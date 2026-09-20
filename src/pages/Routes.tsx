@@ -5,7 +5,7 @@ import {
   Crosshair, ArrowUpDown, ShieldAlert, CheckCircle2, 
   Layers, Clock, AlertCircle, RefreshCw, Compass, Waves,
   ExternalLink, Building2, Siren, Truck, Shield, Sparkles,
-  Check, Info, ChevronRight, Maximize2
+  Check, Info, ChevronRight
 } from 'lucide-react';
 import { useAppState } from '@/lib/store';
 import { cn } from '@/lib/utils';
@@ -14,7 +14,6 @@ import { evaluateDisasterAwareRoutes } from '@/lib/dorRoadService';
 import { RouteAlternative, RoutingProfileMode, DisasterAwareRouteEvaluation } from '@/types';
 import { DhmHydrologyService } from '@/lib/dhmHydrologyService';
 import { ReportRoadModal } from '@/components/routes/ReportRoadModal';
-import { GoogleMapsFullscreenNav } from '@/components/routes/GoogleMapsFullscreenNav';
 import { MOCK_ROADS, MOCK_BRIDGES } from '@/data/mock';
 import { MapContainer, TileLayer, Polyline, Marker, Popup, Tooltip, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -208,7 +207,6 @@ export function Routes() {
   const [mapLayer, setMapLayer] = useState<'streets' | 'topo'>('streets');
   
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-  const [isFullscreenNavOpen, setIsFullscreenNavOpen] = useState(false);
   const [demoScenario, setDemoScenario] = useState(0);
   const [gpsAcquired, setGpsAcquired] = useState(false);
   const [selectedDorClosure, setSelectedDorClosure] = useState<any | null>(null);
@@ -683,26 +681,6 @@ export function Routes() {
                 </Button>
               </div>
             </div>
-
-            {/* Launch Fullscreen Google Maps Navigation Button */}
-            <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-              <Button
-                onClick={() => setIsFullscreenNavOpen(true)}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl shadow-md flex items-center justify-center gap-2 border border-emerald-500 text-xs sm:text-sm"
-              >
-                <Navigation className="w-4 h-4" />
-                <span>Start Google Maps Navigation (Fullscreen)</span>
-              </Button>
-              <div className="mt-1.5 flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 px-1">
-                <span>Turn-by-turn guidance</span>
-                <span>•</span>
-                <span>DOR Bridges</span>
-                <span>•</span>
-                <span>DHM Rivers</span>
-                <span>•</span>
-                <span className="text-red-500 font-bold">Route Avoidance</span>
-              </div>
-            </div>
           </Card>
 
           {/* Route Alternatives & Evidence-Based AI Explanation */}
@@ -943,23 +921,6 @@ export function Routes() {
               >
                 <Crosshair className="w-3.5 h-3.5 text-emerald-500" /> GPS
               </Button>
-
-              {/* Fullscreen Google Maps Navigation Buttons */}
-              <Button 
-                onClick={() => setIsFullscreenNavOpen(true)} 
-                className="h-7 text-xs px-2.5 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-xs border border-emerald-500"
-              >
-                <Navigation className="w-3.5 h-3.5" /> Fullscreen Nav
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setIsFullscreenNavOpen(true)} 
-                className="h-7 w-7 p-0 border-slate-200 dark:border-slate-800"
-                title="Fullscreen Map Navigation"
-              >
-                <Maximize2 className="w-3.5 h-3.5 text-slate-700 dark:text-slate-200" />
-              </Button>
             </div>
           </div>
 
@@ -1037,43 +998,6 @@ export function Routes() {
                   </Polyline>
                 </>
               )}
-
-              {/* Alternative Route to Avoid (Red Polyline with Warning) */}
-              {disasterEvaluations.length > 1 && (() => {
-                const avoidEval = disasterEvaluations.find(e => e.dorRoadStatus === 'BLOCKED' || e.overallRiskLevel === 'CRITICAL') || disasterEvaluations[1];
-                if (!avoidEval || !avoidEval.path || avoidEval.path.length < 2) return null;
-                const avoidCoords = avoidEval.path.map(pt => [pt.lat, pt.lng] as [number, number]);
-                return (
-                  <>
-                    <Polyline
-                      positions={avoidCoords}
-                      pathOptions={{
-                        color: '#991b1b',
-                        weight: 8,
-                        opacity: 0.35
-                      }}
-                    />
-                    <Polyline
-                      positions={avoidCoords}
-                      pathOptions={{
-                        color: '#ef4444',
-                        weight: 5,
-                        opacity: 0.9,
-                        dashArray: '8, 8'
-                      }}
-                    >
-                      <Tooltip sticky>
-                        <div className="p-1 text-xs">
-                          <span className="font-extrabold text-red-600 uppercase block">⛔ ROUTE TO AVOID</span>
-                          <span className="font-medium text-slate-800 dark:text-slate-200">
-                            {avoidEval.name}: {avoidEval.warnings[0] || 'Confirmed DOR Landslide or Flood Hazard'}
-                          </span>
-                        </div>
-                      </Tooltip>
-                    </Polyline>
-                  </>
-                );
-              })()}
 
               {/* DOR Road Closures Markers */}
               {dorClosures.map((closure, idx) => {
@@ -1222,14 +1146,6 @@ export function Routes() {
                   <span className="w-3.5 h-1 bg-emerald-600 rounded shrink-0"></span>
                   <span className="text-slate-700 dark:text-slate-300">Safest Route</span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-3.5 h-1 border-t-2 border-dashed border-red-500 rounded shrink-0"></span>
-                  <span className="text-red-600 dark:text-red-400 font-semibold">Route to Avoid</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs">🌊</span>
-                  <span className="text-slate-700 dark:text-slate-300">DHM River Watch</span>
-                </div>
               </div>
             </div>
           </div>
@@ -1240,24 +1156,6 @@ export function Routes() {
       <ReportRoadModal 
         isOpen={isReportModalOpen} 
         onClose={() => setIsReportModalOpen(false)} 
-      />
-
-      {/* FULLSCREEN GOOGLE MAPS STYLE NAVIGATION */}
-      <GoogleMapsFullscreenNav
-        isOpen={isFullscreenNavOpen}
-        onClose={() => setIsFullscreenNavOpen(false)}
-        origin={{ name: startLoc, lat: startCoordinates.lat, lng: startCoordinates.lng }}
-        destination={{ name: endLoc, lat: endCoordinates.lat, lng: endCoordinates.lng }}
-        activeRoute={activeRoute || (recommendedDisasterRoute ? { latlngs: recommendedDisasterRoute.path, distance: recommendedDisasterRoute.distanceKm * 1000, duration: recommendedDisasterRoute.estimatedTimeMin * 60, steps: [] } : null)}
-        recommendedEval={recommendedDisasterRoute}
-        avoidedEvals={disasterEvaluations.filter(e => !e.isRecommended)}
-        dorBridges={dorBridges}
-        dhmStations={dhmStations}
-        dorClosures={dorClosures}
-        roads={roads}
-        bridges={bridges}
-        responderProfile={responderProfile}
-        aiExplanation={aiExplanation}
       />
     </div>
   );

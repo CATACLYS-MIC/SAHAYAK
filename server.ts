@@ -1088,6 +1088,103 @@ Respond ONLY with this exact JSON structure:
     }
   });
 
+  // Nepal Disaster Risk Reduction Portal (DRR Portal) Proxy: Distributed Country
+  // URL: http://drrportal.gov.np/distributed_country
+  app.get('/api/drr/distributed_country', async (req, res) => {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4500);
+
+      const response = await fetch('http://drrportal.gov.np/distributed_country', {
+        signal: controller.signal,
+        headers: {
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,application/json;q=0.8,*/*;q=0.7',
+          'User-Agent': 'SAHAYAK-DRR-Logistics-Platform/1.0'
+        }
+      });
+      clearTimeout(timeoutId);
+
+      const text = await response.text();
+      const isDbError = text.includes('Database Error') || text.includes('Unable to connect to your database server');
+
+      if (response.ok && !isDbError && (text.includes('<table') || text.includes('table-responsive'))) {
+        return res.json({
+          source: 'LIVE_DRR_PORTAL',
+          sourceUrl: 'http://drrportal.gov.np/distributed_country',
+          isLiveUpstream: true,
+          rawHtmlLength: text.length,
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      // Upstream portal is down or throwing DB error -> return structured mirror signal
+      return res.json({
+        source: 'DRR_PORTAL_CACHED_MIRROR',
+        sourceUrl: 'http://drrportal.gov.np/distributed_country',
+        isLiveUpstream: false,
+        upstreamStatus: isDbError ? 'UPSTREAM_DATABASE_ERROR' : `HTTP_${response.status}`,
+        timestamp: new Date().toISOString()
+      });
+    } catch (err: any) {
+      return res.json({
+        source: 'DRR_PORTAL_CACHED_MIRROR',
+        sourceUrl: 'http://drrportal.gov.np/distributed_country',
+        isLiveUpstream: false,
+        upstreamStatus: 'UPSTREAM_TIMEOUT_OR_UNAVAILABLE',
+        error: err.message,
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
+  // Nepal Disaster Risk Reduction Portal (DRR Portal) Proxy: VDC Distribution
+  // URL: http://drrportal.gov.np/vdcdistribution
+  app.get('/api/drr/vdcdistribution', async (req, res) => {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4500);
+
+      const response = await fetch('http://drrportal.gov.np/vdcdistribution', {
+        signal: controller.signal,
+        headers: {
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,application/json;q=0.8,*/*;q=0.7',
+          'User-Agent': 'SAHAYAK-DRR-Logistics-Platform/1.0'
+        }
+      });
+      clearTimeout(timeoutId);
+
+      const text = await response.text();
+      const isDbError = text.includes('Database Error') || text.includes('Unable to connect to your database server');
+
+      if (response.ok && !isDbError && (text.includes('<table') || text.includes('table-responsive'))) {
+        return res.json({
+          source: 'LIVE_DRR_PORTAL',
+          sourceUrl: 'http://drrportal.gov.np/vdcdistribution',
+          isLiveUpstream: true,
+          rawHtmlLength: text.length,
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      return res.json({
+        source: 'DRR_PORTAL_CACHED_MIRROR',
+        sourceUrl: 'http://drrportal.gov.np/vdcdistribution',
+        isLiveUpstream: false,
+        upstreamStatus: isDbError ? 'UPSTREAM_DATABASE_ERROR' : `HTTP_${response.status}`,
+        timestamp: new Date().toISOString()
+      });
+    } catch (err: any) {
+      return res.json({
+        source: 'DRR_PORTAL_CACHED_MIRROR',
+        sourceUrl: 'http://drrportal.gov.np/vdcdistribution',
+        isLiveUpstream: false,
+        upstreamStatus: 'UPSTREAM_TIMEOUT_OR_UNAVAILABLE',
+        error: err.message,
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
   // Galli Maps Routes API Proxy with resilient Nepal road fallback
   app.post('/api/routes', async (req, res) => {
     try {
@@ -1150,15 +1247,11 @@ Respond ONLY with this exact JSON structure:
                   const modifier = s.maneuver?.modifier ? ` ${s.maneuver.modifier}` : '';
                   const type = s.maneuver?.type || 'Drive';
                   const roadName = s.name ? ` onto ${s.name}` : '';
-                  const location = s.maneuver?.location ? [s.maneuver.location[1], s.maneuver.location[0]] : null;
                   return {
                     instruction: `${type.charAt(0).toUpperCase() + type.slice(1)}${modifier}${roadName}`,
                     distance: Math.round(s.distance),
                     duration: Math.round(s.duration),
-                    name: s.name || 'Highway Segment',
-                    type: s.maneuver?.type || 'turn',
-                    modifier: s.maneuver?.modifier || 'straight',
-                    location
+                    name: s.name || 'Highway Segment'
                   };
                 });
 
