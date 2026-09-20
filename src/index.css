@@ -1,0 +1,40 @@
+@import "tailwindcss";
+@import "tailwindcss/utilities";
+@import "leaflet/dist/leaflet.css";
+
+@theme {
+  --color-slate-850: #141c2e;
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased selection:bg-blue-500/30 dark:bg-slate-950 dark:text-slate-50 transition-colors duration-300;
+  }
+}
+
+/* Galli Maps & Leaflet Essential Canvas Styles */
+.gallimap-container,
+.leaflet-container {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 250px;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.gallimap {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+}
+
+.leaflet-tile {
+  filter: none;
+}
+
+
+
