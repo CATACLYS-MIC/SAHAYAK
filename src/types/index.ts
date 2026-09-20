@@ -796,12 +796,13 @@ export interface Road {
   endLocation: string; // e.g. Node ID or name
   geometry: { lat: number; lng: number }[]; // Path coordinates
   status: RoadStatus;
-  condition: RoadCondition;
+  condition: RoadCondition | string;
   hazards: string[];
   lastUpdated: string;
   source: string;
   sourceUrl?: string;
   confidence: number;
+  closureReason?: string;
 }
 
 export interface Bridge {
@@ -810,12 +811,16 @@ export interface Bridge {
   location: { lat: number; lng: number };
   roadId: string;
   status: RoadStatus;
-  condition: RoadCondition;
+  condition: RoadCondition | string;
   hazards: string[];
   lastUpdated: string;
   source: string;
   sourceUrl?: string;
   confidence: number;
+  threatLevel?: string;
+  river?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface RouteAlternative {

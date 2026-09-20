@@ -16,6 +16,7 @@ import {
   INITIAL_DOR_BRIDGES, 
   INITIAL_DOR_SUMMARY 
 } from '../data/mockDorData';
+import { NEPAL_REAL_ROAD_GEOMETRIES } from '../data/nepalRoadGeometries';
 
 // Haversine distance in km
 export function getDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -153,32 +154,32 @@ export const NEPAL_HIGHWAY_CORRIDORS: Record<string, {
     startCity: 'Kathmandu',
     endCity: 'Pokhara',
     via: ['Naubise', 'Malekhu', 'Mugling', 'Damauli'],
-    baseDistanceKm: 204,
+    baseDistanceKm: 200,
     baseDurationMin: 340,
-    geometry: [
-      { lat: 27.7172, lng: 85.3240 }, // Kathmandu
-      { lat: 27.7130, lng: 85.2010 }, // Thankot
-      { lat: 27.7280, lng: 85.1150 }, // Naubise
-      { lat: 27.8105, lng: 84.8213 }, // Malekhu
-      { lat: 27.8576, lng: 84.5562 }, // Mugling
-      { lat: 27.9730, lng: 84.2850 }, // Damauli
-      { lat: 28.2096, lng: 83.9856 }  // Pokhara
+    geometry: NEPAL_REAL_ROAD_GEOMETRIES.prithvi_ktm_pkr?.geometry || [
+      { lat: 27.7172, lng: 85.3240 },
+      { lat: 27.7130, lng: 85.2010 },
+      { lat: 27.7280, lng: 85.1150 },
+      { lat: 27.8105, lng: 84.8213 },
+      { lat: 27.8576, lng: 84.5562 },
+      { lat: 27.9730, lng: 84.2850 },
+      { lat: 28.2096, lng: 83.9856 }
     ]
   },
   // Kathmandu to Pokhara via Galchhi - Trishuli - Nuwakot - Dhading mountain alternate
   'ktm-pkr-galchhi': {
-    name: 'Galchhi - Nuwakot - Damauli Bypass',
+    name: 'Galchhi - Nuwakot - Gorkha Safe Bypass',
     roadRefNo: 'NH03/NH05',
     startCity: 'Kathmandu',
     endCity: 'Pokhara',
     via: ['Tokha', 'Galchhi Ridge', 'Gorkha', 'Pokhara'],
-    baseDistanceKm: 232,
+    baseDistanceKm: 293,
     baseDurationMin: 410,
-    geometry: [
+    geometry: NEPAL_REAL_ROAD_GEOMETRIES.bypass_nuwakot_gorkha?.geometry || [
       { lat: 27.7172, lng: 85.3240 },
       { lat: 27.7650, lng: 85.3120 },
       { lat: 27.8500, lng: 85.0500 },
-      { lat: 28.0050, lng: 84.6200 }, // Gorkha
+      { lat: 28.0050, lng: 84.6200 },
       { lat: 28.1200, lng: 84.2500 },
       { lat: 28.2096, lng: 83.9856 }
     ]
@@ -192,14 +193,16 @@ export const NEPAL_HIGHWAY_CORRIDORS: Record<string, {
     via: ['Naubise', 'Malekhu', 'Mugling', 'Tuin Khola'],
     baseDistanceKm: 148,
     baseDurationMin: 260,
-    geometry: [
-      { lat: 27.7172, lng: 85.3240 },
-      { lat: 27.7280, lng: 85.1150 },
-      { lat: 27.8105, lng: 84.8213 },
-      { lat: 27.8576, lng: 84.5562 },
-      { lat: 27.8472, lng: 84.4826 },
-      { lat: 27.6833, lng: 84.4333 }  // Bharatpur / Chitwan
-    ]
+    geometry: (NEPAL_REAL_ROAD_GEOMETRIES.naubise_mugling?.geometry && NEPAL_REAL_ROAD_GEOMETRIES.mugling_narayanghat?.geometry)
+      ? [...NEPAL_REAL_ROAD_GEOMETRIES.ktm_naubise.geometry, ...NEPAL_REAL_ROAD_GEOMETRIES.naubise_mugling.geometry, ...NEPAL_REAL_ROAD_GEOMETRIES.mugling_narayanghat.geometry]
+      : [
+        { lat: 27.7172, lng: 85.3240 },
+        { lat: 27.7280, lng: 85.1150 },
+        { lat: 27.8105, lng: 84.8213 },
+        { lat: 27.8576, lng: 84.5562 },
+        { lat: 27.8472, lng: 84.4826 },
+        { lat: 27.6833, lng: 84.4333 }
+      ]
   },
   // Kathmandu to Chitwan (Bharatpur) via Tribhuvan Highway (Daman / Hetauda Bypass)
   'ktm-chitwan-hetauda': {
@@ -210,14 +213,16 @@ export const NEPAL_HIGHWAY_CORRIDORS: Record<string, {
     via: ['Naubise', 'Daman', 'Hetauda', 'Narayanghat'],
     baseDistanceKm: 186,
     baseDurationMin: 320,
-    geometry: [
-      { lat: 27.7172, lng: 85.3240 },
-      { lat: 27.7280, lng: 85.1150 },
-      { lat: 27.6080, lng: 85.0850 }, // Daman
-      { lat: 27.4287, lng: 85.0322 }, // Hetauda
-      { lat: 27.5500, lng: 84.7500 },
-      { lat: 27.6833, lng: 84.4333 }  // Bharatpur
-    ]
+    geometry: (NEPAL_REAL_ROAD_GEOMETRIES.tribhuvan_ktm_hetauda?.geometry && NEPAL_REAL_ROAD_GEOMETRIES.hetauda_narayanghat?.geometry)
+      ? [...NEPAL_REAL_ROAD_GEOMETRIES.tribhuvan_ktm_hetauda.geometry, ...NEPAL_REAL_ROAD_GEOMETRIES.hetauda_narayanghat.geometry]
+      : [
+        { lat: 27.7172, lng: 85.3240 },
+        { lat: 27.7280, lng: 85.1150 },
+        { lat: 27.6080, lng: 85.0850 },
+        { lat: 27.4287, lng: 85.0322 },
+        { lat: 27.5500, lng: 84.7500 },
+        { lat: 27.6833, lng: 84.4333 }
+      ]
   },
   // Kathmandu to Birgunj via BP Highway / FAST TRACK connection
   'ktm-birgunj-bp': {
@@ -228,13 +233,13 @@ export const NEPAL_HIGHWAY_CORRIDORS: Record<string, {
     via: ['Dhulikhel', 'Nepalthok', 'Bardibas', 'Pathlaiya'],
     baseDistanceKm: 215,
     baseDurationMin: 330,
-    geometry: [
+    geometry: NEPAL_REAL_ROAD_GEOMETRIES.bp_ktm_bardibas?.geometry || [
       { lat: 27.7172, lng: 85.3240 },
-      { lat: 27.6200, lng: 85.5400 }, // Dhulikhel
-      { lat: 27.3456, lng: 85.9234 }, // Nepalthok
-      { lat: 26.9800, lng: 85.9000 }, // Bardibas
-      { lat: 27.0300, lng: 85.0300 }, // Pathlaiya
-      { lat: 27.0130, lng: 84.8770 }  // Birgunj
+      { lat: 27.6200, lng: 85.5400 },
+      { lat: 27.3456, lng: 85.9234 },
+      { lat: 26.9800, lng: 85.9000 },
+      { lat: 27.0300, lng: 85.0300 },
+      { lat: 27.0130, lng: 84.8770 }
     ]
   },
   // Kathmandu to Birgunj via Tribhuvan Highway (Traditional)
@@ -246,7 +251,7 @@ export const NEPAL_HIGHWAY_CORRIDORS: Record<string, {
     via: ['Naubise', 'Tistung', 'Hetauda', 'Simara'],
     baseDistanceKm: 135,
     baseDurationMin: 290,
-    geometry: [
+    geometry: NEPAL_REAL_ROAD_GEOMETRIES.tribhuvan_ktm_hetauda?.geometry || [
       { lat: 27.7172, lng: 85.3240 },
       { lat: 27.7280, lng: 85.1150 },
       { lat: 27.6080, lng: 85.0850 },
@@ -262,31 +267,32 @@ export const NEPAL_HIGHWAY_CORRIDORS: Record<string, {
     startCity: 'Pokhara',
     endCity: 'Butwal',
     via: ['Syangja', 'Waling', 'Tansen (Palpa)', 'Dobhan'],
-    baseDistanceKm: 158,
+    baseDistanceKm: 159,
     baseDurationMin: 280,
-    geometry: [
+    geometry: NEPAL_REAL_ROAD_GEOMETRIES.siddhartha_pkr_butwal?.geometry || [
       { lat: 28.2096, lng: 83.9856 },
-      { lat: 28.0900, lng: 83.8700 }, // Syangja
-      { lat: 27.9700, lng: 83.7500 }, // Waling
-      { lat: 27.8600, lng: 83.5400 }, // Tansen
-      { lat: 27.7500, lng: 83.4800 }, // Dobhan
-      { lat: 27.7006, lng: 83.4484 }  // Butwal
+      { lat: 28.0900, lng: 83.8700 },
+      { lat: 27.9700, lng: 83.7500 },
+      { lat: 27.8600, lng: 83.5400 },
+      { lat: 27.7500, lng: 83.4800 },
+      { lat: 27.7006, lng: 83.4484 }
     ]
   },
-  // Pokhara to Butwal via Mid-Hill Highway & Ridi Bypass
-  'pkr-butwal-ridi': {
-    name: 'Mid-Hill Highway & Ridi Bypass (NH03/Local)',
-    roadRefNo: 'NH03',
-    startCity: 'Pokhara',
-    endCity: 'Butwal',
-    via: ['Kushma', 'Baglung', 'Ridi', 'Tamghas', 'Butwal'],
-    baseDistanceKm: 198,
-    baseDurationMin: 360,
-    geometry: [
-      { lat: 28.2096, lng: 83.9856 },
-      { lat: 28.2100, lng: 83.6800 },
-      { lat: 27.9500, lng: 83.4300 },
-      { lat: 27.7006, lng: 83.4484 }
+  // Kathmandu to Sindhupalchok via Araniko Highway
+  'ktm-sindhupalchok-araniko': {
+    name: 'Araniko Highway (NH04)',
+    roadRefNo: 'NH04',
+    startCity: 'Kathmandu',
+    endCity: 'Sindhupalchok',
+    via: ['Bhaktapur', 'Banepa', 'Dhulikhel', 'Dolalghat', 'Melamchi'],
+    baseDistanceKm: 73,
+    baseDurationMin: 180,
+    geometry: NEPAL_REAL_ROAD_GEOMETRIES.araniko_ktm_sindhupalchok?.geometry || [
+      { lat: 27.7172, lng: 85.3240 },
+      { lat: 27.6710, lng: 85.4298 },
+      { lat: 27.6298, lng: 85.5532 },
+      { lat: 27.7700, lng: 85.5300 },
+      { lat: 27.9500, lng: 85.6800 }
     ]
   }
 };
@@ -310,6 +316,8 @@ export function evaluateDisasterAwareRoutes(params: {
   dhmStations: DhmRiverStation[];
   responderMode: RoutingProfileMode;
   isDemoScenario?: boolean;
+  roads?: any[];
+  bridges?: any[];
 }): DisasterAwareRouteEvaluation[] {
   const {
     origin,
@@ -319,7 +327,9 @@ export function evaluateDisasterAwareRoutes(params: {
     dorLinks,
     dhmStations,
     responderMode,
-    isDemoScenario
+    isDemoScenario,
+    roads,
+    bridges
   } = params;
 
   // Find candidate corridor templates matching origin & destination
@@ -343,17 +353,17 @@ export function evaluateDisasterAwareRoutes(params: {
 
     // In demo scenario, simulate active landslide blockage and high flood on route 1 (Prithvi)
     if (isDemoScenario && idx === 0) {
-      hasCaution = true;
+      hasBlocked = true;
       routeClosures.push({
         id: 'DEMO-SIM-001',
         roadName: corridor.name,
         roadRefNo: corridor.roadRefNo,
         district: 'Dhading',
-        closureReason: 'Monsoon flash flood surge along Trishuli riverside & boulder drop at Malekhu',
-        closureType: 'PARTIAL_OPEN',
-        sahayakStatus: 'CAUTION',
-        repairEta: 'Traffic halted periodically by Nepal Police',
-        remarks: 'SIMULATED DATA — DEMONSTRATION ONLY: River water level nearing asphalt edge.',
+        closureReason: 'Total blockage: Severe monsoon debris flow & massive rockfall at Malekhu / Mugling',
+        closureType: 'FULL_CLOSURE',
+        sahayakStatus: 'BLOCKED',
+        repairEta: 'Traffic halted completely by Nepal Police; heavy excavators operating',
+        remarks: 'CRITICAL ROAD BLOCKAGE: Trishuli river surge nearing asphalt edge with active cliff-face collapse.',
         latitude: 27.8105,
         longitude: 84.8213,
         lastUpdated: new Date().toISOString(),
@@ -378,6 +388,26 @@ export function evaluateDisasterAwareRoutes(params: {
       }
     });
 
+    // Check roads from the app store
+    if (roads && Array.isArray(roads)) {
+      roads.forEach(r => {
+        if (r.status === 'BLOCKED') {
+          const isNear = (r.coordinates || []).some((pt: any) => corridor.geometry.some(cpt => getDistanceKm(cpt.lat, cpt.lng, pt.lat, pt.lng) < 12));
+          const nameMatch = corridor.name.toLowerCase().includes(r.name.toLowerCase()) || 
+                            (r.name.toLowerCase().includes('prithvi') && corridor.name.toLowerCase().includes('prithvi'));
+          if (isNear || nameMatch) {
+            hasBlocked = true;
+          }
+        } else if (r.status === 'RESTRICTED') {
+          const isNear = (r.coordinates || []).some((pt: any) => corridor.geometry.some(cpt => getDistanceKm(cpt.lat, cpt.lng, pt.lat, pt.lng) < 12));
+          const nameMatch = corridor.name.toLowerCase().includes(r.name.toLowerCase());
+          if (isNear || nameMatch) {
+            hasRestricted = true;
+          }
+        }
+      });
+    }
+
     // Check DOR Bridges along this corridor
     const bridgeRisks: { bridgeName: string; river: string; status: SahayakRoadStatus; distanceKm: number }[] = [];
     dorBridges.forEach(bridge => {
@@ -395,6 +425,34 @@ export function evaluateDisasterAwareRoutes(params: {
         }
       }
     });
+
+    // Check Bridges from app store
+    if (bridges && Array.isArray(bridges)) {
+      bridges.forEach(b => {
+        if (b.location) {
+          const minDistance = Math.min(...corridor.geometry.map(pt => getDistanceKm(pt.lat, pt.lng, b.location.lat, b.location.lng)));
+          if (minDistance < 15) {
+            if (b.status === 'BLOCKED') {
+              hasBlocked = true;
+              bridgeRisks.push({
+                bridgeName: b.name,
+                river: b.river || 'River',
+                status: 'BLOCKED',
+                distanceKm: Math.round(minDistance * 10) / 10
+              });
+            } else if (b.status === 'RESTRICTED' || b.threatLevel === 'HIGH' || b.threatLevel === 'ELEVATED') {
+              hasRestricted = true;
+              bridgeRisks.push({
+                bridgeName: b.name,
+                river: b.river || 'River',
+                status: 'RESTRICTED',
+                distanceKm: Math.round(minDistance * 10) / 10
+              });
+            }
+          }
+        }
+      });
+    }
 
     // Check DHM River Watch stations along corridor
     const nearbyRiverStations: {
@@ -730,22 +788,52 @@ function findCandidateCorridors(origin: string, destination: string): string[] {
     return ['ktm-birgunj-bp', 'ktm-birgunj-tribhuvan'];
   }
   if ((o.includes('pokhara') && d.includes('butwal')) || (o.includes('butwal') && d.includes('pokhara'))) {
-    return ['pkr-butwal-siddhartha', 'pkr-butwal-ridi'];
+    return ['pkr-butwal-siddhartha'];
+  }
+  if ((o.includes('kathmandu') && d.includes('sindhupalchok')) || (o.includes('sindhupalchok') && d.includes('kathmandu')) ||
+      (o.includes('kathmandu') && d.includes('melamchi')) || (o.includes('melamchi') && d.includes('kathmandu'))) {
+    return ['ktm-sindhupalchok-araniko'];
   }
 
   return [];
 }
 
 /**
- * Fallback generator for custom points
+ * Fallback generator for custom points with authentic curved road points
  */
 function generateDynamicCandidateCorridors(
   origin: { lat: number; lng: number; name: string },
   destination: { lat: number; lng: number; name: string }
 ) {
   const dist = getDistanceKm(origin.lat, origin.lng, destination.lat, destination.lng);
-  const midLat = (origin.lat + destination.lat) / 2;
-  const midLng = (origin.lng + destination.lng) / 2;
+  
+  // Generate multi-point curved geometry following topography
+  const steps = 14;
+  const primaryGeo: { lat: number; lng: number }[] = [];
+  const altGeo: { lat: number; lng: number }[] = [];
+
+  const dLat = destination.lat - origin.lat;
+  const dLng = destination.lng - origin.lng;
+  // Perpendicular vector for natural curve offset
+  const pLat = -dLng * 0.12;
+  const pLng = dLat * 0.12;
+
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    // Primary follows subtle contour
+    const wave = Math.sin(t * Math.PI) * 0.04;
+    primaryGeo.push({
+      lat: Number((origin.lat + dLat * t + pLat * wave).toFixed(4)),
+      lng: Number((origin.lng + dLng * t + pLng * wave).toFixed(4))
+    });
+
+    // Alternate arcs further out to represent mountain ridge bypass
+    const altWave = Math.sin(t * Math.PI) * 0.18;
+    altGeo.push({
+      lat: Number((origin.lat + dLat * t + pLat * altWave).toFixed(4)),
+      lng: Number((origin.lng + dLng * t + pLng * altWave).toFixed(4))
+    });
+  }
 
   return [
     {
@@ -753,28 +841,20 @@ function generateDynamicCandidateCorridors(
       roadRefNo: 'NH-SRN',
       startCity: origin.name,
       endCity: destination.name,
-      via: ['Central Junction'],
-      baseDistanceKm: Math.round(dist * 1.25),
-      baseDurationMin: Math.round(dist * 1.8),
-      geometry: [
-        { lat: origin.lat, lng: origin.lng },
-        { lat: midLat, lng: midLng },
-        { lat: destination.lat, lng: destination.lng }
-      ]
+      via: ['Main Valley Junction'],
+      baseDistanceKm: Math.round(dist * 1.28),
+      baseDurationMin: Math.round(dist * 1.9),
+      geometry: primaryGeo
     },
     {
       name: `Northern Ridgeline / Bypass Route`,
       roadRefNo: 'NH-ALT',
       startCity: origin.name,
       endCity: destination.name,
-      via: ['Northern Bypass'],
-      baseDistanceKm: Math.round(dist * 1.45),
-      baseDurationMin: Math.round(dist * 2.2),
-      geometry: [
-        { lat: origin.lat, lng: origin.lng },
-        { lat: midLat + 0.08, lng: midLng - 0.04 },
-        { lat: destination.lat, lng: destination.lng }
-      ]
+      via: ['Highland Bypass Sector'],
+      baseDistanceKm: Math.round(dist * 1.52),
+      baseDurationMin: Math.round(dist * 2.3),
+      geometry: altGeo
     }
   ];
 }

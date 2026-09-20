@@ -2045,6 +2045,8 @@ export const MOCK_CLAIM_ANALYSES: ClaimAnalysis[] = [
 ];
 
 
+import { NEPAL_REAL_ROAD_GEOMETRIES } from './nepalRoadGeometries';
+
 // --- ROUTING MOCK DATA ---
 export const MOCK_ROADS: any[] = [
   {
@@ -2052,12 +2054,21 @@ export const MOCK_ROADS: any[] = [
     name: 'Tribhuvan Highway (KTM - Naubise)',
     startLocation: 'Kathmandu',
     endLocation: 'Naubise',
-    geometry: [{ lat: 27.7172, lng: 85.3240 }, { lat: 27.7150, lng: 85.2500 }, { lat: 27.7172, lng: 85.1240 }],
+    geometry: NEPAL_REAL_ROAD_GEOMETRIES.ktm_naubise?.geometry || [
+      { lat: 27.7175, lng: 85.3241 },
+      { lat: 27.7253, lng: 85.3055 },
+      { lat: 27.7181, lng: 85.2840 },
+      { lat: 27.7166, lng: 85.2710 },
+      { lat: 27.7216, lng: 85.2508 },
+      { lat: 27.7408, lng: 85.2279 },
+      { lat: 27.7348, lng: 85.1764 },
+      { lat: 27.7172, lng: 85.1240 }
+    ],
     status: 'OPEN',
-    condition: 'GOOD',
+    condition: 'GOOD - Clear road surface, all lanes operational',
     hazards: [],
     lastUpdated: new Date().toISOString(),
-    source: 'Department of Roads',
+    source: 'Department of Roads Navigate',
     confidence: 95
   },
   {
@@ -2065,25 +2076,33 @@ export const MOCK_ROADS: any[] = [
     name: 'Prithvi Highway (Naubise - Mugling)',
     startLocation: 'Naubise',
     endLocation: 'Mugling',
-    geometry: [{ lat: 27.7172, lng: 85.1240 }, { lat: 27.7500, lng: 84.9000 }, { lat: 27.8184, lng: 84.5516 }],
+    geometry: NEPAL_REAL_ROAD_GEOMETRIES.naubise_mugling?.geometry || [
+      { lat: 27.7172, lng: 85.1240 },
+      { lat: 27.7500, lng: 84.9000 },
+      { lat: 27.8184, lng: 84.5516 }
+    ],
     status: 'OPEN',
-    condition: 'GOOD',
+    condition: 'GOOD - Normal transit conditions along Trishuli valley',
     hazards: [],
     lastUpdated: new Date().toISOString(),
-    source: 'Traffic Police',
-    confidence: 90
+    source: 'Highway Traffic Police',
+    confidence: 92
   },
   {
     id: 'rd-3',
     name: 'Prithvi Highway (Mugling - Pokhara)',
     startLocation: 'Mugling',
     endLocation: 'Pokhara',
-    geometry: [{ lat: 27.8184, lng: 84.5516 }, { lat: 28.0000, lng: 84.2000 }, { lat: 28.2096, lng: 83.9856 }],
+    geometry: NEPAL_REAL_ROAD_GEOMETRIES.mugling_pokhara?.geometry || [
+      { lat: 27.8184, lng: 84.5516 },
+      { lat: 28.0000, lng: 84.2000 },
+      { lat: 28.2096, lng: 83.9856 }
+    ],
     status: 'OPEN',
-    condition: 'GOOD',
+    condition: 'GOOD - Clear 2-lane asphalt highway',
     hazards: [],
     lastUpdated: new Date().toISOString(),
-    source: 'Traffic Police',
+    source: 'Department of Roads',
     confidence: 90
   },
   {
@@ -2091,9 +2110,13 @@ export const MOCK_ROADS: any[] = [
     name: 'Madan Ashrit Hwy (Mugling - Narayanghat)',
     startLocation: 'Mugling',
     endLocation: 'Narayanghat',
-    geometry: [{ lat: 27.8184, lng: 84.5516 }, { lat: 27.7500, lng: 84.5000 }, { lat: 27.7001, lng: 84.4285 }],
+    geometry: NEPAL_REAL_ROAD_GEOMETRIES.mugling_narayanghat?.geometry || [
+      { lat: 27.8184, lng: 84.5516 },
+      { lat: 27.7500, lng: 84.5000 },
+      { lat: 27.7001, lng: 84.4285 }
+    ],
     status: 'OPEN',
-    condition: 'GOOD',
+    condition: 'GOOD - Operational road corridor',
     hazards: [],
     lastUpdated: new Date().toISOString(),
     source: 'Department of Roads',
@@ -2101,51 +2124,67 @@ export const MOCK_ROADS: any[] = [
   },
   {
     id: 'rd-5',
-    name: 'Kanti Highway (KTM - Hetauda)',
+    name: 'Tribhuvan Highway (KTM - Hetauda via Daman)',
     startLocation: 'Kathmandu',
     endLocation: 'Hetauda',
-    geometry: [{ lat: 27.7172, lng: 85.3240 }, { lat: 27.6000, lng: 85.2000 }, { lat: 27.4285, lng: 85.0326 }],
+    geometry: NEPAL_REAL_ROAD_GEOMETRIES.tribhuvan_ktm_hetauda?.geometry || [
+      { lat: 27.7172, lng: 85.3240 },
+      { lat: 27.6000, lng: 85.2000 },
+      { lat: 27.4285, lng: 85.0326 }
+    ],
     status: 'OPEN',
-    condition: 'GOOD',
+    condition: 'GOOD - Clear hill route',
     hazards: [],
     lastUpdated: new Date().toISOString(),
-    source: 'Citizen Report',
-    confidence: 70
+    source: 'Traffic Police Directorate',
+    confidence: 88
   },
   {
     id: 'rd-6',
     name: 'East-West Hwy (Hetauda - Narayanghat)',
     startLocation: 'Hetauda',
     endLocation: 'Narayanghat',
-    geometry: [{ lat: 27.4285, lng: 85.0326 }, { lat: 27.5000, lng: 84.7000 }, { lat: 27.7001, lng: 84.4285 }],
+    geometry: NEPAL_REAL_ROAD_GEOMETRIES.hetauda_narayanghat?.geometry || [
+      { lat: 27.4285, lng: 85.0326 },
+      { lat: 27.5000, lng: 84.7000 },
+      { lat: 27.7001, lng: 84.4285 }
+    ],
     status: 'OPEN',
-    condition: 'GOOD',
+    condition: 'GOOD - Wide 4-lane Asian Highway section',
     hazards: [],
     lastUpdated: new Date().toISOString(),
     source: 'Department of Roads',
-    confidence: 90
+    confidence: 94
   },
   {
     id: 'rd-7',
     name: 'BP Highway (Kathmandu - Sindhuli - Bardibas)',
     startLocation: 'Kathmandu',
     endLocation: 'Bardibas',
-    geometry: [{ lat: 27.7172, lng: 85.3240 }, { lat: 27.2000, lng: 85.9000 }, { lat: 26.9800, lng: 85.9000 }],
+    geometry: NEPAL_REAL_ROAD_GEOMETRIES.bp_ktm_bardibas?.geometry || [
+      { lat: 27.7172, lng: 85.3240 },
+      { lat: 27.2000, lng: 85.9000 },
+      { lat: 26.9800, lng: 85.9000 }
+    ],
     status: 'OPEN',
-    condition: 'GOOD',
+    condition: 'GOOD - Japan grant engineered winding road',
     hazards: [],
     lastUpdated: new Date().toISOString(),
     source: 'Department of Roads',
-    confidence: 88
+    confidence: 90
   },
   {
     id: 'rd-8',
     name: 'East-West Mahendra Hwy (Bardibas - Biratnagar via Koshi)',
     startLocation: 'Bardibas',
     endLocation: 'Biratnagar',
-    geometry: [{ lat: 26.9800, lng: 85.9000 }, { lat: 26.5222, lng: 86.9217 }, { lat: 26.4525, lng: 87.2718 }],
+    geometry: NEPAL_REAL_ROAD_GEOMETRIES.mahendra_bardibas_biratnagar?.geometry || [
+      { lat: 26.9800, lng: 85.9000 },
+      { lat: 26.5222, lng: 86.9217 },
+      { lat: 26.4525, lng: 87.2718 }
+    ],
     status: 'OPEN',
-    condition: 'GOOD',
+    condition: 'GOOD - Flat Terai corridor',
     hazards: [],
     lastUpdated: new Date().toISOString(),
     source: 'Highway Traffic Directorate',
@@ -2156,9 +2195,13 @@ export const MOCK_ROADS: any[] = [
     name: 'East-West Hwy (Hetauda - Bardibas)',
     startLocation: 'Hetauda',
     endLocation: 'Bardibas',
-    geometry: [{ lat: 27.4285, lng: 85.0326 }, { lat: 27.0500, lng: 85.4000 }, { lat: 26.9800, lng: 85.9000 }],
+    geometry: NEPAL_REAL_ROAD_GEOMETRIES.mahendra_hetauda_bardibas?.geometry || [
+      { lat: 27.4285, lng: 85.0326 },
+      { lat: 27.0500, lng: 85.4000 },
+      { lat: 26.9800, lng: 85.9000 }
+    ],
     status: 'OPEN',
-    condition: 'GOOD',
+    condition: 'GOOD - Clear highway',
     hazards: [],
     lastUpdated: new Date().toISOString(),
     source: 'Department of Roads',
@@ -2169,37 +2212,71 @@ export const MOCK_ROADS: any[] = [
     name: 'Araniko Highway (Kathmandu - Sindhupalchok)',
     startLocation: 'Kathmandu',
     endLocation: 'Sindhupalchok',
-    geometry: [{ lat: 27.7172, lng: 85.3240 }, { lat: 27.7700, lng: 85.5300 }, { lat: 27.9500, lng: 85.6800 }],
-    status: 'CAUTION',
-    condition: 'Heavy mudflow and active rockfall risk near Melamchi turn',
+    geometry: NEPAL_REAL_ROAD_GEOMETRIES.araniko_ktm_sindhupalchok?.geometry || [
+      { lat: 27.7172, lng: 85.3240 },
+      { lat: 27.7700, lng: 85.5300 },
+      { lat: 27.9500, lng: 85.6800 }
+    ],
+    status: 'RESTRICTED',
+    condition: 'Caution: Debris flow risk and single-lane passage near Melamchi',
     hazards: ['Debris Flow', 'Rockfall Warning'],
     lastUpdated: new Date().toISOString(),
     source: 'District Traffic Police / Citizen Reports',
     confidence: 85,
     reportsConflict: true
+  },
+  {
+    id: 'rd-11',
+    name: 'Galchhi - Nuwakot - Gorkha Safe Bypass Corridor',
+    startLocation: 'Kathmandu',
+    endLocation: 'Pokhara',
+    geometry: NEPAL_REAL_ROAD_GEOMETRIES.bypass_nuwakot_gorkha?.geometry || [],
+    status: 'OPEN',
+    condition: 'GOOD - Verified emergency bypass avoiding landslide prone river sectors',
+    hazards: [],
+    lastUpdated: new Date().toISOString(),
+    source: 'Armed Police Force / DOR Bypass Division',
+    confidence: 94
+  },
+  {
+    id: 'rd-12',
+    name: 'Siddhartha Highway (Pokhara - Butwal)',
+    startLocation: 'Pokhara',
+    endLocation: 'Butwal',
+    geometry: NEPAL_REAL_ROAD_GEOMETRIES.siddhartha_pkr_butwal?.geometry || [],
+    status: 'OPEN',
+    condition: 'GOOD - Open for all traffic',
+    hazards: [],
+    lastUpdated: new Date().toISOString(),
+    source: 'District Traffic Police',
+    confidence: 91
   }
 ];
 
 export const MOCK_BRIDGES: any[] = [
   {
     id: 'br-1',
-    name: 'Trishuli Bridge (Mugling)',
+    name: 'Trishuli Bridge (Mugling Junction)',
     location: { lat: 27.8184, lng: 84.5516 },
     roadId: 'rd-2',
     status: 'OPEN',
-    condition: 'GOOD',
+    threatLevel: 'LOW',
+    river: 'Trishuli River',
+    condition: 'Normal structural clearance, water level below caution gauge',
     hazards: [],
     lastUpdated: new Date().toISOString(),
-    source: 'Traffic Police',
+    source: 'Department of Roads Bridge Directorate',
     confidence: 95
   },
   {
     id: 'br-2',
-    name: 'Narayani Bridge',
+    name: 'Narayani River Bridge (Bharatpur)',
     location: { lat: 27.7001, lng: 84.4285 },
     roadId: 'rd-4',
     status: 'OPEN',
-    condition: 'GOOD',
+    threatLevel: 'LOW',
+    river: 'Narayani River',
+    condition: 'Operational multi-span steel bridge with clear drainage',
     hazards: [],
     lastUpdated: new Date().toISOString(),
     source: 'Department of Roads',
@@ -2210,12 +2287,70 @@ export const MOCK_BRIDGES: any[] = [
     name: 'Koshi Barrage Bridge',
     location: { lat: 26.5222, lng: 86.9217 },
     roadId: 'rd-8',
-    status: 'OPEN',
-    condition: 'GOOD',
-    hazards: [],
+    status: 'RESTRICTED',
+    threatLevel: 'ELEVATED',
+    river: 'Saptakoshi River',
+    condition: 'Restricted: High river discharge (315,000 cusecs). 10-ton axle limit enforced',
+    hazards: ['High Discharge Warning', 'Single Lane Heavy Transit'],
     lastUpdated: new Date().toISOString(),
     source: 'Department of Hydrology and Meteorology / Armed Police',
     confidence: 95
+  },
+  {
+    id: 'br-4',
+    name: 'Malekhu Trishuli Bridge',
+    location: { lat: 27.8115, lng: 84.8250 },
+    roadId: 'rd-2',
+    status: 'OPEN',
+    threatLevel: 'LOW',
+    river: 'Malekhu Khola / Trishuli',
+    condition: 'All lanes open with secure abutments',
+    hazards: [],
+    lastUpdated: new Date().toISOString(),
+    source: 'Traffic Police Malekhu',
+    confidence: 90
+  },
+  {
+    id: 'br-5',
+    name: 'Seti River Gorge Bridge (Pokhara)',
+    location: { lat: 28.2160, lng: 83.9890 },
+    roadId: 'rd-3',
+    status: 'OPEN',
+    threatLevel: 'LOW',
+    river: 'Seti River',
+    condition: 'Completely normal structural condition',
+    hazards: [],
+    lastUpdated: new Date().toISOString(),
+    source: 'Pokhara Infrastructure Division',
+    confidence: 96
+  },
+  {
+    id: 'br-6',
+    name: 'Devghat Trishuli Suspension Bridge',
+    location: { lat: 27.7200, lng: 84.4250 },
+    roadId: 'rd-4',
+    status: 'RESTRICTED',
+    threatLevel: 'HIGH',
+    river: 'Trishuli / Kali Gandaki Confluence',
+    condition: 'Restricted & Risky: High scour risk near western pier. Light vehicles and pedestrians only',
+    hazards: ['Pier Scour Hazard', 'Overload Restriction'],
+    lastUpdated: new Date().toISOString(),
+    source: 'Armed Police Force River Rescue Unit',
+    confidence: 88
+  },
+  {
+    id: 'br-7',
+    name: 'Roshi Khola BP Bridge (Kavre/Sindhuli)',
+    location: { lat: 27.5250, lng: 85.6500 },
+    roadId: 'rd-7',
+    status: 'OPEN',
+    threatLevel: 'LOW',
+    river: 'Roshi Khola',
+    condition: 'Clear, reinforced approach roads open',
+    hazards: [],
+    lastUpdated: new Date().toISOString(),
+    source: 'BP Highway Division Office',
+    confidence: 92
   }
 ];
 

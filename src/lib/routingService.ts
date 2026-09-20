@@ -93,8 +93,10 @@ export function calculateRoutes(
       // Check bridges on this road
       const roadBridges = bridges.filter(b => b.roadId === road.id);
       let bridgeBlocked = false;
+      let bridgeRestricted = false;
       roadBridges.forEach(b => {
          if (b.status === 'BLOCKED') bridgeBlocked = true;
+         if (b.status === 'RESTRICTED' || b.threatLevel === 'HIGH' || b.threatLevel === 'ELEVATED') bridgeRestricted = true;
          if (b.hazards.length > 0) b.hazards.forEach(h => hazards.add(h));
       });
 
@@ -102,17 +104,18 @@ export function calculateRoutes(
         hasBlocked = true;
         maxRiskLevel = 'CRITICAL';
         blockedSegments.push(road.name);
-        riskScore += 1000;
-      } else if (road.status === 'RESTRICTED') {
-        riskScore += 50;
+        // Massively penalize so router NEVER recommends a route through blocked road or bridge
+        riskScore += 100000;
+      } else if (road.status === 'RESTRICTED' || bridgeRestricted) {
+        riskScore += 500;
         if (maxRiskLevel !== 'CRITICAL') maxRiskLevel = 'HIGH';
       } else if (road.status === 'CAUTION') {
-        riskScore += 20;
+        riskScore += 150;
         if (maxRiskLevel === 'LOW') maxRiskLevel = 'MODERATE';
       }
 
       // factor in weather / hazards from existing system (simulated via hazards array for now)
-      riskScore += road.hazards.length * 15;
+      riskScore += road.hazards.length * 50;
       if (road.hazards.length > 0 && maxRiskLevel === 'LOW') maxRiskLevel = 'MODERATE';
     }
 
@@ -122,8 +125,8 @@ export function calculateRoutes(
     const estimatedTime = (path.distance / 40) * 60; 
 
     // Score for ranking: combine distance and risk.
-    // Safety matters more than distance!
-    const rankingScore = path.distance + (riskScore * 5);
+    // Safety matters far more than distance!
+    const rankingScore = path.distance + riskScore;
     
     const avgConfidence = path.roads.length > 0 ? totalConfidence / path.roads.length : 100;
 

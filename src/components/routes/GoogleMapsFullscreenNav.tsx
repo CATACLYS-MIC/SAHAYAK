@@ -105,14 +105,17 @@ const createWaypointIcon = (label: string, isOrigin: boolean) => {
   });
 };
 
-// Color-coded DOR bridge icon
-const createBridgeMarkerIcon = (status: string) => {
-  const bg = status === 'BLOCKED' ? '#dc2626' : status === 'RESTRICTED' ? '#ea580c' : '#10b981';
+// Color-coded bridge icon: Red for blocked, Yellow for restricted/risky, Green for normal
+const createBridgeMarkerIcon = (status: string, threatLevel?: string) => {
+  const isBlocked = status?.toUpperCase() === 'BLOCKED';
+  const isRestrictedOrRisky = status?.toUpperCase() === 'RESTRICTED' || status?.toUpperCase() === 'CAUTION' || threatLevel === 'HIGH' || threatLevel === 'ELEVATED';
+  const bg = isBlocked ? '#ef4444' : isRestrictedOrRisky ? '#eab308' : '#10b981';
+  const symbol = isBlocked ? '⛔' : isRestrictedOrRisky ? '⚠️' : '🌉';
   return L.divIcon({
     className: 'nav-bridge-marker',
     html: `
       <div style="background: ${bg}; width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; border: 2.5px solid white; box-shadow: 0 3px 8px rgba(0,0,0,0.35); color: white;">
-        🌉
+        ${symbol}
       </div>
     `,
     iconSize: [30, 30],
@@ -376,11 +379,13 @@ export function GoogleMapsFullscreenNav({
     return ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360;
   }, [routeCoords, simProgressRatio]);
 
-  // Bridges in path (DOR) with color coding
+  // Bridges in path (DOR & system bridges) with color coding
   const bridgesOnPath = useMemo(() => {
     if (!routeCoords || routeCoords.length === 0) return [];
     const matched: (DorBridge & { threatColor: string; distanceToRoute: number })[] = [];
+    const seenNames = new Set<string>();
     
+    // 1. Process DOR bridges database
     dorBridges.forEach(bridge => {
       if (bridge.latitude && bridge.longitude) {
         let minDist = Infinity;
@@ -388,8 +393,11 @@ export function GoogleMapsFullscreenNav({
           const d = Math.hypot(pt[0] - bridge.latitude, pt[1] - bridge.longitude) * 111; // ~km
           if (d < minDist) minDist = d;
         }
-        if (minDist < 12) {
-          const threatColor = bridge.status === 'BLOCKED' ? '#ef4444' : bridge.status === 'RESTRICTED' ? '#f59e0b' : '#10b981';
+        if (minDist < 16) {
+          const isBlocked = bridge.status === 'BLOCKED';
+          const isRestricted = bridge.status === 'RESTRICTED' || bridge.status === 'CAUTION';
+          const threatColor = isBlocked ? '#ef4444' : isRestricted ? '#eab308' : '#10b981';
+          seenNames.add(bridge.bridgeName.toLowerCase());
           matched.push({
             ...bridge,
             threatColor,
@@ -398,8 +406,46 @@ export function GoogleMapsFullscreenNav({
         }
       }
     });
+
+    // 2. Process system bridges (Narayani, Trishuli, Seti, Koshi, etc.)
+    bridges.forEach(b => {
+      const bLat = typeof b.latitude === 'number' ? b.latitude : b.location?.lat;
+      const bLng = typeof b.longitude === 'number' ? b.longitude : b.location?.lng;
+
+      if (bLat && bLng && !seenNames.has(b.name.toLowerCase())) {
+        let minDist = Infinity;
+        for (const pt of routeCoords) {
+          const d = Math.hypot(pt[0] - bLat, pt[1] - bLng) * 111;
+          if (d < minDist) minDist = d;
+        }
+        if (minDist < 16) {
+          const isBlocked = b.status === 'BLOCKED';
+          const isRestricted = b.status === 'RESTRICTED' || b.status === 'CAUTION' || b.threatLevel === 'HIGH' || b.threatLevel === 'ELEVATED';
+          const threatColor = isBlocked ? '#ef4444' : isRestricted ? '#eab308' : '#10b981';
+          matched.push({
+            id: b.id,
+            bridgeName: b.name,
+            river: b.river || 'River Crossing',
+            district: typeof b.location === 'string' ? b.location : 'Nepal Strategic Corridor',
+            lengthMeters: 180,
+            spanLengthMeters: 45,
+            status: b.status,
+            bridgeIdCode: b.id || 'SYS-BR',
+            roadName: 'Strategic Highway',
+            latitude: bLat,
+            longitude: bLng,
+            threatColor,
+            distanceToRoute: Math.round(minDist * 10) / 10,
+            chainageKm: null,
+            source: 'DOR / Strategic Road Network',
+            dataSource: 'SIMULATED' as const
+          });
+        }
+      }
+    });
+
     return matched;
-  }, [routeCoords, dorBridges]);
+  }, [routeCoords, dorBridges, bridges]);
 
   // Rivers in path (DHM) with color coding
   const riversOnPath = useMemo(() => {
@@ -897,6 +943,119 @@ export function GoogleMapsFullscreenNav({
             </Marker>
           ))}
 
+          {/* H. ALL STRATEGIC HIGHWAY NETWORK ROADS COLOR-CODED: RED (BLOCKED), YELLOW (RESTRICTED), GREEN (NORMAL) */}
+          {roads.map((road, idx) => {
+            if (!road.geometry || road.geometry.length < 2) return null;
+            const isBlocked = road.status?.toUpperCase() === 'BLOCKED';
+            const isRestricted = road.status?.toUpperCase() === 'RESTRICTED' || road.status?.toUpperCase() === 'CAUTION';
+            const roadColor = isBlocked ? '#ef4444' : isRestricted ? '#eab308' : '#10b981';
+            const positions = road.geometry.map(pt => [pt.lat, pt.lng] as [number, number]);
+
+            return (
+              <React.Fragment key={`nav-road-corridor-${road.id || idx}`}>
+                {/* Outer halo */}
+                <Polyline
+                  positions={positions}
+                  pathOptions={{
+                    color: isBlocked ? '#991b1b' : isRestricted ? '#854d0e' : '#064e3b',
+                    weight: isBlocked ? 7 : 5,
+                    opacity: 0.35,
+                    dashArray: isBlocked ? '6, 6' : undefined
+                  }}
+                />
+                {/* Main line */}
+                <Polyline
+                  positions={positions}
+                  pathOptions={{
+                    color: roadColor,
+                    weight: isBlocked ? 4 : 3,
+                    opacity: 0.85,
+                    dashArray: isBlocked ? '8, 6' : undefined
+                  }}
+                >
+                  <Tooltip sticky>
+                    <div className="p-1 text-xs">
+                      <div className="font-bold flex items-center gap-1.5" style={{ color: roadColor }}>
+                        <span>{isBlocked ? '⛔' : isRestricted ? '⚠️' : '🛣️'}</span>
+                        <span>{road.name}</span>
+                      </div>
+                      <div className="text-slate-600 dark:text-slate-300 text-[10px]">
+                        Status: <strong>{road.status}</strong> {road.closureReason ? `• ${road.closureReason}` : ''}
+                      </div>
+                    </div>
+                  </Tooltip>
+                  <Popup>
+                    <div className="p-2 text-xs max-w-xs space-y-1">
+                      <div className="flex items-center justify-between gap-1 border-b pb-1">
+                        <span className="font-bold text-slate-900 dark:text-white">{road.name}</span>
+                        <span 
+                          className="px-1.5 py-0.5 rounded text-[10px] font-bold text-white uppercase"
+                          style={{ backgroundColor: roadColor }}
+                        >
+                          {road.status}
+                        </span>
+                      </div>
+                      <p className="text-slate-600 dark:text-slate-300 text-[11px]">
+                        {road.startLocation} ➔ {road.endLocation}
+                      </p>
+                      {road.condition && (
+                        <p className="text-slate-500 text-[10px]">{road.condition}</p>
+                      )}
+                      {road.hazards && road.hazards.length > 0 && (
+                        <div className="text-[10px] text-red-600 font-semibold">
+                          ⚠️ {road.hazards.join(', ')}
+                        </div>
+                      )}
+                    </div>
+                  </Popup>
+                </Polyline>
+              </React.Fragment>
+            );
+          })}
+
+          {/* I. ALL SYSTEM HIGHWAY BRIDGES WITH STATUS COLOR CODING */}
+          {bridges.map((bridge, idx) => {
+            const bLat = typeof bridge.latitude === 'number' ? bridge.latitude : (bridge.location as any)?.lat;
+            const bLng = typeof bridge.longitude === 'number' ? bridge.longitude : (bridge.location as any)?.lng;
+            if (!bLat || !bLng) return null;
+            const isBlocked = bridge.status?.toUpperCase() === 'BLOCKED';
+            const isRestricted = bridge.status?.toUpperCase() === 'RESTRICTED' || bridge.status?.toUpperCase() === 'CAUTION' || bridge.threatLevel === 'HIGH' || bridge.threatLevel === 'ELEVATED';
+            const statusColor = isBlocked ? '#ef4444' : isRestricted ? '#eab308' : '#10b981';
+
+            return (
+              <Marker
+                key={`nav-sys-bridge-${bridge.id || idx}`}
+                position={[bLat, bLng]}
+                icon={createBridgeMarkerIcon(bridge.status, bridge.threatLevel)}
+              >
+                <Popup>
+                  <div className="p-2 text-xs max-w-xs space-y-1">
+                    <div className="flex items-center justify-between gap-1 border-b pb-1">
+                      <span className="font-bold text-slate-900 dark:text-white">{bridge.name}</span>
+                      <span 
+                        className="px-1.5 py-0.5 rounded text-[10px] font-bold text-white uppercase"
+                        style={{ backgroundColor: statusColor }}
+                      >
+                        {bridge.status}
+                      </span>
+                    </div>
+                    <p className="text-slate-600 dark:text-slate-300 text-[11px]">
+                      River: {bridge.river} • {typeof bridge.location === 'string' ? bridge.location : 'Highway Crossing'}
+                    </p>
+                    {bridge.threatLevel && (
+                      <p className="text-[10px] font-medium" style={{ color: statusColor }}>
+                        Threat: {bridge.threatLevel}
+                      </p>
+                    )}
+                    {bridge.hazards && bridge.hazards.length > 0 && (
+                      <p className="text-[10px] text-red-600 font-semibold">⚠️ {bridge.hazards.join(', ')}</p>
+                    )}
+                  </div>
+                </Popup>
+              </Marker>
+            );
+          })}
+
           {/* G. DOR CONFIRMED ROAD CLOSURES */}
           {dorClosures.map((closure, idx) => {
             if (!closure.latitude || !closure.longitude) return null;
@@ -907,7 +1066,7 @@ export function GoogleMapsFullscreenNav({
                 icon={L.divIcon({
                   className: 'nav-closure-pin',
                   html: `
-                    <div style="background: #dc2626; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 2.5px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.5); color: white;">
+                    <div style="background: #ef4444; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 2.5px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.5); color: white;">
                       ⛔
                     </div>
                   `,
@@ -933,6 +1092,48 @@ export function GoogleMapsFullscreenNav({
             );
           })}
         </MapContainer>
+
+        {/* Floating Route & Bridge Color Legend Overlay */}
+        <div className="absolute top-20 right-4 bg-slate-900/95 backdrop-blur-md px-3.5 py-2.5 rounded-xl border border-slate-800 shadow-xl text-[11px] space-y-1.5 z-[1000] pointer-events-auto max-w-[260px]">
+          <div className="font-bold text-slate-200 mb-1 text-[10px] uppercase tracking-wider flex items-center justify-between">
+            <span>Route & Bridge Safety</span>
+            <span className="text-[9px] text-emerald-400 font-semibold">Live DOR / Police</span>
+          </div>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px]">
+            <div className="flex items-center gap-1.5">
+              <span className="w-3.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+              <span className="text-slate-300 font-medium">Normal Road</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-3.5 h-1.5 rounded-full bg-yellow-500 shrink-0"></span>
+              <span className="text-yellow-400 font-medium">Restricted Road</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-3.5 h-1.5 rounded-full bg-red-500 shrink-0"></span>
+              <span className="text-red-400 font-bold">Blocked Road</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs">🟢</span>
+              <span className="text-slate-300">Normal Bridge</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs">🟡</span>
+              <span className="text-yellow-400 font-medium">Risky Bridge</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs">🔴</span>
+              <span className="text-red-400 font-bold">Blocked Bridge</span>
+            </div>
+            <div className="flex items-center gap-1.5 col-span-2 pt-1 border-t border-slate-800">
+              <span className="w-3.5 h-1 bg-emerald-500 rounded shrink-0"></span>
+              <span className="text-emerald-400 font-bold">Recommended Safest Route</span>
+            </div>
+            <div className="flex items-center gap-1.5 col-span-2">
+              <span className="w-3.5 h-1 border-t-2 border-dashed border-red-500 rounded shrink-0"></span>
+              <span className="text-red-400 font-bold">Route to Avoid (Blocked)</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* 4. BOTTOM GOOGLE MAPS NAVIGATION CONTROL DRAWER */}

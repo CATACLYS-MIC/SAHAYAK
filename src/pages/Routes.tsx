@@ -32,12 +32,12 @@ L.Icon.Default.mergeOptions({
 
 const getRoadStatusColor = (status: string) => {
   switch (status?.toUpperCase()) {
-    case 'OPEN': return '#10b981'; // Green
-    case 'CAUTION': return '#eab308'; // Yellow
-    case 'RESTRICTED': return '#f97316'; // Orange
-    case 'BLOCKED': return '#ef4444'; // Red
+    case 'OPEN': return '#10b981'; // Green: totally normal roads
+    case 'CAUTION': return '#eab308'; // Yellow: restricted / caution
+    case 'RESTRICTED': return '#eab308'; // Yellow: restricted roads
+    case 'BLOCKED': return '#ef4444'; // Red: blocked roads
     case 'UNKNOWN':
-    default: return '#94a3b8'; // Gray
+    default: return '#10b981'; // Green
   }
 };
 
@@ -97,18 +97,21 @@ const createDorClosureIcon = (status: string) => {
   });
 };
 
-const createBridgeIcon = (status: string) => {
-  const bg = status === 'BLOCKED' ? '#dc2626' : '#2563eb';
+const createBridgeIcon = (status: string, threatLevel?: string) => {
+  const isBlocked = status?.toUpperCase() === 'BLOCKED';
+  const isRestrictedOrRisky = status?.toUpperCase() === 'RESTRICTED' || status?.toUpperCase() === 'CAUTION' || threatLevel === 'HIGH' || threatLevel === 'ELEVATED';
+  const bg = isBlocked ? '#ef4444' : isRestrictedOrRisky ? '#eab308' : '#10b981';
+  const symbol = isBlocked ? '⛔' : isRestrictedOrRisky ? '⚠️' : '🌉';
   return L.divIcon({
     className: 'custom-bridge-icon',
     html: `
-      <div style="background: ${bg}; width: 26px; height: 26px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 13px; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3); color: white;">
-        🌉
+      <div style="background: ${bg}; width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; border: 2px solid white; box-shadow: 0 3px 8px rgba(0,0,0,0.35); color: white;">
+        ${symbol}
       </div>
     `,
-    iconSize: [26, 26],
-    iconAnchor: [13, 13],
-    popupAnchor: [0, -14]
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+    popupAnchor: [0, -16]
   });
 };
 
@@ -268,7 +271,7 @@ export function Routes() {
     const startCity = startLoc === 'Current Location' ? getClosestCity(startCoordinates.lat, startCoordinates.lng) : startLoc;
     const endCity = endLoc === 'Current Location' ? getClosestCity(endCoordinates.lat, endCoordinates.lng) : endLoc;
 
-    // 1. Core DOR Disaster-Aware Multi-Factor Evaluation
+    // 1. Core DOR Disaster-Aware Multi-Factor Evaluation (incorporating dynamic roads & bridges)
     const evals = evaluateDisasterAwareRoutes({
       origin: { lat: startCoordinates.lat, lng: startCoordinates.lng, name: startCity },
       destination: { lat: endCoordinates.lat, lng: endCoordinates.lng, name: endCity },
@@ -277,7 +280,9 @@ export function Routes() {
       dorLinks: [],
       dhmStations: dhmStations || [],
       responderMode: responderProfile,
-      isDemoScenario: dorDemoMode
+      isDemoScenario: dorDemoMode,
+      roads,
+      bridges
     });
     setDisasterEvaluations(evals);
 
@@ -285,25 +290,32 @@ export function Routes() {
     const alts = calculateRoutes(startCity, endCity, roads, bridges);
     setCalculatedRoutes(alts);
 
-    // 3. Fetch turn-by-turn routing coordinates
+    // 3. Fetch turn-by-turn routing coordinates avoiding blocked roads & risky bridges
     setIsFetchingRoute(true);
     try {
+      const blockedRoadIds = roads.filter(r => r.status === 'BLOCKED').map(r => r.id);
       const res = await fetch('/api/routes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           origin: startCoordinates, 
-          destination: endCoordinates 
+          destination: endCoordinates,
+          avoidBlocked: true,
+          dorClosures,
+          blockedRoadIds
         })
       });
       
       if (res.ok) {
         const data = await res.json();
-        if (data.success && data.data && data.data.length > 0) {
-          setRoutesList(data.data);
-          setActiveRouteIndex(0);
-          if (data.data[0]?.provider) {
-            setRoutingProvider(data.data[0].provider);
+        const incomingRoutes = data.routes || (data.success && data.data ? data.data : []);
+        if (incomingRoutes && incomingRoutes.length > 0) {
+          // Select the unblocked / recommended route
+          const safeIdx = incomingRoutes.findIndex((r: any) => r.status !== 'BLOCKED' && r.riskLevel !== 'CRITICAL');
+          setRoutesList(incomingRoutes);
+          setActiveRouteIndex(safeIdx >= 0 ? safeIdx : 0);
+          if (incomingRoutes[0]?.provider) {
+            setRoutingProvider(incomingRoutes[0].provider);
           }
         }
       }
@@ -454,7 +466,15 @@ export function Routes() {
     return DhmHydrologyService.assessRouteRiverRisks(pathLatLngs, dhmStations, 12);
   }, [pathLatLngs, dhmStations]);
 
-  const activeRouteCoords = activeRoute?.latlngs as [number, number][] | undefined;
+  const activeRouteCoords = useMemo((): [number, number][] | undefined => {
+    if (activeRoute?.latlngs && activeRoute.latlngs.length > 0) {
+      return activeRoute.latlngs.map((c: any) => Array.isArray(c) ? [c[0], c[1]] : [c.lat, c.lng]);
+    }
+    if (disasterEvaluations[0]?.path && disasterEvaluations[0].path.length > 0) {
+      return disasterEvaluations[0].path.map(p => [p.lat, p.lng]);
+    }
+    return undefined;
+  }, [activeRoute?.latlngs, disasterEvaluations]);
 
   const tileUrl = mapLayer === 'topo'
     ? 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png'
@@ -1122,9 +1142,51 @@ export function Routes() {
                 );
               })}
 
-              {/* DOR Bridges Markers */}
+              {/* All Highway Bridges (System & DOR) with Color Coding: Red (Blocked), Yellow (Restricted/Risky), Green (Normal) */}
+              {bridges.map((bridge, idx) => {
+                if (!bridge.latitude || !bridge.longitude) return null;
+                const isBlocked = bridge.status?.toUpperCase() === 'BLOCKED';
+                const isRestricted = bridge.status?.toUpperCase() === 'RESTRICTED' || bridge.status?.toUpperCase() === 'CAUTION' || bridge.threatLevel === 'HIGH' || bridge.threatLevel === 'ELEVATED';
+                const statusColor = isBlocked ? '#ef4444' : isRestricted ? '#eab308' : '#10b981';
+                return (
+                  <Marker
+                    key={`system-bridge-${bridge.id || idx}`}
+                    position={[bridge.latitude, bridge.longitude]}
+                    icon={createBridgeIcon(bridge.status, bridge.threatLevel)}
+                  >
+                    <Popup>
+                      <div className="p-2 text-xs max-w-xs space-y-1">
+                        <div className="flex items-center justify-between gap-1 border-b pb-1">
+                          <span className="font-bold text-slate-900">{bridge.name}</span>
+                          <span 
+                            className="px-1.5 py-0.5 rounded text-[10px] font-bold text-white uppercase"
+                            style={{ backgroundColor: statusColor }}
+                          >
+                            {bridge.status}
+                          </span>
+                        </div>
+                        <p className="text-slate-600 text-[11px]">River: {bridge.river} • {bridge.location}</p>
+                        {bridge.threatLevel && (
+                          <p className="text-[10px] font-medium" style={{ color: statusColor }}>
+                            Threat Level: {bridge.threatLevel}
+                          </p>
+                        )}
+                        {bridge.condition && <p className="text-slate-500 text-[10px]">{bridge.condition}</p>}
+                        {bridge.hazards && bridge.hazards.length > 0 && (
+                          <p className="text-[10px] text-red-600 font-semibold">⚠️ {bridge.hazards.join(', ')}</p>
+                        )}
+                      </div>
+                    </Popup>
+                  </Marker>
+                );
+              })}
+
+              {/* DOR Bridges Database Markers */}
               {dorBridges.map((bridge, idx) => {
                 if (!bridge.latitude || !bridge.longitude) return null;
+                const isBlocked = bridge.status?.toUpperCase() === 'BLOCKED';
+                const isRestricted = bridge.status?.toUpperCase() === 'RESTRICTED';
+                const statusColor = isBlocked ? '#ef4444' : isRestricted ? '#eab308' : '#10b981';
                 return (
                   <Marker
                     key={`dor-bridge-${bridge.id || idx}`}
@@ -1133,7 +1195,15 @@ export function Routes() {
                   >
                     <Popup>
                       <div className="p-1.5 text-xs max-w-xs space-y-1">
-                        <div className="font-bold text-slate-900">{bridge.bridgeName}</div>
+                        <div className="flex items-center justify-between gap-1 border-b pb-1">
+                          <span className="font-bold text-slate-900">{bridge.bridgeName}</span>
+                          <span 
+                            className="px-1.5 py-0.5 rounded text-[10px] font-bold text-white uppercase"
+                            style={{ backgroundColor: statusColor }}
+                          >
+                            {bridge.status}
+                          </span>
+                        </div>
                         <p className="text-slate-600 text-[11px]">River: {bridge.river} • {bridge.district}</p>
                         <p className="text-slate-500 text-[10px]">Length: {bridge.lengthMeters}m | Span: {bridge.spanLengthMeters}m</p>
                         <p className="text-[9px] text-blue-600 font-medium">Department of Roads Bridge Database</p>
@@ -1194,43 +1264,44 @@ export function Routes() {
               </Marker>
             </MapContainer>
 
-            {/* Map Legend Overlay */}
-            <div className="absolute bottom-3.5 left-3.5 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-3.5 py-2.5 rounded-lg border border-slate-200/90 dark:border-slate-800/90 shadow-lg text-[11px] space-y-1.5 z-[400] pointer-events-auto max-w-[260px]">
-              <div className="font-bold text-slate-800 dark:text-slate-200 mb-1 text-[10px] uppercase tracking-wider">
-                DOR & Disaster Route Legend
+            {/* Map Legend Overlay with Required Color Coding */}
+            <div className="absolute bottom-3.5 left-3.5 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-3.5 py-2.5 rounded-lg border border-slate-200/90 dark:border-slate-800/90 shadow-lg text-[11px] space-y-1.5 z-[400] pointer-events-auto max-w-[280px]">
+              <div className="font-bold text-slate-800 dark:text-slate-200 mb-1 text-[10px] uppercase tracking-wider flex items-center justify-between">
+                <span>Route & Bridge Legend</span>
+                <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-semibold">Nepal Highways</span>
               </div>
-              <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
+              <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px]">
                 <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
-                  <span className="text-slate-700 dark:text-slate-300">Open Highway</span>
+                  <span className="w-3.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+                  <span className="text-slate-700 dark:text-slate-300 font-medium">Normal Road</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-1.5 rounded-full bg-orange-500 shrink-0"></span>
-                  <span className="text-slate-700 dark:text-slate-300">Restricted</span>
+                  <span className="w-3.5 h-1.5 rounded-full bg-yellow-500 shrink-0"></span>
+                  <span className="text-yellow-700 dark:text-yellow-400 font-medium">Restricted Road</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-1.5 rounded-full bg-red-500 shrink-0"></span>
-                  <span className="text-slate-700 dark:text-slate-300">Blocked</span>
+                  <span className="w-3.5 h-1.5 rounded-full bg-red-500 shrink-0"></span>
+                  <span className="text-red-600 dark:text-red-400 font-bold">Blocked Road</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs">🌊</span>
-                  <span className="text-slate-700 dark:text-slate-300">River Gauge</span>
+                  <span className="text-xs">🟢</span>
+                  <span className="text-slate-700 dark:text-slate-300">Normal Bridge</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs">🌉</span>
-                  <span className="text-slate-700 dark:text-slate-300">DOR Bridge</span>
+                  <span className="text-xs">🟡</span>
+                  <span className="text-yellow-700 dark:text-yellow-400 font-medium">Risky Bridge</span>
                 </div>
                 <div className="flex items-center gap-1.5">
+                  <span className="text-xs">🔴</span>
+                  <span className="text-red-600 dark:text-red-400 font-bold">Blocked Bridge</span>
+                </div>
+                <div className="flex items-center gap-1.5 col-span-2 pt-1 border-t border-slate-200 dark:border-slate-800">
                   <span className="w-3.5 h-1 bg-emerald-600 rounded shrink-0"></span>
-                  <span className="text-slate-700 dark:text-slate-300">Safest Route</span>
+                  <span className="text-emerald-700 dark:text-emerald-300 font-bold">Recommended Safest Route</span>
                 </div>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 col-span-2">
                   <span className="w-3.5 h-1 border-t-2 border-dashed border-red-500 rounded shrink-0"></span>
-                  <span className="text-red-600 dark:text-red-400 font-semibold">Route to Avoid</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs">🌊</span>
-                  <span className="text-slate-700 dark:text-slate-300">DHM River Watch</span>
+                  <span className="text-red-600 dark:text-red-400 font-bold">Route to Avoid</span>
                 </div>
               </div>
             </div>
