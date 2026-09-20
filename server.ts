@@ -1150,11 +1150,15 @@ Respond ONLY with this exact JSON structure:
                   const modifier = s.maneuver?.modifier ? ` ${s.maneuver.modifier}` : '';
                   const type = s.maneuver?.type || 'Drive';
                   const roadName = s.name ? ` onto ${s.name}` : '';
+                  const location = s.maneuver?.location ? [s.maneuver.location[1], s.maneuver.location[0]] : null;
                   return {
                     instruction: `${type.charAt(0).toUpperCase() + type.slice(1)}${modifier}${roadName}`,
                     distance: Math.round(s.distance),
                     duration: Math.round(s.duration),
-                    name: s.name || 'Highway Segment'
+                    name: s.name || 'Highway Segment',
+                    type: s.maneuver?.type || 'turn',
+                    modifier: s.maneuver?.modifier || 'straight',
+                    location
                   };
                 });
 
