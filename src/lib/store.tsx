@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode, useMemo, useEffect } from 'react';
 import { 
   Location, Weather, Facility, Route, News, MissingPerson, Sighting, CandidateMatch, CaseTimelineEvent,
-  Supply, Volunteer, Assessment, Incident, AppNotification, VolunteerTeam, CoverageGap, DistributionAuditLog, DetailedLocationResourceDemand, AIDistributionPlanProposal, LogisticsDeliveryRoutePlan,
+  Supply, Volunteer, Assessment, Incident, AppNotification, VolunteerTeam, VolunteerStatus, CoverageGap, DistributionAuditLog, DetailedLocationResourceDemand, AIDistributionPlanProposal, LogisticsDeliveryRoutePlan,
   WeatherSource, FusedWeather, HazardRisk, HistoricalEvent, HourlyForecast, EnvironmentalSensor,
   GovernmentHospital, HospitalServiceSummary,
   GovernmentPersonReport, RescueServiceSummary,
@@ -123,6 +123,10 @@ interface AppState {
   addVolunteer: (volunteer: Volunteer) => void;
   addAssessment: (assessment: Assessment) => void;
   markNotificationRead: (id: string) => void;
+  registerTeam: (team: Omit<VolunteerTeam, 'id'> | Partial<VolunteerTeam>) => VolunteerTeam;
+  assignTeamArea: (teamId: string, areaId: string, areaName: string, task?: string, coords?: { lat: number; lng: number }) => void;
+  updateTeamStatus: (teamId: string, status: VolunteerStatus | 'STANDBY') => void;
+  resetTeamsToDefault: () => void;
 
   // Hospital Missing-Person Matching Network
   hospitalPatients: HospitalPatientRecord[];
@@ -182,8 +186,23 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [liveNewsLastSynced, setLiveNewsLastSynced] = useState<string | null>(null);
   const [claimAnalyses, setClaimAnalyses] = useState<ClaimAnalysis[]>((mockData as any).MOCK_CLAIM_ANALYSES || []);
   const [supplies] = useState<Supply[]>(MOCK_LOGISTICS_SUPPLIES);
-  const [teams] = useState<VolunteerTeam[]>(MOCK_EXTENDED_TEAMS);
-  const [coverageGaps] = useState<CoverageGap[]>(MOCK_COVERAGE_GAPS);
+  const [teams, setTeams] = useState<VolunteerTeam[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('sahayak_volunteer_teams_v1');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load cached volunteer teams', e);
+      }
+    }
+    return MOCK_EXTENDED_TEAMS;
+  });
+  const [coverageGaps, setCoverageGaps] = useState<CoverageGap[]>(MOCK_COVERAGE_GAPS);
   const [resourceDemands] = useState<DetailedLocationResourceDemand[]>(MOCK_LOCATION_RESOURCE_DEMANDS);
   const [distributionPlans] = useState<AIDistributionPlanProposal[]>(MOCK_AI_DISTRIBUTION_PLANS);
   const [deliveryRoutes] = useState<LogisticsDeliveryRoutePlan[]>(MOCK_LOGISTICS_DELIVERY_ROUTES);
@@ -906,6 +925,151 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   };
 
   // ==========================================
+  // VOLUNTEER TEAM & AREA ALLOCATION METHODS
+  // ==========================================
+
+  const registerTeam = (teamData: Omit<VolunteerTeam, 'id'> | Partial<VolunteerTeam>): VolunteerTeam => {
+    const newTeam: VolunteerTeam = {
+      id: `team-${Date.now()}`,
+      name: teamData.name || 'Emergency Volunteer Unit',
+      leaderId: teamData.leaderId || `vol-${Date.now()}`,
+      leaderName: teamData.leaderName || 'Team Leader',
+      contact: teamData.contact || '+977-9800-000000',
+      memberCount: Number(teamData.memberCount) || 5,
+      skills: teamData.skills || ['First Aid', 'Search & Rescue'],
+      specialization: teamData.specialization || 'Search & Rescue (SAR)',
+      equipment: teamData.equipment || [],
+      operatingArea: teamData.assignedLocationName || teamData.operatingArea || 'Kathmandu Valley',
+      availability: teamData.availability || 'Immediate (24/7)',
+      status: teamData.status || (teamData.assignedLocationName ? 'DEPLOYED' : 'STANDBY'),
+      verificationStatus: teamData.verificationStatus || 'VERIFIED',
+      experienceScore: teamData.experienceScore || 90,
+      experienceSummary: teamData.experienceSummary || 'Registered disaster response volunteer unit.',
+      assignedLocationId: teamData.assignedLocationId,
+      assignedLocationName: teamData.assignedLocationName,
+      currentTask: teamData.currentTask || (teamData.assignedLocationName ? `Disaster response and relief operations at ${teamData.assignedLocationName}` : undefined),
+      lat: teamData.lat,
+      lng: teamData.lng,
+    };
+
+    setTeams(prev => {
+      const updated = [newTeam, ...prev];
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('sahayak_volunteer_teams_v1', JSON.stringify(updated));
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      return updated;
+    });
+
+    if (newTeam.assignedLocationId) {
+      setCoverageGaps(prevGaps =>
+        prevGaps.map(gap => {
+          if (gap.locationId === newTeam.assignedLocationId || gap.id === newTeam.assignedLocationId) {
+            const newAssigned = (gap.assignedVolunteers || 0) + newTeam.memberCount;
+            return {
+              ...gap,
+              assignedVolunteers: newAssigned,
+              gapCount: Math.max(0, (gap.requiredVolunteers || 0) - newAssigned)
+            };
+          }
+          return gap;
+        })
+      );
+    }
+
+    const notif: AppNotification = {
+      id: `notif-${Date.now()}`,
+      title: 'New Volunteer Team Registered',
+      desc: `${newTeam.name} led by ${newTeam.leaderName} (${newTeam.memberCount} members) registered and allocated to ${newTeam.assignedLocationName || 'Standby Base'}.`,
+      timestamp: 'Just now',
+      read: false,
+      type: 'info',
+      category: 'LOGISTICS',
+    };
+    setNotifications(prev => [notif, ...prev]);
+
+    return newTeam;
+  };
+
+  const assignTeamArea = (
+    teamId: string, 
+    areaId: string, 
+    areaName: string, 
+    task?: string, 
+    coords?: { lat: number; lng: number }
+  ) => {
+    setTeams(prev => {
+      const updated = prev.map(t => {
+        if (t.id === teamId) {
+          return {
+            ...t,
+            assignedLocationId: areaId,
+            assignedLocationName: areaName,
+            operatingArea: areaName,
+            currentTask: task || t.currentTask || `Disaster relief operations at ${areaName}`,
+            status: 'DEPLOYED' as const,
+            lat: coords?.lat ?? t.lat,
+            lng: coords?.lng ?? t.lng,
+          };
+        }
+        return t;
+      });
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('sahayak_volunteer_teams_v1', JSON.stringify(updated));
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      return updated;
+    });
+
+    setCoverageGaps(prevGaps =>
+      prevGaps.map(gap => {
+        if (gap.locationId === areaId || gap.id === areaId) {
+          const team = teams.find(t => t.id === teamId);
+          const count = team ? team.memberCount : 5;
+          const newAssigned = (gap.assignedVolunteers || 0) + count;
+          return {
+            ...gap,
+            assignedVolunteers: newAssigned,
+            gapCount: Math.max(0, (gap.requiredVolunteers || 0) - newAssigned)
+          };
+        }
+        return gap;
+      })
+    );
+  };
+
+  const updateTeamStatus = (teamId: string, status: VolunteerStatus | 'STANDBY') => {
+    setTeams(prev => {
+      const updated = prev.map(t => (t.id === teamId ? { ...t, status } : t));
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('sahayak_volunteer_teams_v1', JSON.stringify(updated));
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      return updated;
+    });
+  };
+
+  const resetTeamsToDefault = () => {
+    setTeams(MOCK_EXTENDED_TEAMS);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem('sahayak_volunteer_teams_v1');
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
+
+  // ==========================================
   // HOSPITAL MATCHING NETWORK METHODS
   // ==========================================
 
@@ -1251,6 +1415,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     addVolunteer,
     addAssessment,
     markNotificationRead,
+    registerTeam,
+    assignTeamArea,
+    updateTeamStatus,
+    resetTeamsToDefault,
 
     // Hospital Missing-Person Matching Network
     hospitalPatients,

@@ -7,7 +7,7 @@ import { MOCK_VOLUNTEER_ALLOCATION_RECOMMENDATIONS } from '@/data/logisticsData'
 
 export function TeamAllocation() {
   
-  const { teams, coverageGaps } = useAppState();
+  const { teams, coverageGaps, assignTeamArea } = useAppState();
   const [recommendations, setRecommendations] = React.useState<any[]>(MOCK_VOLUNTEER_ALLOCATION_RECOMMENDATIONS);
   const [isGenerating, setIsGenerating] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -15,8 +15,16 @@ export function TeamAllocation() {
   
   const [approvedIds, setApprovedIds] = React.useState<Set<string>>(new Set());
 
-  const handleApprove = (id: string) => {
-    setApprovedIds(prev => new Set(prev).add(id));
+  const handleApprove = (rec: any) => {
+    setApprovedIds(prev => new Set(prev).add(rec.id));
+    if (assignTeamArea && rec.candidateId) {
+      assignTeamArea(
+        rec.candidateId,
+        rec.targetLocationId || 'loc-2',
+        rec.suggestedLocationName,
+        `AI Optimized Deployment: ${rec.targetRole}`
+      );
+    }
   };
 
   const handleGenerate = async () => {
@@ -107,7 +115,7 @@ export function TeamAllocation() {
               {!approvedIds.has(rec.id) && (
                 <>
                   <Button variant="outline" size="sm">Reject</Button>
-                  <Button variant="secondary" size="sm" onClick={() => handleApprove(rec.id)} className="bg-fuchsia-600 hover:bg-fuchsia-700 text-white border-0">Approve Allocation</Button>
+                  <Button variant="secondary" size="sm" onClick={() => handleApprove(rec)} className="bg-fuchsia-600 hover:bg-fuchsia-700 text-white border-0">Approve Allocation</Button>
                 </>
               )}
               </div>
