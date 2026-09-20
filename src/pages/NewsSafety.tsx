@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardHeader, Badge, Button } from '@/components/ui';
 import { 
   ShieldCheck, ShieldAlert, FileText, UserPlus, Search, 
@@ -7,11 +7,11 @@ import {
   AlertTriangle, Filter, RotateCcw, Lock, Unlock, Users, ChevronRight,
   List, RefreshCw, ExternalLink, Activity, Clock, MapPin, User,
   FileWarning, ShieldQuestion, Stethoscope, Radio, Globe, Rss, ArrowUpRight,
-  Shield, Zap, Waves
+  Shield, Zap
 } from 'lucide-react';
 import { useAppState } from '@/lib/store';
 import { cn } from '@/lib/utils';
-import { MissingPerson, CandidateMatch, Sighting, News } from '@/types';
+import { MissingPerson, CandidateMatch, Sighting } from '@/types';
 import { MissingPersonDashboard } from '@/components/missing-persons/MissingPersonDashboard';
 import { MissingPersonCard } from '@/components/missing-persons/MissingPersonCard';
 import { MissingPersonProfileModal } from '@/components/missing-persons/MissingPersonProfileModal';
@@ -20,9 +20,8 @@ import { ReportMissingPersonModal } from '@/components/missing-persons/ReportMis
 import { ReportSightingModal } from '@/components/missing-persons/ReportSightingModal';
 import { MissingPersonMap } from '@/components/missing-persons/MissingPersonMap';
 import { MisinfoProtector } from '@/components/misinfo/MisinfoProtector';
-import { BipadAlertsView } from '@/components/alerts/BipadAlertsView';
 
-type MainSection = 'MISSING_PERSONS' | 'BIPAD_ALERTS' | 'NEWS' | 'MISINFORMATION';
+type MainSection = 'MISSING_PERSONS' | 'NEWS' | 'MISINFORMATION';
 type ViewMode = 'TABLE' | 'GRID' | 'MAP' | 'REVIEW_QUEUE';
 
 
@@ -49,11 +48,6 @@ export function NewsSafety() {
     liveNewsError,
     liveNewsLastSynced,
     refreshLiveNews,
-    bipadAlerts,
-    bipadLoading,
-    bipadError,
-    bipadLastSynced,
-    refreshBipadAlerts,
     missingPersons, 
     sightings, 
     candidateMatches, 
@@ -80,23 +74,10 @@ export function NewsSafety() {
   } = useAppState();
 
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const pendingHospitalMatchesCount = (hospitalMatches || []).filter(m => m.status === 'PENDING_HUMAN_REVIEW').length;
 
   // Top Section Navigation
   const [activeSection, setActiveSection] = useState<MainSection>('MISSING_PERSONS');
-
-  // Handle URL deep linking (e.g., from BIPAD notification click)
-  useEffect(() => {
-    const tab = searchParams.get('tab');
-    if (tab === 'BIPAD' || tab === 'bipad') {
-      setActiveSection('BIPAD_ALERTS');
-    } else if (tab === 'NEWS' || tab === 'news') {
-      setActiveSection('NEWS');
-    } else if (tab === 'MISINFORMATION' || tab === 'misinfo') {
-      setActiveSection('MISINFORMATION');
-    }
-  }, [searchParams]);
   
   // Missing Persons View Mode
   const [viewMode, setViewMode] = useState<ViewMode>('GRID');
@@ -118,7 +99,7 @@ export function NewsSafety() {
 
   // News Filtering & Live Wire Feed State
   const [newsFilter, setNewsFilter] = useState('All');
-  const [newsSourceFilter, setNewsSourceFilter] = useState<'ALL' | 'BIPAD' | 'LIVE' | 'OFFICIAL'>('ALL');
+  const [newsSourceFilter, setNewsSourceFilter] = useState<'ALL' | 'LIVE' | 'OFFICIAL'>('ALL');
   const [newsSearchTerm, setNewsSearchTerm] = useState('');
   const [claimToFactCheck, setClaimToFactCheck] = useState<string | undefined>();
 
@@ -188,32 +169,11 @@ export function NewsSafety() {
     ? sightings.find(s => s.id === selectedMatch.sightingId) 
     : null;
 
-  // Convert real-time BIPAD alerts into news dispatches
-  const bipadNewsItems = useMemo(() => {
-    return (bipadAlerts || []).map(a => ({
-      id: a.id,
-      title: a.titleNe ? `${a.titleNe} (${a.title})` : a.title,
-      summary: a.description || `${a.hazardName} reported at ${[a.ward ? `Ward ${a.ward}` : null, a.municipality, a.district].filter(Boolean).join(', ') || 'Nepal'}. Verified by NDRRMA / MoHA.`,
-      source: 'BIPAD Portal NDRRMA (MoHA)',
-      sourceUrl: a.sourceUrl || 'https://bipadportal.gov.np',
-      link: a.sourceUrl || 'https://bipadportal.gov.np',
-      timestamp: a.formattedDate || 'Live Alert',
-      severity: a.severity || 'WARNING',
-      verified: true,
-      verificationStatus: 'VERIFIED',
-      district: a.district || 'Nepal',
-      category: a.hazardName || 'Disaster Alert',
-      isLiveWire: true,
-      isRealBulletin: true,
-      isBipad: true
-    }));
-  }, [bipadAlerts]);
-
-  // Combined Live BIPAD Alerts + Live Wire + Official Bulletins (deduplicated by ID)
+  // Combined Live Wire + Official Bulletins (deduplicated by ID)
   const allArticles = useMemo(() => {
     const seen = new Set<string>();
     const result: typeof news = [];
-    for (const item of [...bipadNewsItems, ...liveNews, ...news]) {
+    for (const item of [...news, ...liveNews]) {
       const key = item.id || item.title;
       if (!seen.has(key)) {
         seen.add(key);
@@ -221,13 +181,12 @@ export function NewsSafety() {
       }
     }
     return result;
-  }, [bipadNewsItems, liveNews, news]);
+  }, [news, liveNews]);
 
   // News filtering
   const filteredNews = useMemo(() => {
     return allArticles.filter(n => {
       // Source tab filter
-      if (newsSourceFilter === 'BIPAD' && !(n as any).isBipad && !n.source?.includes('BIPAD')) return false;
       if (newsSourceFilter === 'LIVE' && !n.isLiveWire) return false;
       if (newsSourceFilter === 'OFFICIAL' && !n.isRealBulletin) return false;
 
@@ -340,21 +299,6 @@ export function NewsSafety() {
         </button>
 
         <button
-          onClick={() => setActiveSection('BIPAD_ALERTS')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
-            activeSection === 'BIPAD_ALERTS'
-              ? 'bg-red-600 text-white shadow-sm'
-              : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800'
-          }`}
-        >
-          <span className="relative flex h-2.5 w-2.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
-          </span>
-          BIPAD Portal Live Alerts ({bipadAlerts.length})
-        </button>
-
-        <button
           onClick={() => setActiveSection('NEWS')}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
             activeSection === 'NEWS'
@@ -363,7 +307,7 @@ export function NewsSafety() {
           }`}
         >
           <FileText className="h-4 w-4" />
-          Verified Disaster Updates ({allArticles.length})
+          Verified Disaster Updates ({news.length})
         </button>
 
         <button
@@ -1039,23 +983,6 @@ export function NewsSafety() {
       )}
 
       {/* ========================================================================= */}
-      {/* SECTION: BIPAD PORTAL REAL-TIME DISASTER ALERTS                           */}
-      {/* ========================================================================= */}
-      {activeSection === 'BIPAD_ALERTS' && (
-        <BipadAlertsView 
-          alerts={bipadAlerts}
-          isLoading={bipadLoading}
-          error={bipadError}
-          lastSynced={bipadLastSynced}
-          onRefresh={refreshBipadAlerts}
-          onFactCheck={(claimText) => {
-            setClaimToFactCheck(claimText);
-            setActiveSection('MISINFORMATION');
-          }}
-        />
-      )}
-
-      {/* ========================================================================= */}
       {/* SECTION 2: VERIFIED DISASTER NEWS & LIVE WIRE FEED                        */}
       {/* ========================================================================= */}
       {activeSection === 'NEWS' && (
@@ -1077,7 +1004,7 @@ export function NewsSafety() {
                 </span>
               </div>
               <p className="text-xs text-slate-400">
-                Continuous ingestion from bipadportal.gov.np, DHM Telemetry, NDRRMA, The Kathmandu Post, OnlineKhabar, BBC, and Reuters
+                Continuous ingestion from Al Jazeera, Reuters, The Kathmandu Post, OnlineKhabar, BBC, DHM Telemetry & NDRRMA
               </p>
             </div>
 
@@ -1102,12 +1029,12 @@ export function NewsSafety() {
           <div className="space-y-3 bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
               {/* Stream Switcher */}
-              <div className="inline-flex p-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-semibold overflow-x-auto">
+              <div className="inline-flex p-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-semibold">
                 <button
                   type="button"
                   onClick={() => setNewsSourceFilter('ALL')}
                   className={cn(
-                    "px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5 shrink-0",
+                    "px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5",
                     newsSourceFilter === 'ALL' 
                       ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm" 
                       : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -1118,22 +1045,9 @@ export function NewsSafety() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setNewsSourceFilter('BIPAD')}
-                  className={cn(
-                    "px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5 shrink-0",
-                    newsSourceFilter === 'BIPAD' 
-                      ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm" 
-                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                  )}
-                >
-                  <span className="w-2 h-2 rounded-full bg-red-500 inline-block animate-ping"></span>
-                  BIPAD Gov Alerts ({bipadAlerts.length})
-                </button>
-                <button
-                  type="button"
                   onClick={() => setNewsSourceFilter('LIVE')}
                   className={cn(
-                    "px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5 shrink-0",
+                    "px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5",
                     newsSourceFilter === 'LIVE' 
                       ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm" 
                       : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -1146,7 +1060,7 @@ export function NewsSafety() {
                   type="button"
                   onClick={() => setNewsSourceFilter('OFFICIAL')}
                   className={cn(
-                    "px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5 shrink-0",
+                    "px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5",
                     newsSourceFilter === 'OFFICIAL' 
                       ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm" 
                       : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -1240,12 +1154,7 @@ export function NewsSafety() {
                   <div className="space-y-2.5">
                     {/* Header Chips */}
                     <div className="flex flex-wrap items-center gap-2">
-                      {(article as any).isBipad || article.source?.includes('BIPAD') ? (
-                        <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-800 inline-flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block animate-ping"></span>
-                          BIPAD LIVE ALERT
-                        </span>
-                      ) : article.isLiveWire ? (
+                      {article.isLiveWire ? (
                         <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 inline-flex items-center gap-1">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
                           LIVE WIRE

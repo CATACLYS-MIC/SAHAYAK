@@ -1,15 +1,14 @@
 import React, { createContext, useContext, useState, ReactNode, useMemo, useEffect } from 'react';
 import { 
   Location, Weather, Facility, Route, News, MissingPerson, Sighting, CandidateMatch, CaseTimelineEvent,
-  Supply, Volunteer, Assessment, Incident, AppNotification, VolunteerTeam, CoverageGap, DistributionAuditLog, DetailedLocationResourceDemand, AIDistributionPlanProposal, LogisticsDeliveryRoutePlan,
+  Supply, Volunteer, Assessment, Incident, AppNotification, VolunteerTeam, VolunteerStatus, CoverageGap, DistributionAuditLog, DetailedLocationResourceDemand, AIDistributionPlanProposal, LogisticsDeliveryRoutePlan,
   WeatherSource, FusedWeather, HazardRisk, HistoricalEvent, HourlyForecast, EnvironmentalSensor,
   GovernmentHospital, HospitalServiceSummary,
   GovernmentPersonReport, RescueServiceSummary,
   Road, Bridge, RoadReport,
   HospitalPatientRecord, HospitalMatchResult, HospitalMatchAuditLog, HospitalMatchingNetworkStats,
   DhmRiverStation, DhmHydrologySummary,
-  DorRoadClosure, DorBridge, DorRoadLink, DorRoadSummary, DisasterAwareRouteEvaluation, RoutingProfileMode, CommunityRoadReport,
-  BipadAlert
+  DorRoadClosure, DorBridge, DorRoadLink, DorRoadSummary, DisasterAwareRouteEvaluation, RoutingProfileMode, CommunityRoadReport
 } from '../types';
 import * as mockData from '../data/mock';
 import { 
@@ -84,13 +83,8 @@ interface AppState {
   liveNewsError: string | null;
   liveNewsLastSynced: string | null;
   refreshLiveNews: (category?: string, query?: string) => Promise<void>;
-  bipadAlerts: BipadAlert[];
-  bipadLoading: boolean;
-  bipadError: string | null;
-  bipadLastSynced: string | null;
-  refreshBipadAlerts: (force?: boolean) => Promise<void>;
   claimAnalyses: ClaimAnalysis[];
-  analyzeClaim: (text: string, sources?: EvidenceSource[], mode?: 'both' | 'nepalfactcheck' | 'web') => Promise<ClaimAnalysis>;
+  analyzeClaim: (text: string, sources?: EvidenceSource[]) => Promise<ClaimAnalysis>;
   updateHumanReviewStatus: (id: string, status: 'PENDING' | 'REVIEWED' | 'NOT_REQUIRED') => void;
   supplies: Supply[];
   teams: VolunteerTeam[];
@@ -129,6 +123,10 @@ interface AppState {
   addVolunteer: (volunteer: Volunteer) => void;
   addAssessment: (assessment: Assessment) => void;
   markNotificationRead: (id: string) => void;
+  registerTeam: (team: Omit<VolunteerTeam, 'id'> | Partial<VolunteerTeam>) => VolunteerTeam;
+  assignTeamArea: (teamId: string, areaId: string, areaName: string, task?: string, coords?: { lat: number; lng: number }) => void;
+  updateTeamStatus: (teamId: string, status: VolunteerStatus | 'STANDBY') => void;
+  resetTeamsToDefault: () => void;
 
   // Hospital Missing-Person Matching Network
   hospitalPatients: HospitalPatientRecord[];
@@ -186,14 +184,25 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [liveNewsLoading, setLiveNewsLoading] = useState<boolean>(false);
   const [liveNewsError, setLiveNewsError] = useState<string | null>(null);
   const [liveNewsLastSynced, setLiveNewsLastSynced] = useState<string | null>(null);
-  const [bipadAlerts, setBipadAlerts] = useState<BipadAlert[]>([]);
-  const [bipadLoading, setBipadLoading] = useState<boolean>(false);
-  const [bipadError, setBipadError] = useState<string | null>(null);
-  const [bipadLastSynced, setBipadLastSynced] = useState<string | null>(null);
   const [claimAnalyses, setClaimAnalyses] = useState<ClaimAnalysis[]>((mockData as any).MOCK_CLAIM_ANALYSES || []);
   const [supplies] = useState<Supply[]>(MOCK_LOGISTICS_SUPPLIES);
-  const [teams] = useState<VolunteerTeam[]>(MOCK_EXTENDED_TEAMS);
-  const [coverageGaps] = useState<CoverageGap[]>(MOCK_COVERAGE_GAPS);
+  const [teams, setTeams] = useState<VolunteerTeam[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('sahayak_volunteer_teams_v1');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load cached volunteer teams', e);
+      }
+    }
+    return MOCK_EXTENDED_TEAMS;
+  });
+  const [coverageGaps, setCoverageGaps] = useState<CoverageGap[]>(MOCK_COVERAGE_GAPS);
   const [resourceDemands] = useState<DetailedLocationResourceDemand[]>(MOCK_LOCATION_RESOURCE_DEMANDS);
   const [distributionPlans] = useState<AIDistributionPlanProposal[]>(MOCK_AI_DISTRIBUTION_PLANS);
   const [deliveryRoutes] = useState<LogisticsDeliveryRoutePlan[]>(MOCK_LOGISTICS_DELIVERY_ROUTES);
@@ -315,16 +324,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   };
 
 
-  const analyzeClaim = async (
-    text: string, 
-    sources?: EvidenceSource[], 
-    mode: 'both' | 'nepalfactcheck' | 'web' = 'both'
-  ) => {
+  const analyzeClaim = async (text: string, sources?: EvidenceSource[]) => {
     // Basic deduplication
-    const existing = claimAnalyses.find(c => c.originalText?.toLowerCase() === text.toLowerCase());
-    if (existing && existing.searchMode === mode) return existing;
+    const existing = claimAnalyses.find(c => c.originalText.toLowerCase() === text.toLowerCase());
+    if (existing) return existing;
 
-    const analysis = await submitClaimForAnalysis(text, sources || [], mode);
+    const analysis = await submitClaimForAnalysis(text, sources || []);
     setClaimAnalyses(prev => [analysis, ...prev]);
     return analysis;
   };
@@ -454,46 +459,6 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       setLiveNewsLoading(false);
     }
   };
-
-  const refreshBipadAlerts = async (force: boolean = false) => {
-    setBipadLoading(true);
-    setBipadError(null);
-    try {
-      const res = await fetch(`/api/bipad/alerts${force ? '?refresh=true' : ''}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      if (data.alerts && Array.isArray(data.alerts)) {
-        setBipadAlerts(data.alerts);
-        setBipadLastSynced(data.lastSynced || new Date().toISOString());
-
-        // Replace demo alerts with real-time BIPAD alerts in App Notifications
-        const realNotifications: AppNotification[] = data.alerts.slice(0, 20).map((a: BipadAlert) => ({
-          id: a.id,
-          title: `${a.hazardName} (${a.hazardNameNe}): ${a.title}`,
-          desc: a.titleNe ? `${a.titleNe}. ${a.description || ''}` : (a.description || a.title),
-          type: a.severity === 'CRITICAL' ? 'critical' : a.severity === 'WARNING' ? 'warning' : 'info',
-          read: false,
-          timestamp: a.formattedDate,
-          category: 'HAZARD',
-          actionUrl: `/news-safety?tab=BIPAD&alertId=${a.id}`
-        }));
-
-        if (realNotifications.length > 0) {
-          setNotifications(realNotifications);
-        }
-      }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      console.error('Failed to load BIPAD alerts:', msg);
-      setBipadError(msg || 'Failed to fetch BIPAD alerts');
-    } finally {
-      setBipadLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    refreshBipadAlerts();
-  }, []);
 
   useEffect(() => {
     fetch('/api/live-news')
@@ -960,6 +925,151 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   };
 
   // ==========================================
+  // VOLUNTEER TEAM & AREA ALLOCATION METHODS
+  // ==========================================
+
+  const registerTeam = (teamData: Omit<VolunteerTeam, 'id'> | Partial<VolunteerTeam>): VolunteerTeam => {
+    const newTeam: VolunteerTeam = {
+      id: `team-${Date.now()}`,
+      name: teamData.name || 'Emergency Volunteer Unit',
+      leaderId: teamData.leaderId || `vol-${Date.now()}`,
+      leaderName: teamData.leaderName || 'Team Leader',
+      contact: teamData.contact || '+977-9800-000000',
+      memberCount: Number(teamData.memberCount) || 5,
+      skills: teamData.skills || ['First Aid', 'Search & Rescue'],
+      specialization: teamData.specialization || 'Search & Rescue (SAR)',
+      equipment: teamData.equipment || [],
+      operatingArea: teamData.assignedLocationName || teamData.operatingArea || 'Kathmandu Valley',
+      availability: teamData.availability || 'Immediate (24/7)',
+      status: teamData.status || (teamData.assignedLocationName ? 'DEPLOYED' : 'STANDBY'),
+      verificationStatus: teamData.verificationStatus || 'VERIFIED',
+      experienceScore: teamData.experienceScore || 90,
+      experienceSummary: teamData.experienceSummary || 'Registered disaster response volunteer unit.',
+      assignedLocationId: teamData.assignedLocationId,
+      assignedLocationName: teamData.assignedLocationName,
+      currentTask: teamData.currentTask || (teamData.assignedLocationName ? `Disaster response and relief operations at ${teamData.assignedLocationName}` : undefined),
+      lat: teamData.lat,
+      lng: teamData.lng,
+    };
+
+    setTeams(prev => {
+      const updated = [newTeam, ...prev];
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('sahayak_volunteer_teams_v1', JSON.stringify(updated));
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      return updated;
+    });
+
+    if (newTeam.assignedLocationId) {
+      setCoverageGaps(prevGaps =>
+        prevGaps.map(gap => {
+          if (gap.locationId === newTeam.assignedLocationId || gap.id === newTeam.assignedLocationId) {
+            const newAssigned = (gap.assignedVolunteers || 0) + newTeam.memberCount;
+            return {
+              ...gap,
+              assignedVolunteers: newAssigned,
+              gapCount: Math.max(0, (gap.requiredVolunteers || 0) - newAssigned)
+            };
+          }
+          return gap;
+        })
+      );
+    }
+
+    const notif: AppNotification = {
+      id: `notif-${Date.now()}`,
+      title: 'New Volunteer Team Registered',
+      desc: `${newTeam.name} led by ${newTeam.leaderName} (${newTeam.memberCount} members) registered and allocated to ${newTeam.assignedLocationName || 'Standby Base'}.`,
+      timestamp: 'Just now',
+      read: false,
+      type: 'info',
+      category: 'LOGISTICS',
+    };
+    setNotifications(prev => [notif, ...prev]);
+
+    return newTeam;
+  };
+
+  const assignTeamArea = (
+    teamId: string, 
+    areaId: string, 
+    areaName: string, 
+    task?: string, 
+    coords?: { lat: number; lng: number }
+  ) => {
+    setTeams(prev => {
+      const updated = prev.map(t => {
+        if (t.id === teamId) {
+          return {
+            ...t,
+            assignedLocationId: areaId,
+            assignedLocationName: areaName,
+            operatingArea: areaName,
+            currentTask: task || t.currentTask || `Disaster relief operations at ${areaName}`,
+            status: 'DEPLOYED' as const,
+            lat: coords?.lat ?? t.lat,
+            lng: coords?.lng ?? t.lng,
+          };
+        }
+        return t;
+      });
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('sahayak_volunteer_teams_v1', JSON.stringify(updated));
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      return updated;
+    });
+
+    setCoverageGaps(prevGaps =>
+      prevGaps.map(gap => {
+        if (gap.locationId === areaId || gap.id === areaId) {
+          const team = teams.find(t => t.id === teamId);
+          const count = team ? team.memberCount : 5;
+          const newAssigned = (gap.assignedVolunteers || 0) + count;
+          return {
+            ...gap,
+            assignedVolunteers: newAssigned,
+            gapCount: Math.max(0, (gap.requiredVolunteers || 0) - newAssigned)
+          };
+        }
+        return gap;
+      })
+    );
+  };
+
+  const updateTeamStatus = (teamId: string, status: VolunteerStatus | 'STANDBY') => {
+    setTeams(prev => {
+      const updated = prev.map(t => (t.id === teamId ? { ...t, status } : t));
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('sahayak_volunteer_teams_v1', JSON.stringify(updated));
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      return updated;
+    });
+  };
+
+  const resetTeamsToDefault = () => {
+    setTeams(MOCK_EXTENDED_TEAMS);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem('sahayak_volunteer_teams_v1');
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
+
+  // ==========================================
   // HOSPITAL MATCHING NETWORK METHODS
   // ==========================================
 
@@ -1266,11 +1376,6 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     liveNewsError,
     liveNewsLastSynced,
     refreshLiveNews,
-    bipadAlerts,
-    bipadLoading,
-    bipadError,
-    bipadLastSynced,
-    refreshBipadAlerts,
     claimAnalyses,
     analyzeClaim,
     updateHumanReviewStatus,
@@ -1310,6 +1415,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     addVolunteer,
     addAssessment,
     markNotificationRead,
+    registerTeam,
+    assignTeamArea,
+    updateTeamStatus,
+    resetTeamsToDefault,
 
     // Hospital Missing-Person Matching Network
     hospitalPatients,

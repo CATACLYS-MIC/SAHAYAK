@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Card, CardHeader, Badge, Button } from '@/components/ui';
 import { ReliefResources } from '@/components/logistics/ReliefResources';
 import { LocationResourceDemands } from '@/components/logistics/LocationResourceDemands';
@@ -12,7 +13,14 @@ import { Package, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function LogisticsTeam() {
-  const [activeTab, setActiveTab] = useState<'resources' | 'teams'>('resources');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab = searchParams.get('tab') === 'resources' ? 'resources' : 'teams';
+  const [activeTab, setActiveTab] = useState<'resources' | 'teams'>(initialTab);
+
+  const handleTabChange = (tab: 'resources' | 'teams') => {
+    setActiveTab(tab);
+    setSearchParams({ tab });
+  };
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-[1600px] mx-auto">
@@ -28,7 +36,7 @@ export function LogisticsTeam() {
 
       <div className="flex space-x-1 rounded-lg bg-slate-100 dark:bg-slate-900 p-1 w-full max-w-md">
         <button
-          onClick={() => setActiveTab('resources')}
+          onClick={() => handleTabChange('resources')}
           className={cn("flex-1 flex items-center justify-center py-2.5 text-sm font-bold rounded-md transition-all",
             activeTab === 'resources' 
               ? "bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-400 shadow-sm" 
@@ -38,7 +46,7 @@ export function LogisticsTeam() {
           <Package className="w-4 h-4 mr-2" /> Resources & Routes
         </button>
         <button
-          onClick={() => setActiveTab('teams')}
+          onClick={() => handleTabChange('teams')}
           className={cn("flex-1 flex items-center justify-center py-2.5 text-sm font-bold rounded-md transition-all",
             activeTab === 'teams' 
               ? "bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 shadow-sm" 

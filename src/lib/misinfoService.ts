@@ -1,17 +1,13 @@
 import { ClaimAnalysis, EvidenceSource } from '../types';
 
-export async function submitClaimForAnalysis(
-  text: string, 
-  providedSources: EvidenceSource[] = [],
-  mode: 'both' | 'nepalfactcheck' | 'web' = 'both'
-): Promise<ClaimAnalysis> {
+export async function submitClaimForAnalysis(text: string, providedSources: EvidenceSource[] = []): Promise<ClaimAnalysis> {
   try {
     const response = await fetch('/api/analyze-claim', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ text, providedSources, mode })
+      body: JSON.stringify({ text, providedSources })
     });
 
     if (!response.ok) {
@@ -25,10 +21,10 @@ export async function submitClaimForAnalysis(
     }
 
     return {
-      id: result.id || `ca-${Date.now()}`,
+      id: `ca-${Date.now()}`,
       originalText: text,
       extractedClaims: result.extractedClaims || [text],
-      sources: (result.sourcesUsed || result.sources || []).map((s: any, i: number) => ({
+      sources: (result.sourcesUsed || []).map((s: any, i: number) => ({
         id: `src-${Date.now()}-${i}`,
         name: s.name || 'Web Source',
         url: s.url,
@@ -48,14 +44,8 @@ export async function submitClaimForAnalysis(
       contradictingEvidence: result.contradictingEvidence || [],
       unknowns: result.unknowns || [],
       recommendedAction: result.recommendedAction || 'WAIT_FOR_OFFICIAL_CONFIRMATION',
-      debunkedBy: result.debunkedBy,
-      factCheckUrl: result.factCheckUrl,
-      isRealDebunk: result.isRealDebunk,
-      searchMode: result.searchMode || mode,
-      searchSourcesCount: result.searchSourcesCount,
-      sourcesUsed: result.sourcesUsed,
-      humanReviewStatus: result.humanReviewStatus || 'REVIEWED',
-      createdAt: result.createdAt || new Date().toISOString()
+      humanReviewStatus: 'PENDING',
+      createdAt: new Date().toISOString()
     };
   } catch (error) {
     console.error("Misinfo Analysis Error:", error);
@@ -66,10 +56,10 @@ export async function submitClaimForAnalysis(
       sources: providedSources,
       verdict: 'UNVERIFIED',
       confidence: 0,
-      explanation: 'Could not connect to live fact-checking sources. Please verify with official portals (bipadportal.gov.np, nepalfactcheck.org).',
+      explanation: 'Live web verification is unavailable at this time due to rate limits or network issues.',
       supportingEvidence: [],
       contradictingEvidence: [],
-      unknowns: ['Network connection to verification service interrupted.'],
+      unknowns: ['Live web search failed.'],
       recommendedAction: 'WAIT_FOR_OFFICIAL_CONFIRMATION',
       humanReviewStatus: 'PENDING',
       createdAt: new Date().toISOString()

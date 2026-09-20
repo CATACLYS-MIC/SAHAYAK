@@ -233,9 +233,6 @@ export interface ClaimAnalysis {
   viralContext?: string;
   isRealDebunk?: boolean;
   category?: 'EARTHQUAKE' | 'FLOOD' | 'AVIATION' | 'MEDICAL_RELIEF' | 'INFRASTRUCTURE' | 'GENERAL' | string;
-  searchMode?: 'both' | 'nepalfactcheck' | 'web';
-  searchSourcesCount?: number;
-  sourcesUsed?: string[];
 }
 
 export interface News {
@@ -1289,42 +1286,4 @@ export interface AIDistributionPlanProposal {
   reviewedBy?: string;
   reviewedAt?: string;
   reviewNotes?: string;
-}
-
-export interface BipadAlert {
-  id: string;
-  originalId: number;
-  title: string;
-  titleNe: string;
-  hazardId: number;
-  hazardName: string;
-  hazardNameNe: string;
-  hazardColor: string;
-  severity: 'CRITICAL' | 'WARNING' | 'ADVISORY';
-  source: string;
-  sourceUrl: string;
-  category: 'ALERT' | 'INCIDENT';
-  createdOn: string;
-  incidentOn?: string;
-  formattedDate: string;
-  locationName: string;
-  coordinates?: [number, number];
-  verified: boolean;
-  waterLevel?: number;
-  warningLevel?: number;
-  dangerLevel?: number;
-  waterLevelStatus?: string;
-  riverName?: string;
-  basin?: string;
-  description?: string;
-  affectedDemography?: {
-    maleCount?: number;
-    femaleCount?: number;
-    householdCount?: number;
-  };
-  type?: string;
-  district?: string;
-  municipality?: string;
-  ward?: string | number;
-  riverBasin?: string;
 }
