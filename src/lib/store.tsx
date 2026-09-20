@@ -39,9 +39,6 @@ import {
   MOCK_DISTRIBUTION_AUDIT_LOGS
 } from '../data/logisticsData';
 
-import { ClaimAnalysis, EvidenceSource } from '../types';
-import { submitClaimForAnalysis } from './misinfoService';
-
 interface AppState {
   currentLocationId: string;
   currentLocation: Location;
@@ -83,9 +80,6 @@ interface AppState {
   liveNewsError: string | null;
   liveNewsLastSynced: string | null;
   refreshLiveNews: (category?: string, query?: string) => Promise<void>;
-  claimAnalyses: ClaimAnalysis[];
-  analyzeClaim: (text: string, sources?: EvidenceSource[]) => Promise<ClaimAnalysis>;
-  updateHumanReviewStatus: (id: string, status: 'PENDING' | 'REVIEWED' | 'NOT_REQUIRED') => void;
   supplies: Supply[];
   teams: VolunteerTeam[];
   coverageGaps: CoverageGap[];
@@ -107,7 +101,6 @@ interface AppState {
   weatherSources: WeatherSource[];
   fusedWeather: FusedWeather;
   hazardRisks: HazardRisk[];
-  historicalEvents: HistoricalEvent[];
   hourlyForecast: HourlyForecast[];
   environmentalSensors: EnvironmentalSensor[];
   
@@ -184,7 +177,6 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [liveNewsLoading, setLiveNewsLoading] = useState<boolean>(false);
   const [liveNewsError, setLiveNewsError] = useState<string | null>(null);
   const [liveNewsLastSynced, setLiveNewsLastSynced] = useState<string | null>(null);
-  const [claimAnalyses, setClaimAnalyses] = useState<ClaimAnalysis[]>((mockData as any).MOCK_CLAIM_ANALYSES || []);
   const [supplies] = useState<Supply[]>(MOCK_LOGISTICS_SUPPLIES);
   const [teams, setTeams] = useState<VolunteerTeam[]>(() => {
     if (typeof window !== 'undefined') {
@@ -262,7 +254,6 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [selectedDhmStation, setSelectedDhmStation] = useState<DhmRiverStation | null>(null);
 
   const [demoScenarioStep, setDemoScenarioStep] = useState<number>(0);
-  const [historicalEvents] = useState<HistoricalEvent[]>(mockData.MOCK_HISTORICAL_EVENTS);
   const [liveWeatherSources, setLiveWeatherSources] = useState<WeatherSource[] | null>(null);
   const [liveHourlyForecast, setLiveHourlyForecast] = useState<HourlyForecast[] | null>(null);
   const [userGeolocation, setUserGeolocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -323,20 +314,6 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     }
   };
 
-
-  const analyzeClaim = async (text: string, sources?: EvidenceSource[]) => {
-    // Basic deduplication
-    const existing = claimAnalyses.find(c => c.originalText.toLowerCase() === text.toLowerCase());
-    if (existing) return existing;
-
-    const analysis = await submitClaimForAnalysis(text, sources || []);
-    setClaimAnalyses(prev => [analysis, ...prev]);
-    return analysis;
-  };
-
-  const updateHumanReviewStatus = (id: string, status: 'PENDING' | 'REVIEWED' | 'NOT_REQUIRED') => {
-    setClaimAnalyses(prev => prev.map(c => c.id === id ? { ...c, humanReviewStatus: status } : c));
-  };
 
   const refreshGovernmentRescueReports = async (options?: FetchRescueOptions) => {
     setRescueLoading(true);
@@ -1376,9 +1353,6 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     liveNewsError,
     liveNewsLastSynced,
     refreshLiveNews,
-    claimAnalyses,
-    analyzeClaim,
-    updateHumanReviewStatus,
     supplies,
     teams,
     coverageGaps,
@@ -1399,7 +1373,6 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     weatherSources,
     fusedWeather,
     hazardRisks,
-    historicalEvents,
     hourlyForecast,
     environmentalSensors,
 

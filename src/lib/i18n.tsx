@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 
 export type Language = 'ne' | 'en' | 'new' | 'mai' | 'hi';
 
@@ -51,8 +51,10 @@ export const SUPPORTED_LANGUAGES: LanguageOption[] = [
 // Dictionary type
 type TranslationDictionary = Record<string, string>;
 
-const TRANSLATIONS: Record<Language, TranslationDictionary> = {
+export const TRANSLATIONS: Record<Language, TranslationDictionary> = {
+  // ==========================================
   // 1. NEPALI (नेपाली)
+  // ==========================================
   ne: {
     // Navigation
     'nav.home': 'गृह पृष्ठ',
@@ -87,6 +89,7 @@ const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     'common.high': 'उच्च जोखिम',
     'common.moderate': 'मध्यम',
     'common.low': 'सामान्य',
+    'common.normal': 'सामान्य',
     'common.notifications': 'सूचनाहरू',
     'common.no_notifications': 'कुनै नयाँ सूचना छैन',
     'common.demo_mode': 'डेमो मोड',
@@ -94,6 +97,23 @@ const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     'common.refresh': 'ताजा गर्नुहोस्',
     'common.exit': 'बाहिर निस्कनुहोस्',
     'common.close': 'बन्द गर्नुहोस्',
+    'common.view': 'हेर्नुहोस्',
+    'common.view_details': 'विस्तृत विवरण हेर्नुहोस्',
+    'common.edit': 'सम्पादन गर्नुहोस्',
+    'common.delete': 'मेटाउनुहोस्',
+    'common.actions': 'कार्यहरू',
+    'common.loading': 'लोड हुँदैछ...',
+    'common.error': 'त्रुटि',
+    'common.success': 'सफल',
+    'common.warning': 'चेतावनी',
+    'common.info': 'जानकारी',
+    'common.confirm': 'पुष्टि गर्नुहोस्',
+    'common.back': 'पछाडि',
+    'common.next': 'अर्को',
+    'common.reset': 'रिसेट गर्नुहोस्',
+    'common.download': 'डाउनलोड गर्नुहोस्',
+    'common.export': 'निर्यात गर्नुहोस्',
+    'common.print': 'प्रिन्ट गर्नुहोस्',
 
     // Home Page
     'home.hero_title': 'नेपाल राष्ट्रिय विपद् व्यवस्थापन र उद्धार प्रणाली',
@@ -129,8 +149,16 @@ const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     'teams.search_placeholder': 'टोली, नेता, क्षेत्र वा सीप खोज्नुहोस्...',
     'teams.resources_routes': 'राहत सामग्री र ढुवानी मार्ग',
     'teams.teams_coverage': 'स्वयंसेवक टोली र परिचालन',
+    'teams.leader_name': 'नेताको नाम',
+    'teams.contact_phone': 'सम्पर्क फोन नम्बर',
+    'teams.team_size': 'टोली सदस्य संख्या',
+    'teams.primary_skill': 'प्रमुख सीप / विशेषज्ञता',
+    'teams.current_location': 'हालको स्थान',
+    'teams.equipment': 'उपलब्ध उपकरणहरू',
+    'teams.approve_team': 'टोली स्वीकृत गर्नुहोस्',
+    'teams.deploy_now': 'तत्काल परिचालन गर्नुहोस्',
 
-    // Routes
+    // Routes & Navigation
     'routes.title': 'विपद् सचेत सुरक्षित सडक मार्ग निर्देशन',
     'routes.subtitle': 'सडक विभाग र जल तथा मौसम विज्ञान विभागको प्रत्यक्ष तथ्याङ्क अनुसार सुरक्षित मार्ग।',
     'routes.start_nav': 'गुगल म्याप्स नेभिगेसन सुरु गर्नुहोस् (फुलस्क्रिन)',
@@ -140,19 +168,92 @@ const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     'routes.dhm_rivers': 'जल मापन केन्द्रहरू',
     'routes.travel_time': 'अनुमानित यात्रा समय',
     'routes.distance': 'जम्मा दूरी',
+    'routes.origin': 'प्रस्थान स्थान',
+    'routes.destination': 'गन्तव्य स्थान',
+    'routes.test_scenarios': 'परीक्षण परिदृश्यहरू',
+    'routes.baseline': 'सामान्य अवस्था',
+    'routes.landslide': 'पहिरो अवरोध',
+    'routes.river_flood': 'नदी बाढी संकट',
+    'routes.turn_left': 'बायाँ मोडिनुहोस्',
+    'routes.turn_right': 'दायाँ मोडिनुहोस्',
+    'routes.move_forward': 'सिधा अगाडि बढ्नुहोस्',
+    'routes.destination_reached': 'तपाईं गन्तव्यमा पुग्नुभयो',
+    'routes.recalculating': 'मार्ग पुन: गणना हुँदैछ...',
+    'routes.why_recommended': 'यो मार्ग किन सिफारिस गरियो:',
+    'routes.speed': 'गति',
+    'routes.eta': 'पुग्ने समय',
+    'routes.exit_fullscreen': 'फुलस्क्रिन बन्द गर्नुहोस्',
+    'routes.hazard_avoidance': 'खतराबाट बच्ने एआई तर्क:',
+
+    // Weather & Risk
+    'weather.title': 'मौसम पूर्वानुमान र नदी बाढी जोखिम',
+    'weather.subtitle': 'नेपालका प्रमुख नदीहरूको प्रत्यक्ष जलस्तर, चेतावनी स्तर र बाढी पूर्वानुमान।',
+    'weather.live_river_gauges': 'प्रत्यक्ष नदी जलस्तर मापन केन्द्रहरू',
+    'weather.overview': 'मौसम अवलोकन',
+    'weather.river_watch': 'नदी अनुगमन',
+    'weather.precipitation': 'वर्षा',
+    'weather.rainfall_rate': 'वर्षा दर',
+    'weather.humidity': 'आर्द्रता',
+    'weather.wind_speed': 'हावाको गति',
+    'weather.temperature': 'तापक्रम',
+    'weather.warning_level': 'चेतावनी तह',
+    'weather.danger_level': 'खतराको तह',
+    'weather.rising': 'बढ्दो क्रममा',
+    'weather.falling': 'घट्दो क्रममा',
+    'weather.steady': 'स्थिर',
+
+    // Facilities & Hospitals
+    'facilities.title': 'स्वास्थ्य तथा आपतकालीन सुविधाहरू',
+    'facilities.subtitle': 'अस्पतालहरू, आपतकालीन आश्रयस्थल र राहत केन्द्रहरूको प्रत्यक्ष विवरण।',
+    'facilities.hospitals': 'अस्पतालहरू',
+    'facilities.shelters': 'आपतकालीन आश्रयस्थलहरू',
+    'facilities.relief_hubs': 'राहत वितरण केन्द्रहरू',
+    'facilities.blood_banks': 'रक्त सञ्चार केन्द्रहरू',
+    'facilities.available_beds': 'उपलब्ध बेड संख्या',
+    'facilities.icu_beds': 'आईसीयू बेड',
+    'facilities.ventilators': 'भेन्टिलेटरहरू',
+    'facilities.occupancy': 'बेड भरिएको स्थिति',
+    'facilities.call_hospital': 'अस्पतालमा सम्पर्क गर्नुहोस्',
+    'facilities.get_directions': 'मार्ग हेर्नुहोस्',
+    'facilities.dispatch_ambulance': 'एम्बुलेन्स पठाउनुहोस्',
 
     // Hospital Matching
     'hospital.title': 'आपतकालीन बिरामी तथा अस्पताल मिलान',
     'hospital.subtitle': 'आईसीयू, ट्रमा र भेन्टिलेटर क्षमता अनुसार बिरामीलाई तुरुन्त उपयुक्त अस्पताल पठाउनुहोस्।',
     'hospital.matched_patients': 'सिफारिस गरिएका बिरामीहरू',
+    'hospital.patient_registry': 'बिरामी दर्ता पुस्तिका',
+    'hospital.submit_patient': 'नयाँ बिरामी विवरण दर्ता',
+    'hospital.audit_log': 'प्रणाली अडिट लग',
+    'hospital.match_confidence': 'मिलान प्रतिशत',
+    'hospital.confirm_match': 'मिलान स्वीकृत गर्नुहोस्',
+    'hospital.reject_match': 'अस्वीकार गर्नुहोस्',
 
-    // Weather & Risk
-    'weather.title': 'मौसम पूर्वानुमान र नदी बाढी जोखिम',
-    'weather.subtitle': 'नेपालका प्रमुख नदीहरूको प्रत्यक्ष जलस्तर, चेतावनी स्तर र बाढी पूर्वानुमान।',
-    'weather.live_river_gauges': 'प्रत्यक्ष नदी जलस्तर मापन केन्द्रहरू'
+    // News & Safety
+    'news.title': 'प्रमाणित सूचना तथा सुरक्षा सल्लाह',
+    'news.subtitle': 'राष्ट्रिय विपद् जोखिम न्यूनीकरण तथा व्यवस्थापन प्राधिकरण (NDRRMA) आधिकारिक जानकारी।',
+    'news.verified_bulletins': 'प्रमाणित सूचनाहरू',
+    'news.fact_checker': 'तथ्य जाँच तथा हल्ला निवारण',
+    'news.missing_persons': 'हराएका व्यक्तिहरूको खोजी',
+    'news.report_missing': 'हराएको व्यक्ति रिपोर्ट गर्नुहोस्',
+
+    // Damage Assessment
+    'assessment.title': 'विपद् क्षति तथा आवश्यकता द्रुत मूल्यांकन',
+    'assessment.subtitle': 'भौतिक संरचना, घर, सडक र मानवीय क्षतिको तत्काल डिजिटल मूल्यांकन।',
+    'assessment.total_casualties': 'जम्मा मानवीय क्षति',
+    'assessment.injured': 'घाइते',
+    'assessment.displaced': 'विस्थापित परिवार',
+    'assessment.destroyed_houses': 'पूर्ण क्षति भएका घरहरू',
+
+    // AI Priority & Command Center
+    'aipriority.title': 'एआई प्राथमिकता तथा स्रोत परिचालन',
+    'aipriority.subtitle': 'बहु-मापदण्ड निर्णय विश्लेषण अनुसार तत्काल उद्धार आवश्यक क्षेत्रहरूको सूची।',
+    'command.title': 'केन्द्रीय आपतकालीन कमाण्ड सेन्टर',
+    'command.subtitle': 'संयुक्त सुरक्षा बल, स्वास्थ्य टोली र स्वयंसेवकहरूको एकीकृत प्रत्यक्ष कमाण्ड।'
   },
 
-  // 2. ENGLISH
+  // ==========================================
+  // 2. ENGLISH (English)
+  // ==========================================
   en: {
     // Navigation
     'nav.home': 'HOME',
@@ -187,6 +288,7 @@ const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     'common.high': 'High',
     'common.moderate': 'Moderate',
     'common.low': 'Normal',
+    'common.normal': 'Normal',
     'common.notifications': 'Notifications',
     'common.no_notifications': 'No notifications',
     'common.demo_mode': 'DEMO MODE',
@@ -194,6 +296,23 @@ const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     'common.refresh': 'Refresh',
     'common.exit': 'Exit',
     'common.close': 'Close',
+    'common.view': 'View',
+    'common.view_details': 'View Details',
+    'common.edit': 'Edit',
+    'common.delete': 'Delete',
+    'common.actions': 'Actions',
+    'common.loading': 'Loading...',
+    'common.error': 'Error',
+    'common.success': 'Success',
+    'common.warning': 'Warning',
+    'common.info': 'Info',
+    'common.confirm': 'Confirm',
+    'common.back': 'Back',
+    'common.next': 'Next',
+    'common.reset': 'Reset',
+    'common.download': 'Download',
+    'common.export': 'Export',
+    'common.print': 'Print',
 
     // Home Page
     'home.hero_title': 'Nepal National Disaster Management & Relief Platform',
@@ -229,6 +348,14 @@ const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     'teams.search_placeholder': 'Search by team, leader, allocated area, or skill...',
     'teams.resources_routes': 'Resources & Routes',
     'teams.teams_coverage': 'Volunteer Teams & Coverage',
+    'teams.leader_name': 'Leader Name',
+    'teams.contact_phone': 'Contact Phone',
+    'teams.team_size': 'Team Size',
+    'teams.primary_skill': 'Primary Skill',
+    'teams.current_location': 'Current Location',
+    'teams.equipment': 'Available Equipment',
+    'teams.approve_team': 'Approve Team',
+    'teams.deploy_now': 'Deploy Now',
 
     // Routes
     'routes.title': 'Disaster-Aware Safe Evacuation & Convoy Routing',
@@ -240,21 +367,93 @@ const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     'routes.dhm_rivers': 'DHM River Stations',
     'routes.travel_time': 'Estimated Travel Time',
     'routes.distance': 'Total Distance',
+    'routes.origin': 'Origin Corridor',
+    'routes.destination': 'Destination Corridor',
+    'routes.test_scenarios': 'Test Scenarios',
+    'routes.baseline': 'Baseline',
+    'routes.landslide': 'Landslide',
+    'routes.river_flood': 'River Flood',
+    'routes.turn_left': 'Turn Left',
+    'routes.turn_right': 'Turn Right',
+    'routes.move_forward': 'Move Forward / Continue Straight',
+    'routes.destination_reached': 'Destination Reached',
+    'routes.recalculating': 'Recalculating route...',
+    'routes.why_recommended': 'Why This Route is Recommended:',
+    'routes.speed': 'Speed',
+    'routes.eta': 'ETA',
+    'routes.exit_fullscreen': 'Exit Fullscreen',
+    'routes.hazard_avoidance': 'Hazard Avoidance AI Reasoning:',
+
+    // Weather & Risk
+    'weather.title': 'Weather Forecast & River Risk Telemetry',
+    'weather.subtitle': 'Live hydrology monitoring across Nepal major river basins and warning thresholds.',
+    'weather.live_river_gauges': 'Live River Gauges & Flood Stages',
+    'weather.overview': 'Weather Overview',
+    'weather.river_watch': 'River Watch',
+    'weather.precipitation': 'Precipitation',
+    'weather.rainfall_rate': 'Rainfall Rate',
+    'weather.humidity': 'Humidity',
+    'weather.wind_speed': 'Wind Speed',
+    'weather.temperature': 'Temperature',
+    'weather.warning_level': 'Warning Level',
+    'weather.danger_level': 'Danger Level',
+    'weather.rising': 'Rising',
+    'weather.falling': 'Falling',
+    'weather.steady': 'Steady',
+
+    // Facilities & Hospitals
+    'facilities.title': 'Emergency & Medical Facilities Network',
+    'facilities.subtitle': 'Live availability of hospitals, relief distribution centers, and emergency shelters.',
+    'facilities.hospitals': 'Hospitals',
+    'facilities.shelters': 'Emergency Shelters',
+    'facilities.relief_hubs': 'Relief Distribution Hubs',
+    'facilities.blood_banks': 'Blood Banks',
+    'facilities.available_beds': 'Available Beds',
+    'facilities.icu_beds': 'ICU Beds',
+    'facilities.ventilators': 'Ventilators',
+    'facilities.occupancy': 'Bed Occupancy',
+    'facilities.call_hospital': 'Call Facility',
+    'facilities.get_directions': 'Get Directions',
+    'facilities.dispatch_ambulance': 'Dispatch Ambulance',
 
     // Hospital Matching
     'hospital.title': 'Emergency Hospital & Patient Matching',
     'hospital.subtitle': 'Match incoming casualties to available ICU, trauma beds, and surgical capabilities.',
     'hospital.matched_patients': 'Matched Patients',
+    'hospital.patient_registry': 'Patient Registry',
+    'hospital.submit_patient': 'Submit Patient Intake',
+    'hospital.audit_log': 'Audit Log',
+    'hospital.match_confidence': 'Match Confidence',
+    'hospital.confirm_match': 'Confirm Match',
+    'hospital.reject_match': 'Reject Match',
 
-    // Weather & Risk
-    'weather.title': 'Weather Forecast & River Risk Telemetry',
-    'weather.subtitle': 'Live hydrology monitoring across Nepal major river basins and warning thresholds.',
-    'weather.live_river_gauges': 'Live River Gauges & Flood Stages'
+    // News & Safety
+    'news.title': 'Verified News & NDRRMA Safety Directives',
+    'news.subtitle': 'Official disaster bulletins, fact-checking, and emergency citizen alerts.',
+    'news.verified_bulletins': 'Verified Bulletins',
+    'news.fact_checker': 'Fact Checker & Rumor Debunker',
+    'news.missing_persons': 'Missing Persons Registry',
+    'news.report_missing': 'Report Missing Person',
+
+    // Damage Assessment
+    'assessment.title': 'Rapid Damage & Needs Assessment (RDNA)',
+    'assessment.subtitle': 'Post-disaster structural assessment, casualty logs, and emergency aid triage.',
+    'assessment.total_casualties': 'Total Casualties',
+    'assessment.injured': 'Injured',
+    'assessment.displaced': 'Displaced Families',
+    'assessment.destroyed_houses': 'Destroyed Houses',
+
+    // AI Priority & Command Center
+    'aipriority.title': 'AI Decision Engine & Response Prioritization',
+    'aipriority.subtitle': 'Multi-criteria optimization to identify critical bottlenecks and dispatch teams.',
+    'command.title': 'Unified Emergency Command Center',
+    'command.subtitle': 'Central tactical command for security forces, health responders, and volunteer logistics.'
   },
 
+  // ==========================================
   // 3. NEPAL BHASA / NEWARI (नेपाल भाषा)
+  // ==========================================
   new: {
-    // Navigation
     'nav.home': 'छें पौ (गृह)',
     'nav.weather_risk': 'मौसम व जोखिम',
     'nav.news_safety': 'बुखँ व सुरक्षा',
@@ -270,7 +469,6 @@ const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     'nav.language': 'भाषा',
     'nav.select_language': 'भाषा ल्ययादिसँ',
 
-    // Common UI
     'common.search': 'मालादिसँ...',
     'common.filter': 'फिल्टर',
     'common.all': 'दक्को (सबै)',
@@ -287,6 +485,7 @@ const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     'common.high': 'तःधंगु जोखिम',
     'common.moderate': 'दथुइगु',
     'common.low': 'सामान्य',
+    'common.normal': 'सामान्य',
     'common.notifications': 'सुचं',
     'common.no_notifications': 'छुं सुचं मदु',
     'common.demo_mode': 'डेमो मोड',
@@ -294,8 +493,21 @@ const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     'common.refresh': 'न्हापाथें यानादिसँ',
     'common.exit': 'पिहाँ वनेगु',
     'common.close': 'तिनादिसँ',
+    'common.view': 'स्वयेगु',
+    'common.view_details': 'विस्तृत विवरण',
+    'common.edit': 'हिलादिसँ',
+    'common.delete': 'मेटायानादिसँ',
+    'common.actions': 'ज्याखँ',
+    'common.loading': 'लोड जुयाच्वंगु दु...',
+    'common.error': 'गल्ती',
+    'common.success': 'सफल',
+    'common.warning': 'सतर्कता',
+    'common.info': 'जानकारी',
+    'common.confirm': 'पुष्टि यानादिसँ',
+    'common.back': 'लिहां',
+    'common.next': 'न्ह्यःने',
+    'common.reset': 'रिसेट',
 
-    // Home Page
     'home.hero_title': 'नेपाल राष्ट्रिय विपद् व्यवस्थापन व ग्वाहालि प्रणाली',
     'home.hero_subtitle': 'खुसिबाः, चलः, लँ बन्द व राहत पुचःया प्रत्यक्ष समन्वय।',
     'home.critical_alerts': 'गम्भीर चेतावनी',
@@ -312,7 +524,6 @@ const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     'home.supplies_tracking': 'राहत सामग्री अवस्था',
     'home.view_details': 'विस्तृत विवरण',
 
-    // Teams & Logistics
     'teams.title': 'स्वयंसेवक पुचः परिचालन व सामग्री कमाण्ड',
     'teams.subtitle': 'पुचः नायः दर्ता यानादिसँ, विपद् क्षेत्र ल्ययादिसँ व खटेजूगु पुचःत स्वयादिसँ।',
     'teams.register_leader': 'पुचः नायः दर्ता यानादिसँ',
@@ -330,31 +541,51 @@ const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     'teams.resources_routes': 'सामग्री व लँपु',
     'teams.teams_coverage': 'स्वयंसेवक पुचः व परिचालन',
 
-    // Routes
     'routes.title': 'सुरक्षित विपद् सचेत लँपु निर्देशन',
     'routes.subtitle': 'सडक विभाग व खुसिबाः प्रत्यक्ष विवरणकथं सुरक्षित लँपु।',
-    'routes.start_nav': 'गुगल म्याप्स नेभिगेसन सुरु यानादिसँ',
+    'routes.start_nav': 'गुगल म्याप्स नेभिगेसन सुरु यानादिसँ (फुलस्क्रिन)',
     'routes.safest_route': 'दकलय् सुरक्षित लँपु',
     'routes.route_to_avoid': 'बचेजुइमाःगु लँपु',
     'routes.dor_bridges': 'सडक विभाग तां (पुल)',
     'routes.dhm_rivers': 'खुसि मापन केन्द्रत',
     'routes.travel_time': 'अनुमानित ई (समय)',
     'routes.distance': 'जम्मा तापाःगु (दूरी)',
+    'routes.turn_left': 'देपाः पाखे वनेगु (बायाँ)',
+    'routes.turn_right': 'ज्वपाः पाखे वनेगु (दायाँ)',
+    'routes.move_forward': 'न्ह्यःने वनेगु (सिधा)',
+    'routes.destination_reached': 'छि गन्तव्यय् थ्यन',
+    'routes.why_recommended': 'थ्व लँपु सिफारिस याःगु कारण:',
 
-    // Hospital Matching
+    'weather.title': 'मौसम पूर्वानुमान व खुसि जोखिम',
+    'weather.subtitle': 'नेपाःया मू खुसिबाःया प्रत्यक्ष जलस्तर व बाढी पूर्वसूचना।',
+    'weather.live_river_gauges': 'प्रत्यक्ष खुसि जलस्तर केन्द्रत',
+    'weather.overview': 'मौसम अवलोकन',
+    'weather.river_watch': 'खुसि अनुगमन',
+
     'hospital.title': 'अस्पताल व ल्वगी मिलान',
     'hospital.subtitle': 'आईसीयू व बेड क्षमताकथं ल्वगीयात तुरन्त अस्पताल छ्वयेगु।',
     'hospital.matched_patients': 'मिलान जूगु ल्वगीत',
 
-    // Weather & Risk
-    'weather.title': 'मौसम पूर्वानुमान व खुसि जोखिम',
-    'weather.subtitle': 'नेपाःया मू खुसिबाःया प्रत्यक्ष जलस्तर व बाढी पूर्वसूचना।',
-    'weather.live_river_gauges': 'प्रत्यक्ष खुसि जलस्तर केन्द्रत'
+    'facilities.title': 'उसाँय् व आपतकालीन केन्द्रत',
+    'facilities.subtitle': 'अस्पताल, राहत केन्द्र व शरण केन्द्रत।',
+
+    'news.title': 'प्रमाणित बुखँ व सुरक्षा सुचं',
+    'news.subtitle': 'प्राधिकरण पाखें आधिकारिक जानकारी।',
+
+    'assessment.title': 'विपद् क्षति व आवश्यकता ल्यंकेगु',
+    'assessment.subtitle': 'संरचना व मनूया क्षतिया तत्काल मूल्यांकन।',
+
+    'aipriority.title': 'एआई प्राथमिकता व ग्वाहालि परिचालन',
+    'aipriority.subtitle': 'तुरुन्त उद्धार माःगु क्षेत्रत।',
+
+    'command.title': 'केन्द्रीय आपतकालीन कमाण्ड सेन्टर',
+    'command.subtitle': 'सुरक्षाकर्मी व स्वयंसेवकतय्गु एकीकृत कमाण्ड।'
   },
 
+  // ==========================================
   // 4. MAITHILI (मैथिली)
+  // ==========================================
   mai: {
-    // Navigation
     'nav.home': 'मुख्य पृष्ठ',
     'nav.weather_risk': 'मौसम आ जोखिम',
     'nav.news_safety': 'समाचार आ सुरक्षा',
@@ -370,7 +601,6 @@ const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     'nav.language': 'भाषा',
     'nav.select_language': 'भाषा चुनु',
 
-    // Common UI
     'common.search': 'खोजू...',
     'common.filter': 'फिल्टर',
     'common.all': 'सब',
@@ -387,6 +617,7 @@ const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     'common.high': 'उच्च जोखिम',
     'common.moderate': 'मध्यम',
     'common.low': 'सामान्य',
+    'common.normal': 'सामान्य',
     'common.notifications': 'सूचनासभ',
     'common.no_notifications': 'कोनो नव सूचना नहि अछि',
     'common.demo_mode': 'डेमो मोड',
@@ -394,8 +625,21 @@ const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     'common.refresh': 'ताजा करू',
     'common.exit': 'बाहर जाउ',
     'common.close': 'बन्द करू',
+    'common.view': 'देखू',
+    'common.view_details': 'विस्तृत विवरण',
+    'common.edit': 'सम्पादन',
+    'common.delete': 'हटाउ',
+    'common.actions': 'कार्य',
+    'common.loading': 'लोड भ रहल अछि...',
+    'common.error': 'त्रुटि',
+    'common.success': 'सफल',
+    'common.warning': 'चेतावनी',
+    'common.info': 'जानकारी',
+    'common.confirm': 'पुष्टि करू',
+    'common.back': 'पाछाँ',
+    'common.next': 'आगाँ',
+    'common.reset': 'रिसेट',
 
-    // Home Page
     'home.hero_title': 'नेपाल राष्ट्रिय विपद् व्यवस्थापन आ राहत प्रणाली',
     'home.hero_subtitle': 'बाढि, पहिरो, रस्ता अवरोध आ राहत दलक प्रत्यक्ष समन्वय।',
     'home.critical_alerts': 'अति गम्भीर चेतावनी',
@@ -412,7 +656,6 @@ const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     'home.supplies_tracking': 'राहत सामग्री स्थिति',
     'home.view_details': 'विस्तृत विवरण',
 
-    // Teams & Logistics
     'teams.title': 'स्वयंसेवक दल परिचालन आ राहत कमाण्ड',
     'teams.subtitle': 'दलक नेता दर्ता करू, विपद् क्षेत्र सौपू आ खटल दलक विवरण देखू।',
     'teams.register_leader': 'दल नेता दर्ता करू',
@@ -430,7 +673,6 @@ const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     'teams.resources_routes': 'राहत सामग्री आ रस्ता',
     'teams.teams_coverage': 'स्वयंसेवक दल आ परिचालन',
 
-    // Routes
     'routes.title': 'विपद् सचेत सुरक्षित रस्ता निर्देशन',
     'routes.subtitle': 'सड़क विभाग आ नदी बाढिक प्रत्यक्ष जानकारी अनुसार सुरक्षित मार्ग।',
     'routes.start_nav': 'गुगल म्याप्स नेभिगेसन शुरू करू (फुलस्क्रिन)',
@@ -440,21 +682,42 @@ const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     'routes.dhm_rivers': 'नदी मापन केन्द्र',
     'routes.travel_time': 'अनुमानित यात्रा समय',
     'routes.distance': 'कुल दूरी',
+    'routes.turn_left': 'बायाँ मुडू',
+    'routes.turn_right': 'दायाँ मुडू',
+    'routes.move_forward': 'सोझे आगाँ बढ़ू',
+    'routes.destination_reached': 'अहाँ गन्तव्य पर पहुँचि गेलहुँ',
+    'routes.why_recommended': 'ई रस्ता किएक सिफारिस कएल गेल:',
 
-    // Hospital Matching
+    'weather.title': 'मौसम पूर्वानुमान आ नदी जलस्तर',
+    'weather.subtitle': 'नेपालक मुख्य नदीसभक प्रत्यक्ष जलस्तर आ बाढि पूर्वसूचना।',
+    'weather.live_river_gauges': 'प्रत्यक्ष नदी जलस्तर केन्द्र',
+    'weather.overview': 'मौसम अवलोकन',
+    'weather.river_watch': 'नदी निगरानी',
+
     'hospital.title': 'अस्पताल आ बिरामी मिलान',
     'hospital.subtitle': 'आईसीयू आ बेड क्षमतानुकूल बिरामीकेँ तुरन्त उपयुक्त अस्पताल पठाउ।',
     'hospital.matched_patients': 'सिफारिस कएल बिरामी',
 
-    // Weather & Risk
-    'weather.title': 'मौसम पूर्वानुमान आ नदी जलस्तर',
-    'weather.subtitle': 'नेपालक मुख्य नदीसभक प्रत्यक्ष जलस्तर आ बाढि पूर्वसूचना।',
-    'weather.live_river_gauges': 'प्रत्यक्ष नदी जलस्तर केन्द्र'
+    'facilities.title': 'स्वास्थ्य आ राहत केन्द्रसभ',
+    'facilities.subtitle': 'अस्पताल, आश्रयस्थल आ राहत वितरण केन्द्र।',
+
+    'news.title': 'प्रमाणित समाचार आ सुरक्षा सूचना',
+    'news.subtitle': 'प्राधिकरणक आधिकारिक सूचना आ सचेतता।',
+
+    'assessment.title': 'क्षति आ आवश्यकता मूल्यांकन',
+    'assessment.subtitle': 'घर, रस्ता आ मानवीय क्षतिक द्रुत मूल्यांकन।',
+
+    'aipriority.title': 'एआई प्राथमिकता आ राहत प्रेषण',
+    'aipriority.subtitle': 'तत्काल मद्दतिक आवश्यकता भेल क्षेत्रसभ।',
+
+    'command.title': 'केन्द्रीय आपातकालीन कमाण्ड सेन्टर',
+    'command.subtitle': 'सुरक्षा बल आ राहत दलाक एकीकृत कमाण्ड।'
   },
 
+  // ==========================================
   // 5. HINDI (हिन्दी)
+  // ==========================================
   hi: {
-    // Navigation
     'nav.home': 'मुख्य पृष्ठ',
     'nav.weather_risk': 'मौसम और जोखिम',
     'nav.news_safety': 'समाचार व सुरक्षा',
@@ -470,7 +733,6 @@ const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     'nav.language': 'भाषा',
     'nav.select_language': 'भाषा चुनें',
 
-    // Common UI
     'common.search': 'खोजें...',
     'common.filter': 'फ़िल्टर',
     'common.all': 'सभी',
@@ -487,6 +749,7 @@ const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     'common.high': 'उच्च जोखिम',
     'common.moderate': 'मध्यम',
     'common.low': 'सामान्य',
+    'common.normal': 'सामान्य',
     'common.notifications': 'सूचनाएं',
     'common.no_notifications': 'कोई नई सूचना नहीं',
     'common.demo_mode': 'डेमो मोड',
@@ -494,8 +757,21 @@ const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     'common.refresh': 'ताज़ा करें',
     'common.exit': 'बाहर निकलें',
     'common.close': 'बंद करें',
+    'common.view': 'देखें',
+    'common.view_details': 'विवरण देखें',
+    'common.edit': 'संपादित करें',
+    'common.delete': 'हटाएं',
+    'common.actions': 'कार्रवाई',
+    'common.loading': 'लोड हो रहा है...',
+    'common.error': 'त्रुटि',
+    'common.success': 'सफल',
+    'common.warning': 'चेतावनी',
+    'common.info': 'जानकारी',
+    'common.confirm': 'पुष्टि करें',
+    'common.back': 'पीछे',
+    'common.next': 'आगे',
+    'common.reset': 'रीसेट',
 
-    // Home Page
     'home.hero_title': 'नेपाल राष्ट्रीय आपदा प्रबंधन व राहत प्रणाली',
     'home.hero_subtitle': 'बाढ़, भूस्खलन, सड़क अवरोध और आपातकालीन बचाव दलों का लाइव समन्वय।',
     'home.critical_alerts': 'अति गंभीर अलर्ट',
@@ -512,7 +788,6 @@ const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     'home.supplies_tracking': 'राहत सामग्री भंडार',
     'home.view_details': 'विवरण देखें',
 
-    // Teams & Logistics
     'teams.title': 'स्वयंसेवक दल आवंटन व लीडर रजिस्ट्री',
     'teams.subtitle': 'टीम लीडर पंजीकृत करें, आपदा क्षेत्र सौंपें और नेपाल भर में तैनात टीमों का लाइव विवरण देखें।',
     'teams.register_leader': 'टीम लीडर पंजीकृत करें',
@@ -530,7 +805,6 @@ const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     'teams.resources_routes': 'राहत सामग्री व आपूर्ति मार्ग',
     'teams.teams_coverage': 'स्वयंसेवक दल व तैनाती',
 
-    // Routes
     'routes.title': 'आपदा-सचेत सुरक्षित मार्ग नेविगेशन',
     'routes.subtitle': 'सड़क विभाग व नदी बाढ़ स्तर के लाइव डेटा के अनुसार सबसे सुरक्षित मार्ग।',
     'routes.start_nav': 'गूगल मैप्स नेविगेशन शुरू करें (फ़ुलस्क्रीन)',
@@ -540,23 +814,307 @@ const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     'routes.dhm_rivers': 'नदी जलस्तर केंद्र',
     'routes.travel_time': 'अनुमानित यात्रा समय',
     'routes.distance': 'कुल दूरी',
+    'routes.turn_left': 'बाएं मुड़ें',
+    'routes.turn_right': 'दाएं मुड़ें',
+    'routes.move_forward': 'सीधे आगे बढ़ें',
+    'routes.destination_reached': 'आप गंतव्य पर पहुँच गए हैं',
+    'routes.why_recommended': 'यह मार्ग क्यों अनुशंसित है:',
 
-    // Hospital Matching
+    'weather.title': 'मौसम पूर्वानुमान व नदी जोखिम स्तर',
+    'weather.subtitle': 'नेपाल की प्रमुख नदियों का लाइव जलस्तर, चेतावनी स्तर व बाढ़ पूर्वानुमान।',
+    'weather.live_river_gauges': 'लाइव नदी जलस्तर गेज',
+    'weather.overview': 'मौसम अवलोकन',
+    'weather.river_watch': 'नदी निगरानी',
+
     'hospital.title': 'आपातकालीन अस्पताल व मरीज मिलान',
     'hospital.subtitle': 'आईसीयू व ट्रॉमा क्षमता के अनुसार मरीज को तुरंत उपयुक्त अस्पताल भेजें।',
     'hospital.matched_patients': 'अनुशंसित मरीज',
 
-    // Weather & Risk
-    'weather.title': 'मौसम पूर्वानुमान व नदी जोखिम स्तर',
-    'weather.subtitle': 'नेपाल की प्रमुख नदियों का लाइव जलस्तर, चेतावनी स्तर व बाढ़ पूर्वानुमान।',
-    'weather.live_river_gauges': 'लाइव नदी जलस्तर गेज'
+    'facilities.title': 'आपातकालीन व चिकित्सा सुविधाएं',
+    'facilities.subtitle': 'अस्पताल, आश्रय स्थल और राहत आपूर्ति केंद्र।',
+
+    'news.title': 'सत्यापित समाचार व एनडीआरआरएमए सुरक्षा निर्देश',
+    'news.subtitle': 'आधिकारिक आपदा बुलेटिन और आपातकालीन निर्देश।',
+
+    'assessment.title': 'क्षति व आवश्यकता त्वरित मूल्यांकन',
+    'assessment.subtitle': 'मकानों, सड़कों और मानवीय क्षति का डिजिटल मूल्यांकन।',
+
+    'aipriority.title': 'एआई निर्णय व संसाधन प्राथमिकता',
+    'aipriority.subtitle': 'तत्काल राहत और बचाव हेतु अनुशंसित प्राथमिकताएं।',
+
+    'command.title': 'एकीकृत आपातकालीन कमांड सेंटर',
+    'command.subtitle': 'सुरक्षा बलों और स्वास्थ्य टीमों का केंद्रीय सामरिक नियंत्रण।'
   }
+};
+
+// ==========================================
+// COMPREHENSIVE PHRASE GLOSSARY FOR TEXT & DYNAMIC TRANSLATION
+// ==========================================
+const COMMON_PHRASES: Record<string, Record<Language, string>> = {
+  // Navigation & Directions
+  'Turn left': { ne: 'बायाँ मोडिनुहोस्', en: 'Turn left', new: 'देपाः पाखे वनेगु', mai: 'बायाँ मुडू', hi: 'बाएं मुड़ें' },
+  'Turn right': { ne: 'दायाँ मोडिनुहोस्', en: 'Turn right', new: 'ज्वपाः पाखे वनेगु', mai: 'दायाँ मुडू', hi: 'दाएं मुड़ें' },
+  'Move forward': { ne: 'सिधा अगाडि बढ्नुहोस्', en: 'Move forward', new: 'न्ह्यःने वनेगु', mai: 'सोझे आगाँ बढ़ू', hi: 'सीधे आगे बढ़ें' },
+  'Continue straight': { ne: 'सिधा अगाडि बढ्नुहोस्', en: 'Continue straight', new: 'न्ह्यःने वनेगु', mai: 'सोझे आगाँ बढ़ू', hi: 'सीधे आगे बढ़ें' },
+  'Start Google Maps Navigation': { ne: 'गुगल म्याप्स नेभिगेसन सुरु गर्नुहोस्', en: 'Start Google Maps Navigation', new: 'गुगल म्याप्स नेभिगेसन सुरु यानादिसँ', mai: 'गुगल म्याप्स नेभिगेसन शुरू करू', hi: 'गूगल मैप्स नेविगेशन शुरू करें' },
+  'Start Google Maps Navigation (Fullscreen)': { ne: 'गुगल म्याप्स नेभिगेसन सुरु गर्नुहोस् (फुलस्क्रिन)', en: 'Start Google Maps Navigation (Fullscreen)', new: 'गुगल म्याप्स नेभिगेसन सुरु यानादिसँ (फुलस्क्रिन)', mai: 'गुगल म्याप्स नेभिगेसन शुरू करू (फुलस्क्रिन)', hi: 'गूगल मैप्स नेविगेशन शुरू करें (फ़ुलस्क्रीन)' },
+  'Turn-by-turn guidance': { ne: 'प्रत्येक मोडको प्रत्यक्ष निर्देशन', en: 'Turn-by-turn guidance', new: 'प्रत्येक मोडया लँपु निर्देशन', mai: 'प्रत्येक मोड़क मार्गदर्शन', hi: 'प्रत्येक मोड़ का मार्गदर्शन' },
+  'DOR Bridges': { ne: 'सडक विभाग (DOR) पुलहरू', en: 'DOR Bridges', new: 'सडक विभाग तां (पुल)', mai: 'सड़क विभागक पुल', hi: 'सड़क विभाग पुल' },
+  'DHM Rivers': { ne: 'जल तथा मौसम विभाग नदीहरू', en: 'DHM Rivers', new: 'जल तथा मौसम विभाग खुसि', mai: 'जल तथा मौसम विभाग नदी', hi: 'जल एवं मौसम विभाग नदियाँ' },
+  'Route Avoidance': { ne: 'खतरायुक्त मार्गबाट बच्नुहोस्', en: 'Route Avoidance', new: 'खतरा लँपुपाखें बचेजुइगु', mai: 'खतरा रस्तासँ बचू', hi: 'खतरनाक मार्ग से बचें' },
+  'Safest Route': { ne: 'सबैभन्दा सुरक्षित मार्ग', en: 'Safest Route', new: 'दकलय् सुरक्षित लँपु', mai: 'सबसँ सुरक्षित रस्ता', hi: 'सबसे सुरक्षित मार्ग' },
+  'Route to Avoid': { ne: 'बच्नुपर्ने अवरुद्ध मार्ग', en: 'Route to Avoid', new: 'बचेजुइमाःगु लँपु', mai: 'बचबाक रस्ता', hi: 'बचने योग्य अवरुद्ध मार्ग' },
+  'Estimated Travel Time': { ne: 'अनुमानित यात्रा समय', en: 'Estimated Travel Time', new: 'अनुमानित ई (समय)', mai: 'अनुमानित यात्रा समय', hi: 'अनुमानित यात्रा समय' },
+  'Total Distance': { ne: 'जम्मा दूरी', en: 'Total Distance', new: 'जम्मा तापाःगु (दूरी)', mai: 'कुल दूरी', hi: 'कुल दूरी' },
+  'Origin Corridor': { ne: 'प्रस्थान मार्ग / स्थान', en: 'Origin Corridor', new: 'शुरु लँपु', mai: 'प्रस्थान रस्ता', hi: 'प्रस्थान गलियारा' },
+  'Destination Corridor': { ne: 'गन्तव्य मार्ग / स्थान', en: 'Destination Corridor', new: 'गन्तव्य लँपु', mai: 'गन्तव्य रस्ता', hi: 'गंतव्य गलियारा' },
+  'Test Scenarios:': { ne: 'परीक्षण परिदृश्यहरू:', en: 'Test Scenarios:', new: 'परीक्षण अवस्थाहरु:', mai: 'परीक्षण परिदृश्य:', hi: 'परीक्षण परिदृश्य:' },
+  'Test Scenarios': { ne: 'परीक्षण परिदृश्यहरू', en: 'Test Scenarios', new: 'परीक्षण अवस्थाहरु', mai: 'परीक्षण परिदृश्य', hi: 'परीक्षण परिदृश्य' },
+  'Baseline': { ne: 'सामान्य अवस्था', en: 'Baseline', new: 'सामान्य अवस्था', mai: 'सामान्य स्थिति', hi: 'सामान्य स्थिति' },
+  'Landslide': { ne: 'पहिरो', en: 'Landslide', new: 'चलः', mai: 'पहिरो', hi: 'भूस्खलन' },
+  'River Flood': { ne: 'नदी बाढी', en: 'River Flood', new: 'खुसिबाः', mai: 'नदी बाढि', hi: 'नदी बाढ़' },
+  'Why This Route is Recommended:': { ne: 'यो मार्ग किन सिफारिस गरियो:', en: 'Why This Route is Recommended:', new: 'थ्व लँपु सिफारिस याःगु कारण:', mai: 'ई रस्ता किएक सिफारिस कएल गेल:', hi: 'यह मार्ग क्यों अनुशंसित है:' },
+  'Hazard Avoidance AI Reasoning:': { ne: 'खतराबाट बच्ने एआई तर्क:', en: 'Hazard Avoidance AI Reasoning:', new: 'खतरा ल्यंकेगु एआई विश्लेषण:', mai: 'खतरासँ बचबाक एआई तर्क:', hi: 'खतरे से बचाव का एआई विश्लेषण:' },
+  'Exit Fullscreen': { ne: 'फुलस्क्रिन बन्द गर्नुहोस्', en: 'Exit Fullscreen', new: 'फुलस्क्रिन बन्द यानादिसँ', mai: 'फुलस्क्रिन बन्द करू', hi: 'फुलस्क्रीन बंद करें' },
+  'Simulate Driving': { ne: 'यात्रा सिमुलेसन सुरु गर्नुहोस्', en: 'Simulate Driving', new: 'यात्रा सिमुलेसन', mai: 'यात्रा सिमुलेसन', hi: 'यात्रा सिमुलेशन' },
+  'Pause Simulation': { ne: 'सिमुलेसन रोक्नुहोस्', en: 'Pause Simulation', new: 'सिमुलेसन दिकेगु', mai: 'सिमुलेसन रोकू', hi: 'सिमुलेशन रोकें' },
+
+  // Road & Bridge Statuses
+  'OPEN': { ne: 'खुला', en: 'OPEN', new: 'चाला', mai: 'खुला', hi: 'खुला' },
+  'BLOCKED': { ne: 'अवरुद्ध / बन्द', en: 'BLOCKED', new: 'बन्द', mai: 'अवरुद्ध / बन्द', hi: 'अवरुद्ध / बंद' },
+  'CAUTION': { ne: 'सतर्कता / सावधानी', en: 'CAUTION', new: 'होशियार', mai: 'सावधानी', hi: 'सावधानी' },
+  'RESTRICTED': { ne: 'प्रतिबन्धित', en: 'RESTRICTED', new: 'नियन्त्रित', mai: 'प्रतिबन्धित', hi: 'प्रतिबंधित' },
+  'Passable with Caution': { ne: 'सावधानीपूर्वक पार गर्न सकिने', en: 'Passable with Caution', new: 'होशियारीपूर्वक वनेज्यूगु', mai: 'सावधानीपूर्वक पार कएल जा सकैत अछि', hi: 'सावधानीपूर्वक आवागमन योग्य' },
+  'Debris Flow & Massive Landslide at Chainage 18+200': { ne: 'माइल १८+२०० मा ठूलो पहिरो र लेदो अवरोध', en: 'Debris Flow & Massive Landslide at Chainage 18+200', new: '१८+२०० थासय् तःधंगु चलः व लेदो अवरोध', mai: '१८+२०० स्थानमे पैघ पहिरो आ माटि अवरोध', hi: 'चेनेज १८+२०० पर भारी भूस्खलन और मलबा' },
+  'Active Rockfall': { ne: 'ढुङ्गा खसिरहेको', en: 'Active Rockfall', new: 'ल्वहँ कुतुंवंगु दु', mai: 'पत्थर खसि रहल अछि', hi: 'सक्रिय चट्टान गिरना' },
+  'Total Blockage': { ne: 'पूर्ण अवरोध', en: 'Total Blockage', new: 'पूरं बन्द', mai: 'पूर्ण अवरोध', hi: 'पूर्ण अवरोध' },
+  'Flood Surge Above Danger Level - Structural Threat': { ne: 'खतराको स्तरभन्दा माथि बाढीको बहाव - पुल संरचनामा जोखिम', en: 'Flood Surge Above Danger Level - Structural Threat', new: 'खतरा स्तर स्वयां च्वे खुसिबाः - तां (पुल) य् खतरा', mai: 'खतरा स्तरसँ ऊपर बाढिक बहाव - पुल खतरामे', hi: 'खतरे के निशान से ऊपर बाढ़ - पुल को संरचनात्मक खतरा' },
+  'Water 1.8m Above Deck': { ne: 'पुलको सतहभन्दा १.८ मिटर माथि पानी', en: 'Water 1.8m Above Deck', new: 'तां स्वयां १.८ मिटर च्वे लः', mai: 'पुलसँ १.८ मिटर ऊपर पानि', hi: 'पुल की सतह से १.८ मीटर ऊपर पानी' },
+  'Pier Scour': { ne: 'पुलको पिल्लरमा क्षति', en: 'Pier Scour', new: 'तांया पिल्लर स्यंगु', mai: 'पुलक पिलर कटान', hi: 'पुल के खंभे का कटाव' },
+
+  // Highways & Places
+  'Prithvi Highway': { ne: 'पृथ्वी राजमार्ग', en: 'Prithvi Highway', new: 'पृथ्वी राजमार्ग', mai: 'पृथ्वी राजमार्ग', hi: 'पृथ्वी राजमार्ग' },
+  'Tribhuvan Highway': { ne: 'त्रिभुवन राजमार्ग', en: 'Tribhuvan Highway', new: 'त्रिभुवन राजमार्ग', mai: 'त्रिभुवन राजमार्ग', hi: 'त्रिभुवन राजमार्ग' },
+  'BP Highway': { ne: 'बीपी राजमार्ग', en: 'BP Highway', new: 'बीपी राजमार्ग', mai: 'बीपी राजमार्ग', hi: 'बीपी राजमार्ग' },
+  'East-West Highway': { ne: 'पूर्व-पश्चिम राजमार्ग (महेन्द्र राजमार्ग)', en: 'East-West Highway', new: 'पूर्व-पश्चिम राजमार्ग', mai: 'पूर्व-पश्चिम राजमार्ग', hi: 'पूर्व-पश्चिम राजमार्ग' },
+  'Mugling-Narayanghat': { ne: 'मुग्लिङ-नारायणगढ खण्ड', en: 'Mugling-Narayanghat', new: 'मुग्लिङ-नारायणगढ', mai: 'मुग्लिङ-नारायणगढ', hi: 'मुगलिंग-नारायणगढ़' },
+  'Kathmandu': { ne: 'काठमाडौँ', en: 'Kathmandu', new: 'येँ देय् (काठमाडौं)', mai: 'काठमाडौं', hi: 'काठमांडू' },
+  'Pokhara': { ne: 'पोखरा', en: 'Pokhara', new: 'पोखरा', mai: 'पोखरा', hi: 'पोखरा' },
+  'Narayanghat': { ne: 'नारायणगढ', en: 'Narayanghat', new: 'नारायणगढ', mai: 'नारायणगढ', hi: 'नारायणगढ़' },
+  'Hetauda': { ne: 'हेटौँडा', en: 'Hetauda', new: 'हेटौंडा', mai: 'हेटौंडा', hi: 'हेटौंडा' },
+  'Chitwan': { ne: 'चितवन', en: 'Chitwan', new: 'चितवन', mai: 'चितवन', hi: 'चितवन' },
+  'Bardibas': { ne: 'बर्दिबास', en: 'Bardibas', new: 'बर्दिबास', mai: 'बर्दिबास', hi: 'बर्दिबास' },
+  'Janakpur': { ne: 'जनकपुरधाम', en: 'Janakpur', new: 'जनकपुर', mai: 'जनकपुरधाम', hi: 'जनकपुरधाम' },
+  'Sindhupalchok': { ne: 'सिन्धुपाल्चोक', en: 'Sindhupalchok', new: 'सिन्धुपाल्चोक', mai: 'सिन्धुपाल्चोक', hi: 'सिंधुपाल्चोक' },
+  'Biratnagar': { ne: 'विराटनगर', en: 'Biratnagar', new: 'विराटनगर', mai: 'विराटनगर', hi: 'विराटनगर' },
+  'Dharan': { ne: 'धरान', en: 'Dharan', new: 'धरान', mai: 'धरान', hi: 'धरान' },
+  'Butwal': { ne: 'बुटवल', en: 'Butwal', new: 'बुटवल', mai: 'बुटवल', hi: 'बुटवल' },
+  'Nepalgunj': { ne: 'नेपालगन्ज', en: 'Nepalgunj', new: 'नेपालगन्ज', mai: 'नेपालगन्ज', hi: 'नेपालगंज' },
+  'Bagmati': { ne: 'बागमती प्रदेश', en: 'Bagmati', new: 'बागमती प्रदेश', mai: 'बागमती प्रदेश', hi: 'बागमती प्रांत' },
+  'Gandaki': { ne: 'गण्डकी प्रदेश', en: 'Gandaki', new: 'गण्डकी प्रदेश', mai: 'गण्डकी प्रदेश', hi: 'गंडकी प्रांत' },
+  'Madhesh': { ne: 'मधेश प्रदेश', en: 'Madhesh', new: 'मधेश प्रदेश', mai: 'मधेश प्रदेश', hi: 'मधेश प्रांत' },
+  'Koshi': { ne: 'कोशी प्रदेश', en: 'Koshi', new: 'कोशी प्रदेश', mai: 'कोशी प्रदेश', hi: 'कोशी प्रांत' },
+  'Lumbini': { ne: 'लुम्बिनी प्रदेश', en: 'Lumbini', new: 'लुम्बिनी प्रदेश', mai: 'लुम्बिनी प्रदेश', hi: 'लुम्बिनी प्रांत' },
+  'Karnali': { ne: 'कर्णाली प्रदेश', en: 'Karnali', new: 'कर्णाली प्रदेश', mai: 'कर्णाली प्रदेश', hi: 'कर्णाली प्रांत' },
+  'Sudurpashchim': { ne: 'सुदूरपश्चिम प्रदेश', en: 'Sudurpashchim', new: 'सुदूरपश्चिम प्रदेश', mai: 'सुदूरपश्चिम प्रदेश', hi: 'सुदूरपश्चिम प्रांत' },
+
+  // Hospital & Health
+  'Government Hospital': { ne: 'सरकारी अस्पताल', en: 'Government Hospital', new: 'सरकारी अस्पताल', mai: 'सरकारी अस्पताल', hi: 'सरकारी अस्पताल' },
+  'Available Beds': { ne: 'उपलब्ध बेडहरू', en: 'Available Beds', new: 'उपलब्ध खाट (बेड)', mai: 'उपलब्ध बेड', hi: 'उपलब्ध बेड' },
+  'ICU Beds': { ne: 'आईसीयू बेड', en: 'ICU Beds', new: 'आईसीयू बेड', mai: 'आईसीयू बेड', hi: 'आईसीयू बेड' },
+  'Ventilators': { ne: 'भेन्टिलेटर', en: 'Ventilators', new: 'भेन्टिलेटर', mai: 'भेन्टिलेटर', hi: 'वेंटिलेटर' },
+  'Emergency Ward': { ne: 'आपतकालीन वार्ड', en: 'Emergency Ward', new: 'आपतकालीन वार्ड', mai: 'आपातकालीन वार्ड', hi: 'आपातकालीन वार्ड' },
+  'Trauma Center': { ne: 'ट्रमा सेन्टर', en: 'Trauma Center', new: 'ट्रमा सेन्टर', mai: 'ट्रॉमा सेन्टर', hi: 'ट्रॉमा सेंटर' },
+  'Matched Patients': { ne: 'सिफारिस गरिएका बिरामीहरू', en: 'Matched Patients', new: 'मिलान जूगु ल्वगीत', mai: 'मिलान कएल बिरामी', hi: 'मिलान किए गए मरीज' },
+  'Patient Intake': { ne: 'बिरामी भर्ना दर्ता', en: 'Patient Intake', new: 'ल्वगी दर्ता', mai: 'बिरामी भर्ना', hi: 'मरीज दाखिला' },
+
+  // Weather & Hydrology
+  'Live Hydrology Watch': { ne: 'प्रत्यक्ष जल मापन अनुगमन', en: 'Live Hydrology Watch', new: 'प्रत्यक्ष खुसि अनुगमन', mai: 'प्रत्यक्ष नदी जलस्तर', hi: 'लाइव नदी जलस्तर निगरानी' },
+  'Heavy Rainfall Alert': { ne: 'भारी वर्षा सतर्कता', en: 'Heavy Rainfall Alert', new: 'तःधंगु वा वइगु सतर्कता', mai: 'भारी वर्षाक चेतावनी', hi: 'भारी बारिश की चेतावनी' },
+  'Flash Flood Danger': { ne: 'आकस्मिक बाढीको खतरा', en: 'Flash Flood Danger', new: 'आकस्मिक खुसिबाः खतरा', mai: 'अचानक बाढिक खतरा', hi: 'अचानक बाढ़ का खतरा' },
+  'Rising Rapidly': { ne: 'तीव्र गतिमा बढ्दै', en: 'Rising Rapidly', new: 'याकनं अप्वयाच्वंगु', mai: 'तेजीसँ बढ़ि रहल अछि', hi: 'तेजी से बढ़ रहा है' },
+  'Above Danger Level': { ne: 'खतराको तहभन्दा माथि', en: 'Above Danger Level', new: 'खतरा स्तर स्वयां च्वे', mai: 'खतराक स्तरसँ ऊपर', hi: 'खतरे के निशान से ऊपर' },
+  'Below Warning Level': { ne: 'चेतावनी तहभन्दा मुनि (सुरक्षित)', en: 'Below Warning Level', new: 'चेतावनी स्तर स्वयां क्वय्', mai: 'चेतावनी स्तरसँ नीचाँ', hi: 'चेतावनी स्तर से नीचे (सुरक्षित)' },
+
+  // Logistics & Volunteers
+  'Volunteer Teams': { ne: 'स्वयंसेवक टोलीहरू', en: 'Volunteer Teams', new: 'स्वयंसेवक पुचःत', mai: 'स्वयंसेवक दलसभ', hi: 'स्वयंसेवक दल' },
+  'Volunteer Teams & Coverage': { ne: 'स्वयंसेवक टोली परिचालन र रसद', en: 'Volunteer Teams & Coverage', new: 'स्वयंसेवक पुचः व सामग्री', mai: 'स्वयंसेवक दल आ राहत', hi: 'स्वयंसेवक दल व रसद' },
+  'Register Team Leader': { ne: 'टोली नेता दर्ता गर्नुहोस्', en: 'Register Team Leader', new: 'पुचः नायः दर्ता यानादिसँ', mai: 'दल नेता दर्ता करू', hi: 'टीम लीडर पंजीकृत करें' },
+  'Registered Teams': { ne: 'दर्ता भएका टोलीहरू', en: 'Registered Teams', new: 'दर्ता जूगु पुचःत', mai: 'दर्ता भेल दल', hi: 'पंजीकृत दल' },
+  'Mobilized Responders': { ne: 'परिचालित उद्धारकर्ताहरू', en: 'Mobilized Responders', new: 'खटेजूगु उद्धारकर्तात', mai: 'खटल स्वयंसेवक', hi: 'तैनात स्वयंसेवक' },
+  'Disaster Sectors Covered': { ne: 'समेटिएका विपद् क्षेत्रहरू', en: 'Disaster Sectors Covered', new: 'कार्यक्षेत्रत', mai: 'विपद् क्षेत्रसभ', hi: 'आपदा क्षेत्र' },
+  'Deployment Status': { ne: 'तैनाती स्थिति', en: 'Deployment Status', new: 'तैनाती स्थिति', mai: 'तैनाती स्थिति', hi: 'तैनाती स्थिति' },
+  'Allocated Operating Area': { ne: 'तोकिएको कार्य क्षेत्र', en: 'Allocated Operating Area', new: 'तोकेयानातःगु क्षेत्र', mai: 'आवंटित क्षेत्र', hi: 'आवंटित कार्य क्षेत्र' },
+  'Allocated Volunteer Operating Area': { ne: 'तोकिएको स्वयंसेवक कार्य क्षेत्र', en: 'Allocated Volunteer Operating Area', new: 'तोकेयानातःगु स्वयंसेवक कार्यक्षेत्र', mai: 'तोकल स्वयंसेवक कार्य क्षेत्र', hi: 'आवंटित स्वयंसेवक कार्य क्षेत्र' },
+  'Auto-Recommend Optimal Area': { ne: 'एआईद्वारा उपयुक्त क्षेत्र सिफारिस', en: 'Auto-Recommend Optimal Area', new: 'एआई सिफारिस क्षेत्र', mai: 'एआई द्वारा उपयुक्त क्षेत्र', hi: 'एआई द्वारा अनुशंसित क्षेत्र' },
+  'Active Mission': { ne: 'सक्रिय जिम्मेवारी / मिसन', en: 'Active Mission', new: 'सक्रिय जिम्मेवारी', mai: 'सक्रिय मिसन', hi: 'सक्रिय मिशन' },
+  'Active Operational Mission': { ne: 'सक्रिय जिम्मेवारी / मिसन', en: 'Active Operational Mission', new: 'सक्रिय जिम्मेवारी', mai: 'सक्रिय मिसन', hi: 'सक्रिय मिशन' },
+  'Reassign Area': { ne: 'कार्यक्षेत्र पुन: तोक्नुहोस्', en: 'Reassign Area', new: 'मेगु क्षेत्र तोकेयानादिसँ', mai: 'पुनः क्षेत्र आवंटन करू', hi: 'कार्यक्षेत्र पुन: आवंटित करें' },
+  'Leader Name': { ne: 'नेताको नाम', en: 'Leader Name', new: 'नायःया नां', mai: 'नेताक नाम', hi: 'लीडर का नाम' },
+  'Team Size': { ne: 'टोली सदस्य संख्या', en: 'Team Size', new: 'पुचः दुजः ल्याः', mai: 'दल सदस्य संख्या', hi: 'दल सदस्य संख्या' },
+  'Primary Skill': { ne: 'प्रमुख सीप / विशेषज्ञता', en: 'Primary Skill', new: 'मू सीप', mai: 'मुख्य सीप', hi: 'मुख्य कौशल' },
+  'Medical & First Aid': { ne: 'प्राथमिक उपचार तथा स्वास्थ्य', en: 'Medical & First Aid', new: 'प्राथमिक उपचार व उसाँय्', mai: 'प्राथमिक उपचार आ स्वास्थ्य', hi: 'प्राथमिक चिकित्सा व स्वास्थ्य' },
+  'Water Rescue': { ne: 'जल उद्धार (पौडी / डुङ्गा)', en: 'Water Rescue', new: 'लः उद्धार', mai: 'जल उद्धार', hi: 'जल बचाव' },
+  'Debris Clearance': { ne: 'पहिरो तथा भग्नावशेष हटाउने', en: 'Debris Clearance', new: 'चलः व लेदो लिकायेगु', mai: 'मलबा हटाउब', hi: 'मलबा हटाना' },
+  'Food & Supply Distribution': { ne: 'राहत सामग्री तथा खाद्यान्न वितरण', en: 'Food & Supply Distribution', new: 'राहत सामग्री व नसा वितरण', mai: 'राहत सामग्री आ भोजन वितरण', hi: 'राहत सामग्री व खाद्य वितरण' },
+  'Drone Surveillance': { ne: 'ड्रोन निगरानी', en: 'Drone Surveillance', new: 'ड्रोन निगरानी', mai: 'ड्रोन निगरानी', hi: 'ड्रोन निगरानी' },
+  'Search & Evacuation': { ne: 'खोजी तथा सुरक्षित स्थान स्थानान्तरण', en: 'Search & Evacuation', new: 'माला व सुरक्षित थासय् यंकेगु', mai: 'खोज आ सुरक्षित स्थान प्रेषण', hi: 'खोज व निकासी' },
+  'Deployed': { ne: 'खटिएको / तैनाथ', en: 'Deployed', new: 'खटेजूगु', mai: 'खटल', hi: 'तैनात' },
+  'Standby': { ne: 'तयारी अवस्थामा', en: 'Standby', new: 'तयारीइ दुगु', mai: 'तयारी स्थिति', hi: 'तैयार अवस्था' },
+  'Available': { ne: 'उपलब्ध', en: 'Available', new: 'उपलब्ध', mai: 'उपलब्ध', hi: 'उपलब्ध' },
+  'En Route': { ne: 'बाटोमा रहेको', en: 'En Route', new: 'लँपुइ दुगु', mai: 'रस्तामे', hi: 'रास्ते में' },
+  'Rest': { ne: 'आराममा', en: 'Rest', new: 'आरामय्', mai: 'आराममे', hi: 'विश्राम' },
+
+  // Missing Persons & Citizen Safety (NDRRMA / OPMCM)
+  'Missing Persons & Citizen Safety': { ne: 'हराएका व्यक्तिहरू र नागरिक सुरक्षा', en: 'Missing Persons & Citizen Safety', new: 'तंगु मनूत व नागरिक सुरक्षा', mai: 'हेराएल व्यक्ति आ नागरिक सुरक्षा', hi: 'लापता व्यक्ति व नागरिक सुरक्षा' },
+  'SEARCH & RESCUE': { ne: 'खोजी तथा उद्धार', en: 'SEARCH & RESCUE', new: 'माला व ल्हायेगु', mai: 'खोज आ उद्धार', hi: 'खोज व बचाव' },
+  'AI-assisted missing-person tracing, field sighting correlation, human-verified matching, and NDRRMA / OPMCM Search & Rescue registry.': {
+    ne: 'एआई-सहयोगमा हराएका व्यक्तिहरूको खोजी, प्रत्यक्ष目擊 सूचना मिलान र राष्ट्रिय उद्धार लगत।',
+    en: 'AI-assisted missing-person tracing, field sighting correlation, human-verified matching, and NDRRMA / OPMCM Search & Rescue registry.',
+    new: 'एआई ग्वाहालिइ तंगु मनूया माला, प्रत्यक्ष खंगु विवरण मिलान व राष्ट्रिय लगत।',
+    mai: 'एआई सहयोगसँ हेराएल व्यक्तिक खोज, प्रत्यक्ष विवरण मिलान आ राष्ट्रिय उद्धार पंजी।',
+    hi: 'एआई-सहायता प्राप्त लापता व्यक्ति ट्रैकिंग, प्रत्यक्ष विवरण मिलान और राष्ट्रीय बचाव रजिस्टर।'
+  },
+  'Role:': { ne: 'भूमिका:', en: 'Role:', new: 'भूमिका:', mai: 'भूमिका:', hi: 'भूमिका:' },
+  'Public Citizen': { ne: 'सर्वसाधारण नागरिक', en: 'Public Citizen', new: 'सर्वसाधारण नागरिक', mai: 'आम नागरिक', hi: 'आम नागरिक' },
+  'Authorized Officer': { ne: 'अधिकृत सुरक्षाकर्मी / उद्धार अधिकृत', en: 'Authorized Officer', new: 'अधिकृत सुरक्षा अधिकारी', mai: 'अधिकृत अधिकारी', hi: 'अधिकृत अधिकारी' },
+  'Government of Nepal • OPMCM': { ne: 'नेपाल सरकार • प्रधानमन्त्री तथा मन्त्रिपरिषद्को कार्यालय', en: 'Government of Nepal • OPMCM', new: 'नेपाल सरकार • प्रधानमन्त्री ज्याकुथि', mai: 'नेपाल सरकार • प्रधानमन्त्री कार्यालय', hi: 'नेपाल सरकार • प्रधानमंत्री कार्यालय' },
+  'National Disaster Search & Rescue Registry (NDRRMA)': { ne: 'राष्ट्रिय विपद् जोखिम न्यूनीकरण तथा व्यवस्थापन प्राधिकरण (NDRRMA)', en: 'National Disaster Search & Rescue Registry (NDRRMA)', new: 'राष्ट्रिय विपद् जोखिम न्यूनीकरण प्राधिकरण (NDRRMA)', mai: 'राष्ट्रिय विपद् प्राधिकरण (NDRRMA)', hi: 'राष्ट्रीय आपदा प्रबंधन प्राधिकरण (NDRRMA)' },
+  'PORTAL LIVE SYNC': { ne: 'प्रत्यक्ष पोर्टल जडान', en: 'PORTAL LIVE SYNC', new: 'प्रत्यक्ष पोर्टल स्वापू', mai: 'लाइव पोर्टल सिंक', hi: 'लाइव पोर्टल सिंक' },
+  'OFFLINE CACHED': { ne: 'अफलाइन सुरक्षित तथ्याङ्क', en: 'OFFLINE CACHED', new: 'अफलाइन सुरक्षित', mai: 'अफलाइन सुरक्षित', hi: 'ऑफ़लाइन सहेजा गया' },
+  'National Flood & Landslide Missing Persons Registry': { ne: 'राष्ट्रिय बाढी तथा पहिरो बेपत्ता नागरिक लगत', en: 'National Flood & Landslide Missing Persons Registry', new: 'राष्ट्रिय खुसिबाः व चलः तंगु मनूया लगत', mai: 'राष्ट्रिय बाढि आ पहिरो बेपत्ता नागरिक पंजी', hi: 'राष्ट्रीय बाढ़ व भूस्खलन लापता नागरिक रजिस्टर' },
+  'Real-time synchronization with the Office of the Prime Minister and Council of Ministers (OPMCM) Disaster Rescue Portal': {
+    ne: 'प्रधानमन्त्री तथा मन्त्रिपरिषद्को कार्यालय (OPMCM) विपद् उद्धार पोर्टलसँग प्रत्यक्ष समन्वय।',
+    en: 'Real-time synchronization with the Office of the Prime Minister and Council of Ministers (OPMCM) Disaster Rescue Portal',
+    new: 'प्रधानमन्त्री ज्याकुथिया विपद् उद्धार पोर्टलनाप प्रत्यक्ष समन्वय।',
+    mai: 'प्रधानमन्त्री कार्यालय विपद् उद्धार पोर्टलसँ प्रत्यक्ष समन्वय।',
+    hi: 'प्रधानमंत्री कार्यालय आपदा बचाव पोर्टल के साथ रीयल-टाइम समन्वय।'
+  },
+  'Cross-correlated with field sighting intelligence and tactical AI matching.': {
+    ne: 'फिल्डबाट प्राप्त प्रत्यक्ष目擊 सूचना र एआई मिलान प्रणालीसँग विश्लेषण गरिएको।',
+    en: 'Cross-correlated with field sighting intelligence and tactical AI matching.',
+    new: 'खंगु目擊 सुचं व एआई मिलान पाखें विश्लेषण यानातःगु।',
+    mai: 'प्रत्यक्ष目擊 सूचना आ एआई मिलान प्रणालीसँ विश्लेषण कएल गेल।',
+    hi: 'फ़ील्ड目擊 सूचना और एआई मिलान प्रणाली द्वारा विश्लेषित।'
+  },
+  'Last synchronized:': { ne: 'पछिल्लो पटक अद्यावधिक:', en: 'Last synchronized:', new: 'लिपांगु अद्यावधिक:', mai: 'पछिला अपडेट:', hi: 'अंतिम अपडेट:' },
+  'Just now': { ne: 'भर्खरै', en: 'Just now', new: 'आ भर्खर', mai: 'एखने', hi: 'अभी-अभी' },
+  'Sync Live Portal': { ne: 'पोर्टल ताजा गर्नुहोस्', en: 'Sync Live Portal', new: 'पोर्टल ताजा यानादिसँ', mai: 'पोर्टल ताजा करू', hi: 'पोर्टल सिंक करें' },
+  'Official Public Link': { ne: 'आधिकारिक सार्वजनिक लिङ्क', en: 'Official Public Link', new: 'आधिकारिक जाःथाय्', mai: 'आधिकारिक लिंक', hi: 'आधिकारिक लिंक' },
+  'Report Missing Person': { ne: 'बेपत्ता व्यक्ति दर्ता गर्नुहोस्', en: 'Report Missing Person', new: 'तंगु मनू दर्ता यानादिसँ', mai: 'बेपत्ता व्यक्ति दर्ता करू', hi: 'लापता व्यक्ति दर्ज करें' },
+  'Report Sighting': { ne: 'देखेको जानकारी दिनुहोस्', en: 'Report Sighting', new: 'खंगु विवरण बियादिसँ', mai: 'देखल जानकारी दिअ', hi: 'देखे जाने की सूचना दें' },
+  'Review Matches': { ne: 'मिलान समीक्षा गर्नुहोस्', en: 'Review Matches', new: 'मिलान स्वयादिसँ', mai: 'मिलान समीक्षा करू', hi: 'मिलान समीक्षा करें' },
+  'Official Reports': { ne: 'आधिकारिक विवरण', en: 'Official Reports', new: 'आधिकारिक विवरण', mai: 'सरकारी रिपोर्ट', hi: 'आधिकारिक रिपोर्ट' },
+  'Total People Tracked': { ne: 'खोजीमा रहेका नागरिक', en: 'Total People Tracked', new: 'मालाच्वंगु कुल मनूत', mai: 'कुल खोजल जा रहल', hi: 'कुल ट्रैक किए गए व्यक्ति' },
+  'Rescued & Safe': { ne: 'सकुशल उद्धार भएका', en: 'Rescued & Safe', new: 'सकुशल उद्धार जूगु', mai: 'सकुशल उद्धार भेल', hi: 'सकुशल बचाए गए' },
+  'Injured / In Medical Care': { ne: 'घाइते / उपचाररत', en: 'Injured / In Medical Care', new: 'घाःपाः / वासः यानाच्वंगु', mai: 'घायल / उपचाररत', hi: 'घायल / उपचाराधीन' },
+  'Deceased (Confirmed)': { ne: 'मृत्यु पुष्टि भएका', en: 'Deceased (Confirmed)', new: 'मदूगु पुष्टि जूगु', mai: 'मृत्यु पुष्टि भेल', hi: 'मृत्यु (पुष्ट)' },
+  'Critical Unfound': { ne: 'तत्काल खोजी आवश्यक', en: 'Critical Unfound', new: 'तुरुन्त मालेमाःगु', mai: 'तत्काल खोजबाक', hi: 'तत्काल खोज आवश्यक' },
+  'Field Sighting Reports': { ne: 'प्रत्यक्ष目擊 सूचनाहरू', en: 'Field Sighting Reports', new: 'खंगु目擊 सुचं', mai: 'प्रत्यक्ष目擊 रिपोर्ट', hi: 'प्रत्यक्ष目擊 रिपोर्ट' },
+  'Pending Verification': { ne: 'पुष्टि हुन बाँकी', en: 'Pending Verification', new: 'पुष्टि जुइ ल्यं', mai: 'पुष्टि बाँकी', hi: 'सत्यापन लंबित' },
+  'AI Candidate Matches': { ne: 'एआई सम्भावित मिलानहरू', en: 'AI Candidate Matches', new: 'एआई सिफारिस मिलान', mai: 'एआई सम्भावित मिलान', hi: 'एआई संभावित मिलान' },
+  'High-Confidence Pairs': { ne: 'उच्च विश्वसनीयता भएका जोडीहरू', en: 'High-Confidence Pairs', new: 'उच्च विश्वस्त जोडी', mai: 'उच्च विश्वस्त जोडी', hi: 'उच्च विश्वसनीयता वाले जोड़े' },
+  'Filter by Name, Clothing, ID, or Location...': { ne: 'नाम, लुगा, परिचयपत्र वा स्थान खोज्नुहोस्...', en: 'Filter by Name, Clothing, ID, or Location...', new: 'नां, वसः, म्हसिका वा थाय् मालादिसँ...', mai: 'नाम, कपडा, पहचान वा स्थान खोजू...', hi: 'नाम, कपड़े, आईडी या स्थान खोजें...' },
+  'Source:': { ne: 'स्रोत:', en: 'Source:', new: 'स्रोत:', mai: 'स्रोत:', hi: 'स्रोत:' },
+  'All Registries': { ne: 'सबै लगतहरू', en: 'All Registries', new: 'दक्को लगत', mai: 'सब पंजी', hi: 'सभी रजिस्टर' },
+  'Gov OPMCM Only': { ne: 'नेपाल सरकार (OPMCM) मात्र', en: 'Gov OPMCM Only', new: 'नेपाल सरकार जक', mai: 'नेपाल सरकार मात्र', hi: 'केवल नेपाल सरकार' },
+  'Community / Local Only': { ne: 'स्थानीय / समुदाय मात्र', en: 'Community / Local Only', new: 'स्थानीय पुचः जक', mai: 'स्थानीय समुदाय मात्र', hi: 'स्थानीय / समुदाय केवल' },
+  'Status:': { ne: 'स्थिति:', en: 'Status:', new: 'स्थिति:', mai: 'स्थिति:', hi: 'स्थिति:' },
+  'All Statuses': { ne: 'सबै स्थितिहरू', en: 'All Statuses', new: 'दक्को स्थिति', mai: 'सब स्थिति', hi: 'सभी स्थितियां' },
+  'Missing Only': { ne: 'बेपत्ता मात्र', en: 'Missing Only', new: 'तंगु जक', mai: 'बेपत्ता मात्र', hi: 'केवल लापता' },
+  'Possible Matches': { ne: 'सम्भावित मिलानहरू', en: 'Possible Matches', new: 'सम्भावित मिलान', mai: 'सम्भावित मिलान', hi: 'संभावित मिलान' },
+  'Found / Safe': { ne: 'भेटिएका / सुरक्षित', en: 'Found / Safe', new: 'लुयावःगु / सुरक्षित', mai: 'भेटल / सुरक्षित', hi: 'मिले / सुरक्षित' },
+  'Shelter / Hospital': { ne: 'आश्रय / अस्पताल', en: 'Shelter / Hospital', new: 'शरण / अस्पताल', mai: 'आश्रय / अस्पताल', hi: 'आश्रय / अस्पताल' },
+  'Urgency:': { ne: 'प्राथमिकता:', en: 'Urgency:', new: 'प्राथमिकता:', mai: 'प्राथमिकता:', hi: 'प्राथमिकता:' },
+  'All Urgencies': { ne: 'सबै प्राथमिकता', en: 'All Urgencies', new: 'दक्को प्राथमिकता', mai: 'सब प्राथमिकता', hi: 'सभी प्राथमिकताएं' },
+  'Age Group:': { ne: 'उमेर समूह:', en: 'Age Group:', new: 'उमेर समूह:', mai: 'उमरि समूह:', hi: 'आयु वर्ग:' },
+  'All Ages': { ne: 'सबै उमेर समूह', en: 'All Ages', new: 'दक्को उमेर', mai: 'सब उमरि', hi: 'सभी आयु वर्ग' },
+  'Child (0-12)': { ne: 'बालबालिका (०-१२)', en: 'Child (0-12)', new: 'मचा (०-१२)', mai: 'बच्चा (०-१२)', hi: 'बच्चे (०-१२)' },
+  'Teen (13-17)': { ne: 'किशोरकिशोरी (१३-१७)', en: 'Teen (13-17)', new: 'ल्यायम्ह (१३-१७)', mai: 'किशोर (१३-१७)', hi: 'किशोर (१३-१७)' },
+  'Adult (18-59)': { ne: 'वयस्क (१८-५९)', en: 'Adult (18-59)', new: 'वयस्क (१८-५९)', mai: 'वयस्क (१८-५९)', hi: 'वयस्क (१८-५९)' },
+  'Senior (60+)': { ne: 'ज्येष्ठ नागरिक (६०+)', en: 'Senior (60+)', new: 'थकालि (६०+)', mai: 'बुजुर्ग (६०+)', hi: 'वरिष्ठ नागरिक (६०+)' },
+  'District:': { ne: 'जिल्ला:', en: 'District:', new: 'जिल्ला:', mai: 'जिला:', hi: 'ज़िला:' },
+  'All Districts': { ne: 'सबै जिल्लाहरू', en: 'All Districts', new: 'दक्को जिल्ला', mai: 'सब जिला', hi: 'सभी जिले' },
+  'Clear Filters': { ne: 'फिल्टरहरू हटाउनुहोस्', en: 'Clear Filters', new: 'फिल्टर लिकायेगु', mai: 'फिल्टर हटाउ', hi: 'फ़िल्टर हटाएं' },
+  'Cards View': { ne: 'कार्ड दृश्य', en: 'Cards View', new: 'कार्ड क्यनेगु', mai: 'कार्ड दृश्य', hi: 'कार्ड दृश्य' },
+  'Table View': { ne: 'तालिका दृश्य', en: 'Table View', new: 'टेबुल क्यनेगु', mai: 'तालिका दृश्य', hi: 'तालिका दृश्य' },
+  'Live Map': { ne: 'प्रत्यक्ष नक्सा', en: 'Live Map', new: 'प्रत्यक्ष नक्सा', mai: 'लाइव नक्शा', hi: 'लाइव मैप' },
+  'Review Queue': { ne: 'समीक्षा सूची', en: 'Review Queue', new: 'जाँच धलः', mai: 'समीक्षा सूची', hi: 'समीक्षा कतार' },
+  'Pending Sighting & Citizen Matches': { ne: 'पुष्टि हुन बाँकी目擊 मिलानहरू', en: 'Pending Sighting & Citizen Matches', new: 'पुष्टि जुइ ल्यं दूगु मिलान', mai: 'पुष्टि बाँकी目擊 मिलान', hi: 'लंबित目擊 मिलान' },
+  'Needs Operator Action': { ne: 'अधिकृतको स्वीकृति आवश्यक', en: 'Needs Operator Action', new: 'अधिकृतया निर्णय माःगु', mai: 'अधिकारीक स्वीकृति आवश्यक', hi: 'ऑपरेटर कार्रवाई आवश्यक' },
+  'Confirm Match': { ne: 'मिलान पुष्टि गर्नुहोस्', en: 'Confirm Match', new: 'मिलान पुष्टि यानादिसँ', mai: 'मिलान पुष्टि करू', hi: 'मिलान की पुष्टि करें' },
+  'Reject Match': { ne: 'अस्वीकार गर्नुहोस्', en: 'Reject Match', new: 'अस्वीकार यानादिसँ', mai: 'अस्वीकार करू', hi: 'अस्वीकार करें' },
+  'Request More Info': { ne: 'थप जानकारी माग्नुहोस्', en: 'Request More Info', new: 'मेगु विवरण फ्वनेगु', mai: 'आर जानकारी मागू', hi: 'अधिक जानकारी मांगें' },
+  'Mark as Found': { ne: 'भेटिएको जनाउनुहोस्', en: 'Mark as Found', new: 'लुयावःगु पुष्टि यायेगु', mai: 'भेटल दर्ज करू', hi: 'मिला हुआ चिह्नित करें' },
+  'Mark as Safe': { ne: 'सुरक्षित जनाउनुहोस्', en: 'Mark as Safe', new: 'सुरक्षित धकाः च्वयेगु', mai: 'सुरक्षित दर्ज करू', hi: 'सुरक्षित चिह्नित करें' },
+  'Transfer to Hospital': { ne: 'अस्पताल पठाउनुहोस्', en: 'Transfer to Hospital', new: 'अस्पताल छ्वयेगु', mai: 'अस्पताल पठाउ', hi: 'अस्पताल भेजें' },
+  'Last Seen Location': { ne: 'अन्तिम पटक देखिएको स्थान', en: 'Last Seen Location', new: 'अन्तिम खंगु थाय्', mai: 'अन्तिम देखल स्थान', hi: 'अंतिम बार देखा गया स्थान' },
+  'Missing Since': { ne: 'बेपत्ता भएको मिति', en: 'Missing Since', new: 'तंगु दिं', mai: 'बेपत्ता भेल तारीख', hi: 'लापता होने की तारीख' },
+
+  // Weather & DHM River Watch
+  'Weather Overview': { ne: 'मौसम अवलोकन', en: 'Weather Overview', new: 'मौसम स्वयेगु', mai: 'मौसम अवलोकन', hi: 'मौसम अवलोकन' },
+  'River Watch': { ne: 'नदी अनुगमन', en: 'River Watch', new: 'खुसि अनुगमन', mai: 'नदी निगरानी', hi: 'नदी निगरानी' },
+  'Live River Gauges': { ne: 'प्रत्यक्ष नदी जलस्तर केन्द्रहरू', en: 'Live River Gauges', new: 'प्रत्यक्ष खुसि मापन केन्द्र', mai: 'प्रत्यक्ष नदी जलस्तर केन्द्र', hi: 'लाइव नदी जलस्तर गेज' },
+  'Gauges': { ne: 'मापन केन्द्रहरू', en: 'Gauges', new: 'केन्द्रत', mai: 'केन्द्रसभ', hi: 'गेज' },
+  'Official DHM Flood Watch Alert': { ne: 'जल तथा मौसम विज्ञान विभाग बाढी सतर्कता', en: 'Official DHM Flood Watch Alert', new: 'जल तथा मौसम विभाग खुसिबाः सतर्कता', mai: 'जल तथा मौसम विभाग बाढि अलर्ट', hi: 'जल एवं मौसम विभाग बाढ़ चेतावनी' },
+  'Simulated River Surge Telemetry': { ne: 'सिमुलेट गरिएको नदी जलस्तर तथ्याङ्क', en: 'Simulated River Surge Telemetry', new: 'सिमुलेट यानातःगु खुसि तथ्यांक', mai: 'सिमुलेट नदी जलस्तर डेटा', hi: 'सिम्युलेटेड नदी जलस्तर डेटा' },
+  'Inspect River Watch Gauges': { ne: 'नदी जलस्तर केन्द्रहरू हेर्नुहोस्', en: 'Inspect River Watch Gauges', new: 'खुसि जलस्तर केन्द्र स्वयादिसँ', mai: 'नदी जलस्तर केन्द्र देखू', hi: 'नदी जलस्तर गेज देखें' },
+  'Inspect River Watch Gauges ↗': { ne: 'नदी जलस्तर केन्द्रहरू हेर्नुहोस् ↗', en: 'Inspect River Watch Gauges ↗', new: 'खुसि जलस्तर केन्द्र स्वयादिसँ ↗', mai: 'नदी जलस्तर केन्द्र देखू ↗', hi: 'नदी जलस्तर गेज देखें ↗' },
+  'Base Normalization Active': { ne: 'आधारभूत सामान्यीकरण सक्रिय', en: 'Base Normalization Active', new: 'आधारभूत सामान्यीकरण चालु', mai: 'आधारभूत सामान्यीकरण सक्रिय', hi: 'बेस सामान्यीकरण सक्रिय' },
+  'Confidence Threshold': { ne: 'विश्वसनीयता सीमा', en: 'Confidence Threshold', new: 'विश्वसनीयता सीमा', mai: 'विश्वसनीयता सीमा', hi: 'विश्वसनीयता सीमा' },
+  'Confidence Threshold:': { ne: 'विश्वसनीयता सीमा:', en: 'Confidence Threshold:', new: 'विश्वसनीयता सीमा:', mai: 'विश्वसनीयता सीमा:', hi: 'विश्वसनीयता सीमा:' },
+  'Precipitation Rate': { ne: 'वर्षा दर', en: 'Precipitation Rate', new: 'वा वइगु दर', mai: 'वर्षा दर', hi: 'वर्षा दर' },
+  'Accumulated Rainfall': { ne: 'कुल वर्षा', en: 'Accumulated Rainfall', new: 'कुल वा वःगु', mai: 'कुल वर्षा', hi: 'कुल बारिश' },
+  'Danger Threshold': { ne: 'खतराको सीमा', en: 'Danger Threshold', new: 'खतरा सीमा', mai: 'खतराक सीमा', hi: 'खतरे की सीमा' },
+  'Warning Threshold': { ne: 'चेतावनीको सीमा', en: 'Warning Threshold', new: 'चेतावनी सीमा', mai: 'चेतावनी सीमा', hi: 'चेतावनी की सीमा' },
+  'Safe Threshold': { ne: 'सुरक्षित सीमा', en: 'Safe Threshold', new: 'सुरक्षित सीमा', mai: 'सुरक्षित सीमा', hi: 'सुरक्षित सीमा' },
+  'Hourly Forecast': { ne: 'प्रति घण्टा पूर्वानुमान', en: 'Hourly Forecast', new: 'घौकथं पूर्वानुमान', mai: 'प्रति घंटा पूर्वानुमान', hi: 'प्रति घंटा पूर्वानुमान' },
+  'Rain Probability': { ne: 'वर्षाको सम्भावना', en: 'Rain Probability', new: 'वा वइगु सम्भावना', mai: 'वर्षाक सम्भावना', hi: 'बारिश की संभावना' },
+  'Minimal / Dry': { ne: 'सुख्खा / वर्षा नहुने', en: 'Minimal / Dry', new: 'गंगु / वा मवइगु', mai: 'सुक्खा / पानि नहि पड़त', hi: 'शुष्क / बारिश नहीं' },
+  'Isolated Showers': { ne: 'छिटपुट वर्षा', en: 'Isolated Showers', new: 'भचाभचा वा वइगु', mai: 'छिटपुट वर्षा', hi: 'छिटपुट बारिश' },
+  'Scattered Showers': { ne: 'केही स्थानमा वर्षा', en: 'Scattered Showers', new: 'छुं थासय् वा वइगु', mai: 'किछु स्थानमे वर्षा', hi: 'कुछ स्थानों पर वर्षा' },
+  'Rain Likely': { ne: 'वर्षाको सम्भावना', en: 'Rain Likely', new: 'वा वइगु सम्भावना दु', mai: 'वर्षाक भारी सम्भावना', hi: 'बारिश की संभावना' },
+  'Continuous Rain': { ne: 'निरन्तर भारी वर्षा', en: 'Continuous Rain', new: 'झुरुझुरु वा वइगु', mai: 'लगातार भारी वर्षा', hi: 'लगातार भारी बारिश' },
+  'Dry atmospheric profile with negligible rain risk today.': {
+    ne: 'आज वर्षाको सम्भावना न्यून छ।',
+    en: 'Dry atmospheric profile with negligible rain risk today.',
+    new: 'थौं वा वइगु सम्भावना मदु।',
+    mai: 'आइझुक वर्षाक कोनो खतरा नहि अछि।',
+    hi: 'आज बारिश की संभावना नगण्य है।'
+  },
+  'Extreme Rain': { ne: 'अत्यधिक वर्षा', en: 'Extreme Rain', new: 'अति भारी वा', mai: 'अत्यधिक वर्षा', hi: 'अत्यधिक बारिश' },
+  'Flash Flood': { ne: 'आकस्मिक बाढी', en: 'Flash Flood', new: 'आकस्मिक खुसिबाः', mai: 'अचानक बाढि', hi: 'अचानक बाढ़' },
+  'Normal Conditions': { ne: 'सामान्य अवस्था', en: 'Normal Conditions', new: 'सामान्य अवस्था', mai: 'सामान्य स्थिति', hi: 'सामान्य स्थिति' },
+  'No Active Threat': { ne: 'कुनै सक्रिय खतरा छैन', en: 'No Active Threat', new: 'छुं नं खतरा मदु', mai: 'कोनो खतरा नहि', hi: 'कोई सक्रिय खतरा नहीं' },
+  'Synchronized live': { ne: 'प्रत्यक्ष अद्यावधिक', en: 'Synchronized live', new: 'प्रत्यक्ष अद्यावधिक', mai: 'प्रत्यक्ष अद्यावधिक', hi: 'लाइव अपडेट' },
+  'DHM Ground Telemetry': { ne: 'जल तथा मौसम विभाग प्रत्यक्ष तथ्याङ्क', en: 'DHM Ground Telemetry', new: 'जल तथा मौसम विभाग प्रत्यक्ष तथ्यांक', mai: 'जल तथा मौसम विभाग डेटा', hi: 'जल एवं मौसम विभाग डेटा' },
+
+  // Hospital Matching
+  'Hospital Bed Network Capacity': { ne: 'सरकारी अस्पताल बेड नेटवर्क क्षमता', en: 'Hospital Bed Network Capacity', new: 'अस्पताल बेड नेटवर्क क्षमता', mai: 'अस्पताल बेड नेटवर्क क्षमता', hi: 'अस्पताल बेड नेटवर्क क्षमता' },
+  'Dispatch Ambulance': { ne: 'एम्बुलेन्स पठाउनुहोस्', en: 'Dispatch Ambulance', new: 'एम्बुलेन्स छ्वयेगु', mai: 'एम्बुलेन्स पठाउ', hi: 'एम्बुलेंस भेजें' },
+  'Call Hospital': { ne: 'अस्पतालमा फोन गर्नुहोस्', en: 'Call Hospital', new: 'अस्पतालय् फोन यानादिसँ', mai: 'अस्पताल फोन करू', hi: 'अस्पताल फोन करें' },
+  'Get Directions': { ne: 'मार्ग हेर्नुहोस्', en: 'Get Directions', new: 'लँपु स्वयादिसँ', mai: 'रस्ता देखू', hi: 'दिशा-निर्देश देखें' },
+  'Patient Registry': { ne: 'बिरामी दर्ता पुस्तिका', en: 'Patient Registry', new: 'ल्वगी दर्ता', mai: 'बिरामी दर्ता', hi: 'मरीज रजिस्टर' },
+  'Submit Patient': { ne: 'नयाँ बिरामी विवरण दर्ता', en: 'Submit Patient', new: 'न्हूम्ह ल्वगी दर्ता', mai: 'नव बिरामी दर्ता', hi: 'नया मरीज दर्ज करें' },
+  'Match Confidence': { ne: 'मिलान प्रतिशत', en: 'Match Confidence', new: 'मिलान प्रतिशत', mai: 'मिलान प्रतिशत', hi: 'मिलान प्रतिशत' },
+
+  // General Controls
+  'Search demo data...': { ne: 'डेमो तथ्याङ्क खोज्नुहोस्...', en: 'Search demo data...', new: 'डेमो तथ्यांक मालादिसँ...', mai: 'डेमो डेटा खोजू...', hi: 'डेमो डेटा खोजें...' },
+  'Change Language': { ne: 'भाषा परिवर्तन गर्नुहोस्', en: 'Change Language', new: 'भाषा हिलादिसँ', mai: 'भाषा बदलू', hi: 'भाषा बदलें' },
+  'Change Language / भाषा परिवर्तन गर्नुहोस्': { ne: 'भाषा परिवर्तन गर्नुहोस्', en: 'Change Language', new: 'भाषा हिलादिसँ', mai: 'भाषा बदलू', hi: 'भाषा बदलें' },
+  'System Status': { ne: 'प्रणाली स्थिति', en: 'System Status', new: 'प्रणाली स्थिति', mai: 'प्रणाली स्थिति', hi: 'सिस्टम स्थिति' },
+  'Operational': { ne: 'सञ्चालनमा', en: 'Operational', new: 'सञ्चालनय्', mai: 'चालू', hi: 'चालू' },
+  'Notifications': { ne: 'सूचनाहरू', en: 'Notifications', new: 'सुचं', mai: 'सूचना', hi: 'सूचनाएं' },
+  'No new notifications': { ne: 'कुनै नयाँ सूचना छैन', en: 'No new notifications', new: 'छुं नं न्हूगु सुचं मदु', mai: 'कोनो नव सूचना नहि', hi: 'कोई नई सूचना नहीं' },
+  'Clear All': { ne: 'सबै हटाउनुहोस्', en: 'Clear All', new: 'दक्को लिकायेगु', mai: 'सब हटाउ', hi: 'सभी हटाएं' },
+  'Demo Search Results': { ne: 'डेमो खोज परिणामहरू', en: 'Demo Search Results', new: 'खोज लिच्वः', mai: 'खोज परिणाम', hi: 'खोज परिणाम' }
 };
 
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
   t: (key: string, fallback?: string) => string;
+  translateDynamic: (text: string, lang?: Language) => string;
   currentLanguageOption: LanguageOption;
   languages: LanguageOption[];
 }
@@ -572,7 +1130,6 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       if (stored && SUPPORTED_LANGUAGES.some(l => l.code === stored)) {
         return stored;
       }
-      // Check browser language or default to Nepali
       const navLang = navigator.language.toLowerCase();
       if (navLang.startsWith('ne')) return 'ne';
       if (navLang.startsWith('hi')) return 'hi';
@@ -581,13 +1138,13 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     return 'ne';
   });
 
-  const setLanguage = (lang: Language) => {
+  const setLanguage = useCallback((lang: Language) => {
     setLanguageState(lang);
     if (typeof window !== 'undefined') {
       localStorage.setItem(LANGUAGE_STORAGE_KEY, lang);
       document.documentElement.lang = lang;
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -595,19 +1152,274 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     }
   }, [language]);
 
-  const t = (key: string, fallback?: string): string => {
+  // Translate dynamic content or phrase
+  const translateDynamic = useCallback((text: string, targetLang?: Language): string => {
+    const lang = targetLang || language;
+    if (!text || typeof text !== 'string') return text;
+    if (lang === 'en') return text;
+
+    const trimmed = text.trim();
+
+    // 1. Direct dictionary match
+    const dict = TRANSLATIONS[lang];
+    if (dict && dict[trimmed]) {
+      return dict[trimmed];
+    }
+
+    // 2. Common phrase dictionary match
+    if (COMMON_PHRASES[trimmed] && COMMON_PHRASES[trimmed][lang]) {
+      return COMMON_PHRASES[trimmed][lang];
+    }
+
+    // Case-insensitive check
+    for (const [phrase, trans] of Object.entries(COMMON_PHRASES)) {
+      if (phrase.toLowerCase() === trimmed.toLowerCase() && trans[lang]) {
+        return trans[lang];
+      }
+    }
+
+    // 3. Pattern / Substring replacements for compound dynamic strings
+    let result = text;
+    let modified = false;
+
+    // Check longer phrases first
+    const phrasesSorted = Object.keys(COMMON_PHRASES).sort((a, b) => b.length - a.length);
+    for (const phrase of phrasesSorted) {
+      if (result.includes(phrase)) {
+        const replacement = COMMON_PHRASES[phrase][lang];
+        if (replacement) {
+          result = result.replaceAll(phrase, replacement);
+          modified = true;
+        }
+      }
+    }
+
+    // Translate common units and keywords
+    const keywordMap: Record<string, string> = {
+      'min': lang === 'ne' ? 'मिनेट' : lang === 'hi' ? 'मिनट' : lang === 'new' ? 'मिनेट' : 'मिनेट',
+      'mins': lang === 'ne' ? 'मिनेट' : lang === 'hi' ? 'मिनट' : lang === 'new' ? 'मिनेट' : 'मिनेट',
+      'minute': lang === 'ne' ? 'मिनेट' : lang === 'hi' ? 'मिनट' : lang === 'new' ? 'मिनेट' : 'मिनेट',
+      'minutes': lang === 'ne' ? 'मिनेट' : lang === 'hi' ? 'मिनट' : lang === 'new' ? 'मिनेट' : 'मिनेट',
+      'hrs': lang === 'ne' ? 'घण्टा' : lang === 'hi' ? 'घंटे' : lang === 'new' ? 'घन्टा' : 'घन्टा',
+      'hr': lang === 'ne' ? 'घण्टा' : lang === 'hi' ? 'घंटा' : lang === 'new' ? 'घन्टा' : 'घन्टा',
+      'hours': lang === 'ne' ? 'घण्टा' : lang === 'hi' ? 'घंटे' : lang === 'new' ? 'घन्टा' : 'घन्टा',
+      'km': lang === 'ne' ? 'कि.मी.' : lang === 'hi' ? 'किमी' : lang === 'new' ? 'कि.मि.' : 'कि.मी.',
+      'meters': lang === 'ne' ? 'मिटर' : lang === 'hi' ? 'मीटर' : lang === 'new' ? 'मिटर' : 'मिटर',
+      'm': lang === 'ne' ? 'मि.' : lang === 'hi' ? 'मी.' : 'मि.',
+      'Beds': lang === 'ne' ? 'बेडहरू' : lang === 'hi' ? 'बेड' : 'बेड',
+      'High': lang === 'ne' ? 'उच्च' : lang === 'hi' ? 'उच्च' : 'उच्च',
+      'Low': lang === 'ne' ? 'न्यून' : lang === 'hi' ? 'कम' : 'न्यून',
+      'Medium': lang === 'ne' ? 'मध्यम' : lang === 'hi' ? 'मध्यम' : 'मध्यम',
+      'Moderate': lang === 'ne' ? 'मध्यम' : lang === 'hi' ? 'मध्यम' : 'मध्यम',
+      'Critical': lang === 'ne' ? 'अति गम्भीर' : lang === 'hi' ? 'अति गंभीर' : 'तसकं गम्भीर'
+    };
+
+    for (const [kw, trans] of Object.entries(keywordMap)) {
+      const regex = new RegExp(`\\b${kw}\\b`, 'g');
+      if (regex.test(result)) {
+        result = result.replace(regex, trans);
+        modified = true;
+      }
+    }
+
+    return modified ? result : text;
+  }, [language]);
+
+  // Main t function
+  const t = useCallback((key: string, fallback?: string): string => {
+    if (!key) return fallback || '';
+
+    // If key exists directly in current language dict
     const dict = TRANSLATIONS[language];
-    if (dict && dict[key]) {
+    if (dict && dict[key] !== undefined) {
       return dict[key];
     }
-    // Fallback to English dictionary
-    if (TRANSLATIONS.en && TRANSLATIONS.en[key]) {
+
+    // If fallback is provided and in current language dict
+    if (fallback && dict && dict[fallback] !== undefined) {
+      return dict[fallback];
+    }
+
+    // Check if key itself is a common phrase
+    if (COMMON_PHRASES[key] && COMMON_PHRASES[key][language]) {
+      return COMMON_PHRASES[key][language];
+    }
+
+    // Check if fallback is a common phrase
+    if (fallback && COMMON_PHRASES[fallback] && COMMON_PHRASES[fallback][language]) {
+      return COMMON_PHRASES[fallback][language];
+    }
+
+    // Try dynamic translation on the text or fallback
+    const targetText = fallback || key;
+    if (language !== 'en') {
+      const dyn = translateDynamic(targetText, language);
+      if (dyn !== targetText) {
+        return dyn;
+      }
+    }
+
+    // Fallback to English dictionary if key is a code (e.g. 'nav.home')
+    if (TRANSLATIONS.en && TRANSLATIONS.en[key] !== undefined) {
       return TRANSLATIONS.en[key];
     }
-    return fallback || key;
-  };
 
-  const currentLanguageOption = SUPPORTED_LANGUAGES.find(l => l.code === language) || SUPPORTED_LANGUAGES[0];
+    return fallback || key;
+  }, [language, translateDynamic]);
+
+  // ==========================================
+  // RUNTIME DOM AUTO-LOCALIZER
+  // Guarantees all visible text, tooltips, placeholders, and popups change to selected language
+  // ==========================================
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    let isScheduled = false;
+
+    const translateDomTree = () => {
+      isScheduled = false;
+
+      // When language is English, restore original texts
+      if (language === 'en') {
+        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+        let node: Node | null;
+        while ((node = walker.nextNode())) {
+          if ((node as any).__sahayak_orig_text !== undefined) {
+            node.nodeValue = (node as any).__sahayak_orig_text;
+          }
+        }
+        // Restore input placeholders
+        document.querySelectorAll('input, textarea').forEach(el => {
+          const input = el as HTMLInputElement | HTMLTextAreaElement;
+          if ((input as any).__sahayak_orig_placeholder !== undefined) {
+            input.placeholder = (input as any).__sahayak_orig_placeholder;
+          }
+        });
+        // Restore title and aria-label
+        document.querySelectorAll('[title], [aria-label]').forEach(el => {
+          const htmlEl = el as HTMLElement;
+          if ((htmlEl as any).__sahayak_orig_title !== undefined) {
+            htmlEl.title = (htmlEl as any).__sahayak_orig_title;
+          }
+          if ((htmlEl as any).__sahayak_orig_arialabel !== undefined) {
+            htmlEl.setAttribute('aria-label', (htmlEl as any).__sahayak_orig_arialabel);
+          }
+        });
+        return;
+      }
+
+      // When language is NOT English, localize text nodes
+      const walker = document.createTreeWalker(
+        document.body,
+        NodeFilter.SHOW_TEXT,
+        {
+          acceptNode(node) {
+            const parent = node.parentElement;
+            if (!parent) return NodeFilter.FILTER_REJECT;
+            const tag = parent.tagName.toLowerCase();
+            if (['script', 'style', 'code', 'pre', 'noscript'].includes(tag)) {
+              return NodeFilter.FILTER_REJECT;
+            }
+            if (parent.closest('[data-no-translate]')) {
+              return NodeFilter.FILTER_REJECT;
+            }
+            const val = node.nodeValue?.trim();
+            if (!val || val.length < 2) return NodeFilter.FILTER_REJECT;
+            return NodeFilter.FILTER_ACCEPT;
+          }
+        }
+      );
+
+      let node: Node | null;
+      while ((node = walker.nextNode())) {
+        const currentVal = node.nodeValue || '';
+
+        // Skip if already predominantly in Devanagari script (range \u0900-\u097F)
+        const devanagariCount = (currentVal.match(/[\u0900-\u097F]/g) || []).length;
+        if (devanagariCount > currentVal.length * 0.4 && (node as any).__sahayak_orig_text === undefined) {
+          continue;
+        }
+
+        // Save pristine original English text if not yet saved
+        if ((node as any).__sahayak_orig_text === undefined) {
+          (node as any).__sahayak_orig_text = currentVal;
+        }
+
+        const baseText = (node as any).__sahayak_orig_text || currentVal;
+        const translated = translateDynamic(baseText, language);
+
+        if (translated !== currentVal && translated !== baseText) {
+          node.nodeValue = translated;
+        }
+      }
+
+      // Also translate input & textarea placeholders
+      document.querySelectorAll('input, textarea').forEach(el => {
+        const input = el as HTMLInputElement | HTMLTextAreaElement;
+        if (!input.placeholder) return;
+        if ((input as any).__sahayak_orig_placeholder === undefined) {
+          (input as any).__sahayak_orig_placeholder = input.placeholder;
+        }
+        const basePlaceholder = (input as any).__sahayak_orig_placeholder || input.placeholder;
+        const translated = translateDynamic(basePlaceholder, language);
+        if (translated !== input.placeholder) {
+          input.placeholder = translated;
+        }
+      });
+
+      // Also translate button/link titles and aria-labels
+      document.querySelectorAll('[title], [aria-label]').forEach(el => {
+        const htmlEl = el as HTMLElement;
+        if (htmlEl.title) {
+          if ((htmlEl as any).__sahayak_orig_title === undefined) {
+            (htmlEl as any).__sahayak_orig_title = htmlEl.title;
+          }
+          const base = (htmlEl as any).__sahayak_orig_title;
+          const translated = translateDynamic(base, language);
+          if (translated !== htmlEl.title) {
+            htmlEl.title = translated;
+          }
+        }
+        const ariaLabel = htmlEl.getAttribute('aria-label');
+        if (ariaLabel) {
+          if ((htmlEl as any).__sahayak_orig_arialabel === undefined) {
+            (htmlEl as any).__sahayak_orig_arialabel = ariaLabel;
+          }
+          const base = (htmlEl as any).__sahayak_orig_arialabel;
+          const translated = translateDynamic(base, language);
+          if (translated !== ariaLabel) {
+            htmlEl.setAttribute('aria-label', translated);
+          }
+        }
+      });
+    };
+
+    // Run once immediately
+    translateDomTree();
+
+    // Observe subsequent DOM mutations (modals, new tabs, map popups, dynamic cards)
+    const observer = new MutationObserver(() => {
+      if (!isScheduled) {
+        isScheduled = true;
+        window.requestAnimationFrame(translateDomTree);
+      }
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      characterData: true
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [language, translateDynamic]);
+
+  const currentLanguageOption = useMemo(
+    () => SUPPORTED_LANGUAGES.find(l => l.code === language) || SUPPORTED_LANGUAGES[0],
+    [language]
+  );
 
   return (
     <LanguageContext.Provider
@@ -615,6 +1427,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         language,
         setLanguage,
         t,
+        translateDynamic,
         currentLanguageOption,
         languages: SUPPORTED_LANGUAGES
       }}

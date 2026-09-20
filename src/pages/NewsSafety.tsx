@@ -2,12 +2,11 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardHeader, Badge, Button } from '@/components/ui';
 import { 
-  ShieldCheck, ShieldAlert, FileText, UserPlus, Search, 
-  HelpCircle, Eye, Sparkles, Map, LayoutGrid, CheckCircle2, 
+  ShieldCheck, UserPlus, Search, 
+  Map, LayoutGrid, CheckCircle2, 
   AlertTriangle, Filter, RotateCcw, Lock, Unlock, Users, ChevronRight,
-  List, RefreshCw, ExternalLink, Activity, Clock, MapPin, User,
-  FileWarning, ShieldQuestion, Stethoscope, Radio, Globe, Rss, ArrowUpRight,
-  Shield, Zap
+  Clock, MapPin, User, Stethoscope,
+  RefreshCw, ExternalLink, Eye, List, Sparkles, HelpCircle
 } from 'lucide-react';
 import { useAppState } from '@/lib/store';
 import { cn } from '@/lib/utils';
@@ -19,35 +18,11 @@ import { MatchReviewPanel } from '@/components/missing-persons/MatchReviewPanel'
 import { ReportMissingPersonModal } from '@/components/missing-persons/ReportMissingPersonModal';
 import { ReportSightingModal } from '@/components/missing-persons/ReportSightingModal';
 import { MissingPersonMap } from '@/components/missing-persons/MissingPersonMap';
-import { MisinfoProtector } from '@/components/misinfo/MisinfoProtector';
 
-type MainSection = 'MISSING_PERSONS' | 'NEWS' | 'MISINFORMATION';
 type ViewMode = 'TABLE' | 'GRID' | 'MAP' | 'REVIEW_QUEUE';
-
-
-// Helper for Misinfo Status in News
-function getMisinfoNewsBadge(status?: string, verified?: boolean) {
-  if (status === 'VERIFIED') return <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center bg-emerald-50 dark:bg-emerald-950/30 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800"><ShieldCheck className="h-3.5 w-3.5 mr-1" /> Verified</span>;
-  if (status === 'LIKELY TRUE') return <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center bg-emerald-50 dark:bg-emerald-950/30 px-2 py-0.5 rounded-md border border-emerald-100 dark:border-emerald-900"><CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Likely True</span>;
-  if (status === 'MISLEADING') return <span className="text-xs font-semibold text-orange-600 dark:text-orange-400 flex items-center bg-orange-50 dark:bg-orange-950/30 px-2 py-0.5 rounded-md border border-orange-200 dark:border-orange-800"><ShieldAlert className="h-3.5 w-3.5 mr-1" /> Misleading</span>;
-  if (status === 'CONFLICTING') return <span className="text-xs font-semibold text-yellow-600 dark:text-yellow-400 flex items-center bg-yellow-50 dark:bg-yellow-950/30 px-2 py-0.5 rounded-md border border-yellow-200 dark:border-yellow-800"><AlertTriangle className="h-3.5 w-3.5 mr-1" /> Conflicting Reports</span>;
-  if (status === 'LIKELY FALSE') return <span className="text-xs font-semibold text-red-600 dark:text-red-400 flex items-center bg-red-50 dark:bg-red-950/30 px-2 py-0.5 rounded-md border border-red-200 dark:border-red-800"><FileWarning className="h-3.5 w-3.5 mr-1" /> Likely False</span>;
-  if (status === 'OUTDATED') return <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 flex items-center bg-slate-50 dark:bg-slate-800/50 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700"><Clock className="h-3.5 w-3.5 mr-1" /> Outdated</span>;
-  if (status === 'UNVERIFIED') return <span className="text-xs font-semibold text-slate-500 flex items-center bg-slate-50 dark:bg-slate-800/50 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700"><ShieldQuestion className="h-3.5 w-3.5 mr-1" /> Unverified Claim</span>;
-  
-  if (verified) return <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center"><ShieldCheck className="h-3.5 w-3.5 mr-1" /> Official Dispatch</span>;
-  
-  return null;
-}
 
 export function NewsSafety() {
   const { 
-    news, 
-    liveNews,
-    liveNewsLoading,
-    liveNewsError,
-    liveNewsLastSynced,
-    refreshLiveNews,
     missingPersons, 
     sightings, 
     candidateMatches, 
@@ -76,9 +51,6 @@ export function NewsSafety() {
   const navigate = useNavigate();
   const pendingHospitalMatchesCount = (hospitalMatches || []).filter(m => m.status === 'PENDING_HUMAN_REVIEW').length;
 
-  // Top Section Navigation
-  const [activeSection, setActiveSection] = useState<MainSection>('MISSING_PERSONS');
-  
   // Missing Persons View Mode
   const [viewMode, setViewMode] = useState<ViewMode>('GRID');
   
@@ -96,12 +68,6 @@ export function NewsSafety() {
   const [showReportPersonModal, setShowReportPersonModal] = useState(false);
   const [showReportSightingModal, setShowReportSightingModal] = useState(false);
   const [preselectedTargetPersonId, setPreselectedTargetPersonId] = useState<string | undefined>();
-
-  // News Filtering & Live Wire Feed State
-  const [newsFilter, setNewsFilter] = useState('All');
-  const [newsSourceFilter, setNewsSourceFilter] = useState<'ALL' | 'LIVE' | 'OFFICIAL'>('ALL');
-  const [newsSearchTerm, setNewsSearchTerm] = useState('');
-  const [claimToFactCheck, setClaimToFactCheck] = useState<string | undefined>();
 
   // Filtered Missing Persons
   const filteredPersons = useMemo(() => {
@@ -169,62 +135,6 @@ export function NewsSafety() {
     ? sightings.find(s => s.id === selectedMatch.sightingId) 
     : null;
 
-  // Combined Live Wire + Official Bulletins (deduplicated by ID)
-  const allArticles = useMemo(() => {
-    const seen = new Set<string>();
-    const result: typeof news = [];
-    for (const item of [...news, ...liveNews]) {
-      const key = item.id || item.title;
-      if (!seen.has(key)) {
-        seen.add(key);
-        result.push(item);
-      }
-    }
-    return result;
-  }, [news, liveNews]);
-
-  // News filtering
-  const filteredNews = useMemo(() => {
-    return allArticles.filter(n => {
-      // Source tab filter
-      if (newsSourceFilter === 'LIVE' && !n.isLiveWire) return false;
-      if (newsSourceFilter === 'OFFICIAL' && !n.isRealBulletin) return false;
-
-      // Category filter
-      if (newsFilter === 'Official' && !n.verified) return false;
-      if (newsFilter === 'Local') {
-        const text = (n.title + ' ' + n.summary + ' ' + (n.source || '')).toLowerCase();
-        return text.includes('kathmandu') || text.includes('onlinekhabar') || text.includes('himalayan') || text.includes('republica');
-      }
-      if (newsFilter === 'Hydrology') {
-        const text = (n.title + ' ' + n.summary + ' ' + (n.category || '')).toLowerCase();
-        return text.includes('koshi') || text.includes('river') || text.includes('water') || text.includes('flood') || text.includes('dhm') || text.includes('dam') || text.includes('narayani');
-      }
-      if (newsFilter === 'Highways') {
-        const text = (n.title + ' ' + n.summary + ' ' + (n.category || '')).toLowerCase();
-        return text.includes('highway') || text.includes('road') || text.includes('prithvi') || text.includes('bp highway') || text.includes('landslide') || text.includes('block') || text.includes('traffic');
-      }
-      if (newsFilter === 'Relief') {
-        const text = (n.title + ' ' + n.summary + ' ' + (n.category || '')).toLowerCase();
-        return text.includes('red cross') || text.includes('blood') || text.includes('medical') || text.includes('relief') || text.includes('camp') || text.includes('rescue') || text.includes('aid');
-      }
-
-      // Keyword search
-      if (newsSearchTerm.trim()) {
-        const q = newsSearchTerm.toLowerCase();
-        const matchesTitle = n.title.toLowerCase().includes(q);
-        const matchesSummary = n.summary.toLowerCase().includes(q);
-        const matchesSource = (n.source || '').toLowerCase().includes(q);
-        const matchesDistrict = (n.district || '').toLowerCase().includes(q);
-        if (!matchesTitle && !matchesSummary && !matchesSource && !matchesDistrict) {
-          return false;
-        }
-      }
-
-      return true;
-    });
-  }, [allArticles, newsSourceFilter, newsFilter, newsSearchTerm]);
-
   const resetFilters = () => {
     setSearchTerm('');
     setSourceFilter('ALL');
@@ -242,14 +152,14 @@ export function NewsSafety() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-              News & Missing Person Intelligence
+              Missing Persons & Citizen Safety
             </h2>
             <Badge variant="outline" className="text-[10px] font-mono">
-              STAGE 4 INTEL
+              SEARCH & RESCUE
             </Badge>
           </div>
           <p className="text-sm text-slate-600 dark:text-slate-400">
-            AI-assisted missing-person tracing, field sighting correlation, human-verified matching, and official disaster bulletins.
+            AI-assisted missing-person tracing, field sighting correlation, human-verified matching, and NDRRMA / OPMCM Search & Rescue registry.
           </p>
         </div>
 
@@ -279,56 +189,8 @@ export function NewsSafety() {
         </div>
       </div>
 
-      {/* TOP SECTION NAVIGATION TABS */}
-      <div className="flex flex-wrap gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
-        <button
-          onClick={() => setActiveSection('MISSING_PERSONS')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
-            activeSection === 'MISSING_PERSONS'
-              ? 'bg-blue-600 text-white shadow-sm'
-              : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800'
-          }`}
-        >
-          <Search className="h-4 w-4" />
-          Missing Persons Registry & AI Match Engine
-          {pendingMatches.length > 0 && (
-            <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-500 text-white animate-pulse">
-              {pendingMatches.length} Leads
-            </span>
-          )}
-        </button>
-
-        <button
-          onClick={() => setActiveSection('NEWS')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
-            activeSection === 'NEWS'
-              ? 'bg-blue-600 text-white shadow-sm'
-              : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800'
-          }`}
-        >
-          <FileText className="h-4 w-4" />
-          Verified Disaster Updates ({news.length})
-        </button>
-
-        <button
-          onClick={() => setActiveSection('MISINFORMATION')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
-            activeSection === 'MISINFORMATION'
-              ? 'bg-blue-600 text-white shadow-sm'
-              : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800'
-          }`}
-        >
-          <ShieldAlert className="h-4 w-4 text-purple-500" />
-          Misinformation Protector
-          
-        </button>
-      </div>
-
-      {/* ========================================================================= */}
-      {/* SECTION 1: MISSING PERSON INTELLIGENCE SYSTEM                             */}
-      {/* ========================================================================= */}
-      {activeSection === 'MISSING_PERSONS' && (
-        <div className="space-y-6">
+      {/* MISSING PERSON INTELLIGENCE SYSTEM */}
+      <div className="space-y-6">
           
           {/* ===================================================================== */}
           {/* NEPAL GOVERNMENT OPMCM FLOOD RESCUE PORTAL OFFICIAL BANNER             */}
@@ -980,279 +842,8 @@ export function NewsSafety() {
           )}
 
         </div>
-      )}
 
-      {/* ========================================================================= */}
-      {/* SECTION 2: VERIFIED DISASTER NEWS & LIVE WIRE FEED                        */}
-      {/* ========================================================================= */}
-      {activeSection === 'NEWS' && (
-        <div className="space-y-5">
-          {/* Top Live Wire Connectivity Banner */}
-          <div className="p-4 rounded-xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white border border-indigo-900/50 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="relative flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-                </span>
-                <span className="text-xs font-black uppercase tracking-wider text-emerald-400 font-mono">
-                  Live Wire Active
-                </span>
-                <span className="text-xs text-slate-400">•</span>
-                <span className="text-xs text-slate-300 font-medium">
-                  Streaming Real Newsrooms & Official Agencies
-                </span>
-              </div>
-              <p className="text-xs text-slate-400">
-                Continuous ingestion from Al Jazeera, Reuters, The Kathmandu Post, OnlineKhabar, BBC, DHM Telemetry & NDRRMA
-              </p>
-            </div>
 
-            <div className="flex items-center gap-3 self-end md:self-center">
-              <span className="text-[11px] text-slate-400 font-mono">
-                {liveNewsLastSynced ? `Synced ${new Date(liveNewsLastSynced).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Live'}
-              </span>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                onClick={() => refreshLiveNews()} 
-                disabled={liveNewsLoading}
-                className="bg-white/10 hover:bg-white/20 border-white/20 text-white text-xs h-8 px-3"
-              >
-                <RefreshCw className={cn("w-3.5 h-3.5 mr-1.5", liveNewsLoading && "animate-spin")} />
-                {liveNewsLoading ? 'Syncing...' : 'Refresh Feed'}
-              </Button>
-            </div>
-          </div>
-
-          {/* Filtering & Search Toolbar */}
-          <div className="space-y-3 bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-              {/* Stream Switcher */}
-              <div className="inline-flex p-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-semibold">
-                <button
-                  type="button"
-                  onClick={() => setNewsSourceFilter('ALL')}
-                  className={cn(
-                    "px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5",
-                    newsSourceFilter === 'ALL' 
-                      ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm" 
-                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                  )}
-                >
-                  <Globe className="w-3.5 h-3.5 text-indigo-500" />
-                  All Streams ({allArticles.length})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setNewsSourceFilter('LIVE')}
-                  className={cn(
-                    "px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5",
-                    newsSourceFilter === 'LIVE' 
-                      ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm" 
-                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                  )}
-                >
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
-                  Live Web Wire ({liveNews.length})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setNewsSourceFilter('OFFICIAL')}
-                  className={cn(
-                    "px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5",
-                    newsSourceFilter === 'OFFICIAL' 
-                      ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm" 
-                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                  )}
-                >
-                  <FileText className="w-3.5 h-3.5 text-blue-500" />
-                  Official Bulletins ({news.length})
-                </button>
-              </div>
-
-              {/* Instant Search Bar */}
-              <div className="relative w-full lg:w-72">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <input
-                  type="text"
-                  placeholder="Filter headlines, agencies, districts..."
-                  value={newsSearchTerm}
-                  onChange={(e) => setNewsSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-8 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                />
-                {newsSearchTerm && (
-                  <button 
-                    onClick={() => setNewsSearchTerm('')} 
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs"
-                  >
-                    ✕
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Category Filter Pills */}
-            <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
-              <span className="text-[11px] font-semibold text-slate-400 mr-1 uppercase tracking-wider">
-                Topics:
-              </span>
-              <Button size="sm" variant={newsFilter === 'All' ? 'primary' : 'outline'} onClick={() => setNewsFilter('All')} className="text-xs py-1 h-7">
-                All Topics
-              </Button>
-              <Button size="sm" variant={newsFilter === 'Hydrology' ? 'primary' : 'outline'} onClick={() => setNewsFilter('Hydrology')} className="text-xs py-1 h-7">
-                Rivers & Floods
-              </Button>
-              <Button size="sm" variant={newsFilter === 'Highways' ? 'primary' : 'outline'} onClick={() => setNewsFilter('Highways')} className="text-xs py-1 h-7">
-                Highways & Landslides
-              </Button>
-              <Button size="sm" variant={newsFilter === 'Relief' ? 'primary' : 'outline'} onClick={() => setNewsFilter('Relief')} className="text-xs py-1 h-7">
-                Red Cross & Relief
-              </Button>
-              <Button size="sm" variant={newsFilter === 'Local' ? 'primary' : 'outline'} onClick={() => setNewsFilter('Local')} className="text-xs py-1 h-7">
-                Nepal Local Newsrooms
-              </Button>
-              <Button size="sm" variant={newsFilter === 'Official' ? 'primary' : 'outline'} onClick={() => setNewsFilter('Official')} className="text-xs py-1 h-7">
-                Gov Verified Only
-              </Button>
-            </div>
-          </div>
-
-          {/* Results Summary and Count */}
-          <div className="flex items-center justify-between text-xs text-slate-500 px-1">
-            <span>
-              Showing <strong className="text-slate-800 dark:text-slate-200">{filteredNews.length}</strong> dispatches
-              {newsSearchTerm && <span> matching "<em>{newsSearchTerm}</em>"</span>}
-            </span>
-            {liveNewsLoading && (
-              <span className="text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
-                <RefreshCw className="w-3 h-3 animate-spin" /> Fetching latest live news articles...
-              </span>
-            )}
-          </div>
-
-          {/* News Feed Grid */}
-          {filteredNews.length === 0 ? (
-            <Card className="p-12 text-center text-slate-500 space-y-3">
-              <Rss className="w-10 h-10 mx-auto text-slate-400" />
-              <p className="font-semibold text-slate-700 dark:text-slate-300">No articles matched your current filters.</p>
-              <p className="text-xs text-slate-500">Try changing the topic or clearing your search term.</p>
-              <Button size="sm" variant="outline" onClick={() => { setNewsFilter('All'); setNewsSearchTerm(''); setNewsSourceFilter('ALL'); }}>
-                Reset Filters
-              </Button>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredNews.map((article, index) => (
-                <Card 
-                  key={article.id || `news-card-${index}`} 
-                  className={cn(
-                    "hover:border-slate-300 dark:hover:border-slate-700 transition-all flex flex-col justify-between p-4",
-                    article.isLiveWire && "border-slate-200 dark:border-slate-800 hover:shadow-md"
-                  )}
-                >
-                  <div className="space-y-2.5">
-                    {/* Header Chips */}
-                    <div className="flex flex-wrap items-center gap-2">
-                      {article.isLiveWire ? (
-                        <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 inline-flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
-                          LIVE WIRE
-                        </span>
-                      ) : (
-                        <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800 inline-flex items-center gap-1">
-                          <FileText className="w-3 h-3 text-blue-500" />
-                          OFFICIAL BULLETIN
-                        </span>
-                      )}
-
-                      <Badge variant={article.severity === 'CRITICAL' ? 'critical' : article.severity === 'WARNING' ? 'warning' : 'info'}>
-                        {article.severity}
-                      </Badge>
-
-                      {getMisinfoNewsBadge(article.verificationStatus, article.verified)}
-
-                      {article.district && (
-                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                          {article.district}
-                        </span>
-                      )}
-
-                      <span className="text-xs text-slate-400 ml-auto font-mono">{article.timestamp}</span>
-                    </div>
-
-                    {/* Headline */}
-                    <h4 className="text-base font-bold text-slate-900 dark:text-slate-100 leading-snug hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-                      {article.title}
-                    </h4>
-
-                    {/* Summary */}
-                    <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-3 leading-relaxed">
-                      {article.summary}
-                    </p>
-
-                    {/* Verification Context (if available) */}
-                    {article.verificationExplanation && (
-                      <div className="mt-2 p-2.5 bg-slate-50 dark:bg-slate-900 rounded-lg text-xs text-slate-600 dark:text-slate-400 border border-slate-100 dark:border-slate-800">
-                        <span className="font-semibold block mb-1 text-slate-700 dark:text-slate-300">
-                          Verification Context:
-                        </span>
-                        {article.verificationExplanation}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Card Footer Actions */}
-                  <div className="pt-3 mt-3 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-[11px]">
-                    <div className="font-medium text-slate-500 flex items-center gap-1.5">
-                      <span className="uppercase font-bold tracking-wider text-slate-400 text-[10px]">Source:</span>
-                      <span className="font-semibold text-slate-800 dark:text-slate-200">
-                        {article.source}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      {/* Fact-Check Claim in Misinfo Lab */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setClaimToFactCheck(article.title);
-                          setActiveSection('MISINFORMATION');
-                          window.scrollTo({ top: 0, behavior: 'smooth' });
-                        }}
-                        className="inline-flex items-center gap-1 px-2 py-1 rounded text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium transition-colors"
-                        title="Fact-check this headline against verified sources"
-                      >
-                        <Shield className="w-3 h-3 text-indigo-500" />
-                        Fact-Check
-                      </button>
-
-                      {/* Direct External Link to Publisher's Live Article */}
-                      {(article.link || article.sourceUrl) && (
-                        <a 
-                          href={article.link || article.sourceUrl} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/60 font-semibold text-indigo-700 dark:text-indigo-300 transition-colors"
-                        >
-                          Read on {article.source.split(' - ')[0].split(' | ')[0].slice(0, 18)} <ArrowUpRight className="w-3.5 h-3.5" />
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ========================================================================= */}
-      {/* SECTION 3: MISINFORMATION PROTECTOR                                       */}
-      {/* ========================================================================= */}
-      {activeSection === 'MISINFORMATION' && (
-        <MisinfoProtector initialClaimText={claimToFactCheck} />
-      )}
 
       {/* ========================================================================= */}
       {/* MODALS                                                                    */}

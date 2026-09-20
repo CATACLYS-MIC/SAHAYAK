@@ -22,6 +22,7 @@ import { MapContainer, TileLayer, Polyline, Marker, Popup, Tooltip, useMap } fro
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { useTheme } from '@/lib/theme';
+import { useTranslation } from '@/lib/i18n';
 
 // Leaflet map controller for smooth centering and following vehicle
 function NavigationMapController({ 
@@ -202,6 +203,7 @@ export function GoogleMapsFullscreenNav({
   aiExplanation
 }: GoogleMapsFullscreenNavProps) {
   const { theme } = useTheme();
+  const { t, translateDynamic, language } = useTranslation();
 
   // Active step in turn-by-turn navigation
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -949,7 +951,7 @@ export function GoogleMapsFullscreenNav({
               )}
             >
               <Navigation className="w-3.5 h-3.5" />
-              <span>Route Trip</span>
+              <span>{t('routes.route_overview', 'Route Trip')}</span>
             </button>
 
             <button
@@ -962,7 +964,7 @@ export function GoogleMapsFullscreenNav({
               )}
             >
               <Compass className="w-3.5 h-3.5" />
-              <span>Turns ({steps.length})</span>
+              <span>{t('routes.turns', 'Turns')} ({steps.length})</span>
             </button>
 
             <button
@@ -975,7 +977,7 @@ export function GoogleMapsFullscreenNav({
               )}
             >
               <span>🌉</span>
-              <span>Bridges ({bridgesOnPath.length})</span>
+              <span>{t('routes.dor_bridges', 'Bridges')} ({bridgesOnPath.length})</span>
             </button>
 
             <button
@@ -988,7 +990,7 @@ export function GoogleMapsFullscreenNav({
               )}
             >
               <span>🌊</span>
-              <span>Rivers ({riversOnPath.length})</span>
+              <span>{t('routes.dhm_rivers', 'Rivers')} ({riversOnPath.length})</span>
             </button>
 
             {avoidRouteEval && (
@@ -1002,7 +1004,7 @@ export function GoogleMapsFullscreenNav({
                 )}
               >
                 <AlertOctagon className="w-3.5 h-3.5" />
-                <span>Avoid Route</span>
+                <span>{t('routes.avoid_route', 'Avoid Route')}</span>
               </button>
             )}
 
@@ -1016,7 +1018,7 @@ export function GoogleMapsFullscreenNav({
               )}
             >
               <Sparkles className="w-3.5 h-3.5" />
-              <span>AI Reasoning</span>
+              <span>{t('routes.ai_reasoning', 'AI Reasoning')}</span>
             </button>
           </div>
 
@@ -1028,7 +1030,7 @@ export function GoogleMapsFullscreenNav({
               onClick={goToPrevStep}
               disabled={currentStepIndex === 0}
               className="h-7 px-2 text-xs border-slate-700 text-slate-200"
-              title="Previous Turn"
+              title={t('routes.prev_turn', 'Previous Turn')}
             >
               <SkipBack className="w-3.5 h-3.5" />
             </Button>
@@ -1039,7 +1041,7 @@ export function GoogleMapsFullscreenNav({
               className="h-7 px-3 text-xs font-bold gap-1 bg-emerald-600 hover:bg-emerald-700 text-white"
             >
               {isSimulating ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-              <span>{isSimulating ? 'Pause Drive' : 'Start Simulation'}</span>
+              <span>{isSimulating ? t('routes.pause_drive', 'Pause Drive') : t('routes.start_simulation', 'Start Simulation')}</span>
             </Button>
             <Button
               variant="outline"
@@ -1047,7 +1049,7 @@ export function GoogleMapsFullscreenNav({
               onClick={goToNextStep}
               disabled={currentStepIndex === steps.length - 1}
               className="h-7 px-2 text-xs border-slate-700 text-slate-200"
-              title="Next Turn"
+              title={t('routes.next_turn', 'Next Turn')}
             >
               <SkipForward className="w-3.5 h-3.5" />
             </Button>
@@ -1062,34 +1064,34 @@ export function GoogleMapsFullscreenNav({
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 <div>
-                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Estimated Travel Time</span>
+                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">{t('routes.estimated_time', 'Estimated Travel Time')}</span>
                   <span className="text-xl sm:text-2xl font-black text-emerald-400">
                     {recommendedEval ? `${Math.floor(recommendedEval.estimatedTimeMin / 60)}h ${recommendedEval.estimatedTimeMin % 60}m` : '3h 25m'}
                   </span>
                 </div>
                 <div className="h-8 w-px bg-slate-800"></div>
                 <div>
-                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Total Distance</span>
+                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">{t('routes.total_distance', 'Total Distance')}</span>
                   <span className="text-xl sm:text-2xl font-black text-white">
                     {recommendedEval ? `${recommendedEval.distanceKm} km` : '186 km'}
                   </span>
                 </div>
                 <div className="h-8 w-px bg-slate-800 hidden sm:block"></div>
                 <div className="hidden sm:block">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">DOR Road Status</span>
+                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">{t('routes.road_status', 'DOR Road Status')}</span>
                   <span className="text-sm font-bold text-emerald-400 flex items-center gap-1">
                     <CheckCircle2 className="w-3.5 h-3.5" />
-                    OPEN (Zero Active Closures)
+                    {t('routes.open_clear', 'OPEN (Zero Active Closures)')}
                   </span>
                 </div>
               </div>
 
               {/* Responder vehicle tag */}
               <div className="flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700 text-xs">
-                <span className="text-slate-400">Profile:</span>
+                <span className="text-slate-400">{t('routes.profile', 'Profile')}:</span>
                 <span className="font-bold text-indigo-300 uppercase">{responderProfile.replace(/_/g, ' ')}</span>
                 <span className="text-slate-500">|</span>
-                <span className="text-emerald-400 font-semibold">100% Passable</span>
+                <span className="text-emerald-400 font-semibold">{t('routes.passable_100', '100% Passable')}</span>
               </div>
             </div>
           )}
@@ -1098,7 +1100,7 @@ export function GoogleMapsFullscreenNav({
           {activeTab === 'turns' && (
             <div className="space-y-1.5">
               <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                Turn-by-Turn GPS Waypoints (Click to Jump)
+                {t('routes.turn_waypoints', 'Turn-by-Turn GPS Waypoints (Click to Jump)')}
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                 {steps.map((st, idx) => (
@@ -1131,8 +1133,8 @@ export function GoogleMapsFullscreenNav({
           {activeTab === 'bridges' && (
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs font-bold text-slate-300">
-                <span>Department of Roads (DOR) Monitored Bridges on Path ({bridgesOnPath.length})</span>
-                <span className="text-[10px] text-slate-400">Color coded: Green (Open), Amber (Caution), Red (Blocked)</span>
+                <span>{t('routes.dor_bridges_monitored', 'Department of Roads (DOR) Monitored Bridges on Path')} ({bridgesOnPath.length})</span>
+                <span className="text-[10px] text-slate-400">{t('routes.color_coded_bridges', 'Color coded: Green (Open), Amber (Caution), Red (Blocked)')}</span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                 {bridgesOnPath.length > 0 ? (
@@ -1156,7 +1158,7 @@ export function GoogleMapsFullscreenNav({
                         </span>
                       </div>
                       <p className="text-[11px] text-slate-300">
-                        River: <strong>{br.river}</strong> • {br.district}
+                        {t('common.location', 'River')}: <strong>{br.river}</strong> • {br.district}
                       </p>
                       <div className="flex justify-between text-[10px] text-slate-400">
                         <span>Span: {br.spanLengthMeters}m</span>
@@ -1166,7 +1168,7 @@ export function GoogleMapsFullscreenNav({
                     </div>
                   ))
                 ) : (
-                  <p className="text-xs text-slate-400 col-span-3 py-2">No structural bridge bottlenecks along this verified corridor.</p>
+                  <p className="text-xs text-slate-400 col-span-3 py-2">{t('routes.no_bridge_bottlenecks', 'No structural bridge bottlenecks along this verified corridor.')}</p>
                 )}
               </div>
             </div>
@@ -1176,8 +1178,8 @@ export function GoogleMapsFullscreenNav({
           {activeTab === 'rivers' && (
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs font-bold text-slate-300">
-                <span>Department of Hydrology and Meteorology (DHM) River Flood Telemetry ({riversOnPath.length})</span>
-                <span className="text-[10px] text-slate-400">Color coded: Blue (Normal), Amber (Warning), Red (Danger)</span>
+                <span>{t('routes.dhm_rivers_telemetry', 'Department of Hydrology and Meteorology (DHM) River Flood Telemetry')} ({riversOnPath.length})</span>
+                <span className="text-[10px] text-slate-400">{t('routes.color_coded_rivers', 'Color coded: Blue (Normal), Amber (Warning), Red (Danger)')}</span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                 {riversOnPath.length > 0 ? (
@@ -1201,15 +1203,15 @@ export function GoogleMapsFullscreenNav({
                         </span>
                       </div>
                       <div className="flex justify-between text-[11px] text-slate-200">
-                        <span>Water Level: <strong>{st.waterLevel}m</strong></span>
-                        <span className="text-slate-400">Danger: {st.dangerLevel}m</span>
+                        <span>{t('weather.water_level', 'Water Level')}: <strong>{st.waterLevel}m</strong></span>
+                        <span className="text-slate-400">{t('weather.danger_level', 'Danger')}: {st.dangerLevel}m</span>
                       </div>
-                      <p className="text-[10px] text-slate-400">Basin: {st.basin || st.riverName} • Trend: {st.trend || 'Steady'}</p>
-                      <p className="text-[10px] text-amber-300/90 font-medium truncate">{st.statusDesc}</p>
+                      <p className="text-[10px] text-slate-400">{t('weather.river_basin', 'Basin')}: {st.basin || st.riverName} • Trend: {st.trend || 'Steady'}</p>
+                      <p className="text-[10px] text-amber-300/90 font-medium truncate">{translateDynamic(st.statusDesc)}</p>
                     </div>
                   ))
                 ) : (
-                  <p className="text-xs text-slate-400 col-span-3 py-2">All adjacent river basins are within normal safe hydrological thresholds.</p>
+                  <p className="text-xs text-slate-400 col-span-3 py-2">{t('routes.all_rivers_normal', 'All adjacent river basins are within normal safe hydrological thresholds.')}</p>
                 )}
               </div>
             </div>
@@ -1221,10 +1223,10 @@ export function GoogleMapsFullscreenNav({
               <div className="flex items-center justify-between">
                 <span className="font-bold text-red-400 flex items-center gap-1.5 text-sm">
                   <AlertOctagon className="w-4 h-4 text-red-500" />
-                  <span>CRITICAL HAZARDS: Why This Route Must Be Avoided</span>
+                  <span>{t('routes.critical_hazards', 'CRITICAL HAZARDS: Why This Route Must Be Avoided')}</span>
                 </span>
                 <Badge variant="destructive" className="text-[10px] font-bold">
-                  {avoidRouteEval?.overallRiskLevel || 'CRITICAL'} RISK
+                  {avoidRouteEval?.overallRiskLevel || 'CRITICAL'} {t('routes.risk', 'RISK')}
                 </Badge>
               </div>
 

@@ -48,8 +48,6 @@ export function CommandCenter() {
     roads, bridges,
     hospitalSummary,
     hospitalSourceStatus,
-    claimAnalyses,
-    updateHumanReviewStatus,
     rescueSummary,
     rescueSourceStatus,
     dorClosures,

@@ -34,7 +34,6 @@ export function Home() {
     hazardRisks,
     governmentHospitals,
     hospitalSourceStatus,
-    claimAnalyses,
     dorSummary,
     dorClosures,
     dorDataSource
@@ -238,45 +237,6 @@ export function Home() {
         onOpenPortal={() => navigate('/hospital-matching')} 
         className="mt-8" 
       />
-
-      {/* AI PRIORITY SECTION (BASELINE ACTIVE) */}
-      <div className="mt-8">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold flex items-center text-blue-700 dark:text-blue-400">
-            <Activity className="mr-2 h-5 w-5" />
-            Baseline Priority Recommendations <Badge variant="outline" className="ml-2 text-[10px] border-blue-400 text-blue-700 dark:text-blue-300">LIVE</Badge>
-          </h3>
-          <Button variant="ghost" size="sm" onClick={() => navigate('/ai-priority')} className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">
-            View All Priorities <ArrowRight className="ml-1 h-4 w-4" />
-          </Button>
-        </div>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {criticalIncidents.slice(0, 2).map((inc, i) => (
-            <Card key={inc.id} className="border-orange-200 dark:border-orange-500/30">
-              <CardHeader 
-                title="Immediate Attention Required"
-                action={<Badge variant="critical">PRIORITY</Badge>}
-              />
-              <div className="space-y-4">
-                <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-lg border border-slate-200 dark:border-slate-800">
-                  <p className="text-orange-700 dark:text-orange-400 font-bold mb-1">{inc.title}</p>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{inc.desc}</p>
-                  <div className="mt-3 flex items-center justify-between">
-                    <span className="text-[10px] font-bold bg-slate-200 dark:bg-slate-800 px-2 py-1 rounded text-slate-700 dark:text-slate-300">EST. {inc.peopleAffected} PEOPLE</span>
-                    <Button variant="outline" size="sm" onClick={() => navigate('/routes')}>Review Action Plan</Button>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          ))}
-          {criticalIncidents.length === 0 && (
-            <Card className="col-span-2 py-8 text-center text-slate-500 dark:text-slate-400">
-              No critical priorities identified in this region currently. Real-time monitoring active.
-            </Card>
-          )}
-        </div>
-      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
         {/* MAP SECTION */}

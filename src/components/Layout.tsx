@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { 
   Home, CloudLightning, ShieldAlert, Map, Building2, Users, 
-  ClipboardCheck, Target, RadioTower, Menu, Search, Bell, 
+  ClipboardCheck, RadioTower, Menu, Search, Bell, 
   MapPin, UserCircle, Moon, Sun, X, Stethoscope
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -20,7 +20,6 @@ const NAV_ITEMS = [
   { key: 'nav.hospital_matching', defaultName: 'HOSPITAL MATCHING', path: '/hospital-matching', icon: Stethoscope },
   { key: 'nav.logistics', defaultName: 'LOGISTICS & TEAM', path: '/logistics', icon: Users },
   { key: 'nav.assessment', defaultName: 'ASSESSMENT', path: '/assessment', icon: ClipboardCheck },
-  { key: 'nav.ai_priority', defaultName: 'AI PRIORITY', path: '/ai-priority', icon: Target },
   { key: 'nav.command_center', defaultName: 'COMMAND CENTER', path: '/command-center', icon: RadioTower, role: 'COMMANDER' },
 ];
 

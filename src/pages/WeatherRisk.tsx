@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Card, CardHeader, Badge, Button, BaseMap } from '@/components/ui';
-import { CloudRain, Wind, Droplets, Thermometer, BrainCircuit, History, Layers, AlertTriangle, Info, Map, ChevronRight, Activity, BellRing, Navigation, Waves, ShieldAlert, Sparkles, CheckCircle2, Sun, CloudSun, Gauge, Cloud, SlidersHorizontal, Check, ExternalLink } from 'lucide-react';
+import { CloudRain, Wind, Droplets, Thermometer, BrainCircuit, Layers, AlertTriangle, Info, Map, ChevronRight, Activity, BellRing, Navigation, Waves, ShieldAlert, Sparkles, CheckCircle2, Sun, CloudSun, Gauge, Cloud, SlidersHorizontal, Check, ExternalLink } from 'lucide-react';
 import { useAppState } from '@/lib/store';
 import { HistoricalEvent, HazardRisk } from '@/types';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, AreaChart, Area } from 'recharts';
@@ -38,14 +38,13 @@ function getSourceUrl(sourceName: string, location?: { lat?: number; lng?: numbe
 export function WeatherRisk() {
   const { 
     currentLocationId, currentLocation, locations, weatherSources, fusedWeather, hazardRisks, 
-    historicalEvents, demoScenarioStep, setDemoScenarioStep,
+    demoScenarioStep, setDemoScenarioStep,
     hourlyForecast, environmentalSensors,
     dhmStations, dhmSummary, dhmDemoMode
   } = useAppState();
   
   const [activeTab, setActiveTab] = useState<'WEATHER_OVERVIEW' | 'RIVER_WATCH'>('WEATHER_OVERVIEW');
   const [riskLayer, setRiskLayer] = useState<'OVERALL' | 'FLOOD' | 'LANDSLIDE' | 'EXTREME_RAIN'>('OVERALL');
-  const [selectedHistoricalEventId, setSelectedHistoricalEventId] = useState<string>(historicalEvents[0]?.id || '');
   const [selectedRegionId, setSelectedRegionId] = useState<string>(currentLocationId || 'loc-1');
 
   // Scientific baseline benchmarks
@@ -158,8 +157,6 @@ export function WeatherRisk() {
     return { label: 'Continuous Rain', description: 'Persistent heavy precipitation expected across basin.', textClass: 'text-violet-600 dark:text-violet-400', badgeVariant: 'danger' as const };
   };
   const rainAssessment = getRainProbAssessment(todayRainProb);
-
-  const selectedEvent = historicalEvents.find(e => e.id === selectedHistoricalEventId);
 
   // Selected region for map inspection
   const selectedRegionLocation = locations.find(l => l.id === selectedRegionId) || currentLocation || locations[0];
@@ -1145,68 +1142,6 @@ export function WeatherRisk() {
             <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-400">
               <span>Telemetry Sync: {activeRegionRisk.lastUpdate}</span>
               <span className="text-emerald-600 dark:text-emerald-400 font-medium">Live Feed</span>
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      {/* 6. HISTORICAL DISASTER REPLAY */}
-      <div>
-        <h3 className="text-lg font-bold mb-4 text-slate-900 dark:text-white flex items-center">
-          <History className="mr-2 h-5 w-5 text-indigo-600 dark:text-indigo-500" />
-          Historical Disaster Replay
-        </h3>
-        <Card className="border-indigo-100 dark:border-indigo-900/30 overflow-hidden">
-          <div className="grid grid-cols-1 lg:grid-cols-3">
-            
-            {/* Selection & Analysis */}
-            <div className="p-6 border-b lg:border-b-0 lg:border-r border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30">
-              <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-2">Simulated Event</label>
-              <select 
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg p-2.5 text-sm font-medium text-slate-900 dark:text-slate-200 outline-none mb-6"
-                value={selectedHistoricalEventId}
-                onChange={(e) => setSelectedHistoricalEventId(e.target.value)}
-              >
-                {historicalEvents.map(e => <option key={e.id} value={e.id}>{e.name} ({e.date})</option>)}
-              </select>
-
-              <div className="bg-white dark:bg-slate-950 p-4 rounded-lg border border-slate-200 dark:border-slate-800 space-y-4">
-                <h4 className="font-bold text-slate-900 dark:text-white flex items-center text-sm">
-                  <BrainCircuit className="h-4 w-4 mr-2 text-indigo-500" /> What would SAHAYAK have concluded?
-                </h4>
-                <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed italic">
-                  "Based on the available historical signals leading up to the {selectedEvent?.date} event, the system would have classified the area as high risk before the recorded event."
-                </p>
-                <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
-                  <div className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Recorded Outcome</div>
-                  <div className="text-sm font-medium text-slate-900 dark:text-slate-200">{selectedEvent?.actualOutcome}</div>
-                  <div className="text-xs text-slate-500 dark:text-slate-500 mt-1">Region: {selectedEvent?.actualAffectedRegion}</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Timeline */}
-            <div className="p-6 col-span-2">
-              <h4 className="font-bold text-slate-900 dark:text-white mb-6 text-sm uppercase tracking-wider">Event Timeline Progression</h4>
-              <div className="space-y-6 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 dark:before:via-slate-800 before:to-transparent">
-                {selectedEvent?.timeline.map((step, idx) => (
-                  <div key={idx} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white dark:border-slate-950 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
-                      <ChevronRight className="h-4 w-4" />
-                    </div>
-                    <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-white dark:bg-slate-900 p-4 rounded-lg shadow-sm border border-slate-100 dark:border-slate-800">
-                      <div className="flex items-center justify-between mb-2">
-                        <Badge variant="outline" className="font-mono text-xs">{step.timeOffset}</Badge>
-                        <Badge variant={step.aiRiskLevel === 'CRITICAL' ? 'critical' : step.aiRiskLevel === 'HIGH' ? 'danger' : 'warning'}>{step.aiRiskLevel}</Badge>
-                      </div>
-                      <div className="text-sm text-slate-700 dark:text-slate-300 font-medium mb-1">{step.aiPrediction}</div>
-                      <div className="text-xs text-slate-500 dark:text-slate-500 border-t border-slate-100 dark:border-slate-800 pt-2 mt-2">
-                        Source signal: {step.sourceState}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
             </div>
           </div>
         </Card>

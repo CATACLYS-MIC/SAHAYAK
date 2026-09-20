@@ -20,6 +20,7 @@ import { MapContainer, TileLayer, Polyline, Marker, Popup, Tooltip, useMap } fro
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { useTheme } from '@/lib/theme';
+import { useTranslation } from '@/lib/i18n';
 
 // Fix default Leaflet icon assets
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -192,6 +193,7 @@ export function Routes() {
   } = useAppState();
   
   const { theme } = useTheme();
+  const { t, translateDynamic, language } = useTranslation();
   
   // Starting location defaults to "Current Location"
   const [startLoc, setStartLoc] = useState('Current Location');
@@ -472,7 +474,7 @@ export function Routes() {
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">
-                Department of Roads (DOR) Navigate Integration
+                {t('home.dor_highway_status', 'Department of Roads (DOR) Navigate Integration')}
               </span>
               <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-950 text-emerald-300 border border-emerald-800">
                 ● Live 718 SRN Links
@@ -482,7 +484,7 @@ export function Routes() {
               </span>
             </div>
             <p className="text-xs text-slate-300 mt-0.5">
-              Primary road condition feed cross-fused with DHM River Watch flood sensors and citizen road reports.
+              {t('routes.subtitle', 'Primary road condition feed cross-fused with DHM River Watch flood sensors and citizen road reports.')}
             </p>
           </div>
         </div>
@@ -490,10 +492,10 @@ export function Routes() {
         <div className="flex items-center gap-2.5 flex-wrap">
           <div className="flex items-center gap-2 text-xs bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700">
             <span className="text-red-400 font-bold">{dorSummary?.activeRoadblocks || dorClosures.filter(c => c.sahayakStatus === 'BLOCKED').length}</span>
-            <span className="text-slate-400">Active Blockages</span>
+            <span className="text-slate-400">{t('home.blocked_roads', 'Active Blockages')}</span>
             <span className="text-slate-600">|</span>
             <span className="text-amber-400 font-bold">{dorSummary?.partialRestrictions || dorClosures.filter(c => c.sahayakStatus === 'RESTRICTED').length}</span>
-            <span className="text-slate-400">Restrictions</span>
+            <span className="text-slate-400">{t('common.filter', 'Restrictions')}</span>
           </div>
 
           <Button 
@@ -504,7 +506,7 @@ export function Routes() {
             className="h-8 text-xs gap-1.5 text-slate-200 border-slate-700 hover:bg-slate-800"
           >
             <RefreshCw className={cn("w-3.5 h-3.5", dorLoading && "animate-spin")} />
-            <span>Sync DOR</span>
+            <span>{t('common.refresh', 'Sync DOR')}</span>
           </Button>
 
           <a 
@@ -572,7 +574,7 @@ export function Routes() {
                 className="flex-1 h-7 text-xs gap-1 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300"
               >
                 <Building2 className="w-3 h-3 text-red-500" />
-                <span>To Safe Hospital</span>
+                <span>{t('facilities.call_hospital', 'To Safe Hospital')}</span>
               </Button>
               <Button 
                 variant="outline" 
@@ -581,7 +583,7 @@ export function Routes() {
                 className="flex-1 h-7 text-xs gap-1 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300"
               >
                 <Building2 className="w-3 h-3 text-blue-500" />
-                <span>To Relief Shelter</span>
+                <span>{t('facilities.shelters', 'To Relief Shelter')}</span>
               </Button>
             </div>
 
@@ -598,7 +600,7 @@ export function Routes() {
                   {/* Origin */}
                   <div>
                     <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block mb-0.5">
-                      Starting Corridor
+                      {t('routes.origin', 'Starting Corridor')}
                     </label>
                     <select 
                       className="w-full p-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" 
@@ -606,12 +608,12 @@ export function Routes() {
                       onChange={e => setStartLoc(e.target.value)}
                     >
                       <option value="Current Location">
-                        📍 Current Location {gpsAcquired ? `(GPS ${startCoordinates.lat.toFixed(2)}°, ${startCoordinates.lng.toFixed(2)}°)` : '(Detecting GPS...)'}
+                        📍 {t('common.location', 'Current Location')} {gpsAcquired ? `(GPS ${startCoordinates.lat.toFixed(2)}°, ${startCoordinates.lng.toFixed(2)}°)` : '(Detecting GPS...)'}
                       </option>
                       <option disabled>──────────</option>
                       {Object.keys(CITIES).map(city => (
                         <option key={`start-${city}`} value={city}>
-                          {city} ({CITIES[city].region})
+                          {t(city, city)} ({t(CITIES[city].region, CITIES[city].region)})
                         </option>
                       ))}
                     </select>
@@ -620,7 +622,7 @@ export function Routes() {
                   {/* Destination */}
                   <div>
                     <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block mb-0.5">
-                      Destination Corridor
+                      {t('routes.destination', 'Destination Corridor')}
                     </label>
                     <select 
                       className="w-full p-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" 
@@ -629,11 +631,11 @@ export function Routes() {
                     >
                       {Object.keys(CITIES).map(city => (
                         <option key={`end-${city}`} value={city}>
-                          {city} ({CITIES[city].region})
+                          {t(city, city)} ({t(CITIES[city].region, CITIES[city].region)})
                         </option>
                       ))}
                       <option value="Current Location">
-                        📍 Current Location {gpsAcquired ? `(GPS ${endCoordinates.lat.toFixed(2)}°, ${endCoordinates.lng.toFixed(2)}°)` : ''}
+                        📍 {t('common.location', 'Current Location')} {gpsAcquired ? `(GPS ${endCoordinates.lat.toFixed(2)}°, ${endCoordinates.lng.toFixed(2)}°)` : ''}
                       </option>
                     </select>
                   </div>
@@ -645,7 +647,7 @@ export function Routes() {
                     size="sm" 
                     onClick={swapLocations} 
                     className="p-2 h-8 w-8 rounded-lg border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800"
-                    title="Swap Origin and Destination"
+                    title={t('routes.origin', 'Swap Origin and Destination')}
                   >
                     <ArrowUpDown className="w-4 h-4 text-slate-600 dark:text-slate-300" />
                   </Button>
@@ -655,7 +657,7 @@ export function Routes() {
 
             {/* Demo Scenarios */}
             <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
-              <span className="text-[11px] font-semibold text-slate-500">Test Scenarios:</span>
+              <span className="text-[11px] font-semibold text-slate-500">{t('routes.test_scenarios', 'Test Scenarios:')}</span>
               <div className="flex gap-1">
                 <Button 
                   size="sm" 
@@ -663,7 +665,7 @@ export function Routes() {
                   className="h-6 text-[11px] px-2"
                   onClick={() => applyDemoScenario(0)}
                 >
-                  Baseline
+                  {t('routes.baseline', 'Baseline')}
                 </Button>
                 <Button 
                   size="sm" 
@@ -671,7 +673,7 @@ export function Routes() {
                   className="h-6 text-[11px] px-2 text-amber-600 dark:text-amber-400"
                   onClick={() => applyDemoScenario(1)}
                 >
-                  Landslide
+                  {t('routes.landslide', 'Landslide')}
                 </Button>
                 <Button 
                   size="sm" 
@@ -679,7 +681,7 @@ export function Routes() {
                   className="h-6 text-[11px] px-2 text-blue-600 dark:text-blue-400"
                   onClick={() => applyDemoScenario(2)}
                 >
-                  River Flood
+                  {t('routes.river_flood', 'River Flood')}
                 </Button>
               </div>
             </div>
@@ -691,16 +693,16 @@ export function Routes() {
                 className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl shadow-md flex items-center justify-center gap-2 border border-emerald-500 text-xs sm:text-sm"
               >
                 <Navigation className="w-4 h-4" />
-                <span>Start Google Maps Navigation (Fullscreen)</span>
+                <span>{t('routes.start_nav', 'Start Google Maps Navigation (Fullscreen)')}</span>
               </Button>
               <div className="mt-1.5 flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 px-1">
-                <span>Turn-by-turn guidance</span>
+                <span>{t('Turn-by-turn guidance', 'Turn-by-turn guidance')}</span>
                 <span>•</span>
-                <span>DOR Bridges</span>
+                <span>{t('routes.dor_bridges', 'DOR Bridges')}</span>
                 <span>•</span>
-                <span>DHM Rivers</span>
+                <span>{t('routes.dhm_rivers', 'DHM Rivers')}</span>
                 <span>•</span>
-                <span className="text-red-500 font-bold">Route Avoidance</span>
+                <span className="text-red-500 font-bold">{t('Route Avoidance', 'Route Avoidance')}</span>
               </div>
             </div>
           </Card>
@@ -713,14 +715,14 @@ export function Routes() {
               <div className="p-3.5 rounded-xl bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-950/40 dark:to-blue-950/40 border border-indigo-200 dark:border-indigo-800/70 shadow-xs">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-700 dark:text-indigo-300 mb-1">
                   <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
-                  <span>Why This Route is Recommended:</span>
+                  <span>{t('routes.ai_reasoning', 'Why This Route is Recommended:')}</span>
                 </div>
                 <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-normal">
-                  {aiExplanation}
+                  {translateDynamic(aiExplanation)}
                 </p>
                 <div className="mt-2 text-[10px] text-indigo-600/80 dark:text-indigo-400/80 flex items-center gap-1 font-medium">
                   <Check className="w-3 h-3 text-emerald-500" />
-                  <span>Cites live Department of Roads (DOR) and DHM River Watch hydrology</span>
+                  <span>{t('routes.dor_dhm_cites', 'Cites live Department of Roads (DOR) and DHM River Watch hydrology')}</span>
                 </div>
               </div>
             )}
@@ -729,8 +731,8 @@ export function Routes() {
             {disasterEvaluations.length > 0 ? (
               <div className="space-y-2.5">
                 <div className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300 px-1">
-                  <span>Evaluated Highway Corridors ({disasterEvaluations.length})</span>
-                  <span className="text-[10px] font-medium text-slate-400">Ranked by Safety Index</span>
+                  <span>{t('routes.evaluated_corridors', 'Evaluated Highway Corridors')} ({disasterEvaluations.length})</span>
+                  <span className="text-[10px] font-medium text-slate-400">{t('routes.ranked_by_safety', 'Ranked by Safety Index')}</span>
                 </div>
 
                 {disasterEvaluations.map((routeEval, idx) => {
