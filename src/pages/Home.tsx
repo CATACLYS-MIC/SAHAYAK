@@ -4,6 +4,7 @@ import { Card, CardHeader, Badge, Button, BaseMap } from '@/components/ui';
 import { AlertTriangle, CloudRain, MapPin, Activity, ArrowRight, ShieldAlert, Stethoscope, FileWarning, Sun, CheckCircle2, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppState } from '@/lib/store';
+import { useTranslation } from '@/lib/i18n';
 import { getShortageStatus, calculateDistanceKm } from '@/lib/calculations';
 import { HospitalMatchingNetworkCard } from '@/components/hospital-matching/HospitalMatchingNetworkCard';
 import { Marker, Popup } from 'react-leaflet';
@@ -42,6 +43,7 @@ export function Home() {
    
   const currentWeather = weather[currentLocationId];
   const navigate = useNavigate();
+  const { t } = useTranslation();
   
   const overallRisk = hazardRisks.find(r => r.hazard === 'Overall');
   const topHazard = hazardRisks.reduce((prev, current) => (prev.score > current.score) ? prev : current, hazardRisks[0]);
@@ -102,9 +104,11 @@ export function Home() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Dashboard</h2>
+          <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+            {t('nav.home', 'Dashboard')}
+          </h2>
           <p className="text-slate-600 dark:text-slate-400 mt-1">
-            Situation Overview for <strong className="text-slate-900 dark:text-slate-200">{currentLocation?.name}</strong> 
+            {t('home.hero_subtitle', 'Situation Overview for')} <strong className="text-slate-900 dark:text-slate-200">{currentLocation?.name}</strong> 
             <Badge variant="outline" className="ml-2 text-[10px] border-emerald-500 text-emerald-700 dark:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-950/30">
               REAL TELEMETRY
             </Badge>
@@ -133,7 +137,9 @@ export function Home() {
           overallRisk?.level === 'MODERATE' || overallRisk?.level === 'ELEVATED' ? "border-yellow-200 dark:border-yellow-500/30 bg-yellow-50 dark:bg-yellow-500/5" : ""
         )}>
           <div className="absolute top-0 right-0 p-4 opacity-5 dark:opacity-10 text-red-900 dark:text-red-500"><AlertTriangle size={64} /></div>
-          <p className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Overall Hazard Risk</p>
+          <p className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+            {t('home.overall_risk', 'Overall Hazard Risk')}
+          </p>
           <div className="mt-2 flex items-baseline gap-2">
             <span className={cn(
               "text-3xl font-bold",
@@ -157,7 +163,9 @@ export function Home() {
         
         <Card>
           <div className="flex items-center justify-between mb-1">
-            <p className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Live Weather</p>
+            <p className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+              {t('nav.weather_risk', 'Live Weather')}
+            </p>
             <a 
               href={currentLocation?.lat && currentLocation?.lng ? `https://open-meteo.com/en/docs#latitude=${currentLocation.lat}&longitude=${currentLocation.lng}` : 'https://open-meteo.com/'} 
               target="_blank" 
@@ -185,7 +193,9 @@ export function Home() {
         </Card>
 
         <Card>
-          <p className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Active Incidents</p>
+          <p className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+            {t('home.active_incidents', 'Active Incidents')}
+          </p>
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-3xl font-bold text-slate-900 dark:text-white">{localIncidents.length}</span>
             <span className="text-sm font-bold text-slate-500 dark:text-slate-400">in {currentLocation?.name}</span>
@@ -198,7 +208,9 @@ export function Home() {
 
         <Card>
           <div className="flex items-center justify-between mb-1">
-            <p className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Road Status</p>
+            <p className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+              {t('home.dor_highway_status', 'Road Status')}
+            </p>
             <button 
               onClick={() => navigate('/routes')} 
               className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5 font-semibold"

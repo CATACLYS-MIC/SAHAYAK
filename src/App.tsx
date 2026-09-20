@@ -5,6 +5,7 @@
 
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './lib/theme';
+import { LanguageProvider } from './lib/i18n';
 import { AppStateProvider } from './lib/store';
 import { Layout } from './components/Layout';
 import { Home } from './pages/Home';
@@ -22,24 +23,26 @@ import React from 'react';
 export default function App() {
   return (
     <ThemeProvider defaultTheme="light">
-      <AppStateProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Layout />}>
-              <Route index element={<Home />} />
-              <Route path="weather-risk" element={<WeatherRisk />} />
-              <Route path="news-safety" element={<NewsSafety />} />
-              <Route path="routes" element={<RoutesPage />} />
-              <Route path="facilities" element={<Facilities />} />
-              <Route path="hospital-matching" element={<HospitalMatching />} />
-              <Route path="logistics" element={<LogisticsTeam />} />
-              <Route path="assessment" element={<Assessment />} />
-              <Route path="ai-priority" element={<AIPriority />} />
-              <Route path="command-center" element={<CommandCenter />} />
-            </Route>
-          </Routes>
-        </BrowserRouter>
-      </AppStateProvider>
+      <LanguageProvider>
+        <AppStateProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Layout />}>
+                <Route index element={<Home />} />
+                <Route path="weather-risk" element={<WeatherRisk />} />
+                <Route path="news-safety" element={<NewsSafety />} />
+                <Route path="routes" element={<RoutesPage />} />
+                <Route path="facilities" element={<Facilities />} />
+                <Route path="hospital-matching" element={<HospitalMatching />} />
+                <Route path="logistics" element={<LogisticsTeam />} />
+                <Route path="assessment" element={<Assessment />} />
+                <Route path="ai-priority" element={<AIPriority />} />
+                <Route path="command-center" element={<CommandCenter />} />
+              </Route>
+            </Routes>
+          </BrowserRouter>
+        </AppStateProvider>
+      </LanguageProvider>
     </ThemeProvider>
   );
 }

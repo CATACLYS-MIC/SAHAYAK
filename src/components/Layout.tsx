@@ -7,19 +7,21 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/lib/theme';
+import { useTranslation } from '@/lib/i18n';
+import { LanguageSelector } from '@/components/LanguageSelector';
 import { useAppState } from '@/lib/store';
 
 const NAV_ITEMS = [
-  { name: 'HOME', path: '/', icon: Home },
-  { name: 'WEATHER & RISK', path: '/weather-risk', icon: CloudLightning },
-  { name: 'NEWS & SAFETY', path: '/news-safety', icon: ShieldAlert },
-  { name: 'ROUTES', path: '/routes', icon: Map },
-  { name: 'FACILITIES', path: '/facilities', icon: Building2 },
-  { name: 'HOSPITAL MATCHING', path: '/hospital-matching', icon: Stethoscope },
-  { name: 'LOGISTICS & TEAM', path: '/logistics', icon: Users },
-  { name: 'ASSESSMENT', path: '/assessment', icon: ClipboardCheck },
-  { name: 'AI PRIORITY', path: '/ai-priority', icon: Target },
-  { name: 'COMMAND CENTER', path: '/command-center', icon: RadioTower, role: 'COMMANDER' },
+  { key: 'nav.home', defaultName: 'HOME', path: '/', icon: Home },
+  { key: 'nav.weather_risk', defaultName: 'WEATHER & RISK', path: '/weather-risk', icon: CloudLightning },
+  { key: 'nav.news_safety', defaultName: 'NEWS & SAFETY', path: '/news-safety', icon: ShieldAlert },
+  { key: 'nav.routes', defaultName: 'ROUTES', path: '/routes', icon: Map },
+  { key: 'nav.facilities', defaultName: 'FACILITIES', path: '/facilities', icon: Building2 },
+  { key: 'nav.hospital_matching', defaultName: 'HOSPITAL MATCHING', path: '/hospital-matching', icon: Stethoscope },
+  { key: 'nav.logistics', defaultName: 'LOGISTICS & TEAM', path: '/logistics', icon: Users },
+  { key: 'nav.assessment', defaultName: 'ASSESSMENT', path: '/assessment', icon: ClipboardCheck },
+  { key: 'nav.ai_priority', defaultName: 'AI PRIORITY', path: '/ai-priority', icon: Target },
+  { key: 'nav.command_center', defaultName: 'COMMAND CENTER', path: '/command-center', icon: RadioTower, role: 'COMMANDER' },
 ];
 
 export function Layout() {
@@ -28,6 +30,7 @@ export function Layout() {
   const [searchQuery, setSearchQuery] = useState('');
   
   const { theme, setTheme } = useTheme();
+  const { t } = useTranslation();
   const { 
     locations, 
     currentLocationId, 
@@ -90,20 +93,20 @@ export function Layout() {
               )}
             >
               <item.icon className={cn("h-5 w-5 mr-3 shrink-0", 
-                item.name === 'COMMAND CENTER' && !sidebarOpen ? 'text-red-500/80' : ''
+                item.key === 'nav.command_center' && !sidebarOpen ? 'text-red-500/80' : ''
               )} />
-              {item.name}
-              {item.name === 'WEATHER & RISK' && ((dhmSummary?.criticalRiskCount ?? 0) > 0 || (dhmSummary?.highRiskCount ?? 0) > 0) && (
+              <span className="truncate">{t(item.key, item.defaultName)}</span>
+              {item.key === 'nav.weather_risk' && ((dhmSummary?.criticalRiskCount ?? 0) > 0 || (dhmSummary?.highRiskCount ?? 0) > 0) && (
                 <span className="ml-auto px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-600 text-white animate-pulse">
                   DHM {(dhmSummary?.criticalRiskCount ?? 0) + (dhmSummary?.highRiskCount ?? 0)}
                 </span>
               )}
-              {item.name === 'NEWS & SAFETY' && pendingMatchCount > 0 && (
+              {item.key === 'nav.news_safety' && pendingMatchCount > 0 && (
                 <span className="ml-auto px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-500 text-white animate-pulse">
                   {pendingMatchCount}
                 </span>
               )}
-              {item.name === 'HOSPITAL MATCHING' && pendingHospitalMatchCount > 0 && (
+              {item.key === 'nav.hospital_matching' && pendingHospitalMatchCount > 0 && (
                 <span className="ml-auto px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-teal-500 text-white animate-pulse">
                   {pendingHospitalMatchCount}
                 </span>
@@ -115,14 +118,19 @@ export function Layout() {
           ))}
         </nav>
         
-        <div className="p-4 border-t border-slate-200 dark:border-slate-800 shrink-0 bg-slate-50/50 dark:bg-transparent">
+        <div className="p-4 border-t border-slate-200 dark:border-slate-800 shrink-0 bg-slate-50/50 dark:bg-transparent space-y-3">
+          {/* Mobile / Sidebar Language Selector */}
+          <LanguageSelector variant="sidebar" />
+
           <div className="bg-white dark:bg-slate-950 rounded-lg p-3 border border-slate-200 dark:border-slate-800/60 flex items-center shadow-sm dark:shadow-none">
             <RadioTower className="h-8 w-8 text-slate-400 dark:text-slate-500 mr-3 shrink-0" />
             <div>
-              <p className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">System Status</p>
+              <p className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">
+                {t('nav.system_status', 'System Status')}
+              </p>
               <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400 flex items-center mt-0.5">
                 <span className="h-2 w-2 rounded-full bg-emerald-500 dark:bg-emerald-400 mr-1.5 animate-pulse"></span>
-                Operational
+                {t('nav.operational', 'Operational')}
               </p>
             </div>
           </div>
@@ -148,7 +156,7 @@ export function Layout() {
                 type="text" 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search demo data..." 
+                placeholder={t('common.search', 'Search demo data...')} 
                 className="bg-transparent border-none outline-none w-full placeholder:text-slate-500"
               />
               {searchQuery && (
@@ -160,7 +168,10 @@ export function Layout() {
             </form>
           </div>
           
-          <div className="flex items-center gap-2 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Language Selector in Header */}
+            <LanguageSelector variant="header" />
+
             {/* Location Selector */}
             <div className="hidden md:flex items-center text-sm font-medium text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-md transition-colors relative">
               <MapPin className="h-4 w-4 mr-2 text-slate-400" />
@@ -183,7 +194,7 @@ export function Layout() {
               {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </button>
             
-            <div className="flex items-center gap-2 border-l border-slate-200 dark:border-slate-800 pl-2 sm:pl-4 relative">
+            <div className="flex items-center gap-2 border-l border-slate-200 dark:border-slate-800 pl-2 sm:pl-3 relative">
               <button 
                 className="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 relative p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                 onClick={() => setShowNotifications(!showNotifications)}
@@ -198,14 +209,18 @@ export function Layout() {
               {showNotifications && (
                 <div className="absolute top-full right-0 mt-2 w-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl z-50 overflow-hidden">
                   <div className="p-3 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-950/50">
-                    <span className="font-bold text-sm text-slate-900 dark:text-slate-100">Notifications</span>
+                    <span className="font-bold text-sm text-slate-900 dark:text-slate-100">
+                      {t('common.notifications', 'Notifications')}
+                    </span>
                     <button onClick={() => setShowNotifications(false)} className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
                       <X className="h-4 w-4" />
                     </button>
                   </div>
                   <div className="max-h-[300px] overflow-y-auto">
                     {notifications.length === 0 ? (
-                      <div className="p-4 text-center text-sm text-slate-500">No notifications</div>
+                      <div className="p-4 text-center text-sm text-slate-500">
+                        {t('common.no_notifications', 'No notifications')}
+                      </div>
                     ) : (
                       notifications.map(n => (
                         <div 

@@ -12,6 +12,7 @@ import { VOLUNTEER_SKILL_CATEGORIES } from '@/data/logisticsData';
 import { NEPAL_VOLUNTEER_AREAS, recommendAreaForTeam, VolunteerArea } from '@/data/volunteerAreas';
 import { TeamAllocationMap } from './TeamAllocationMap';
 import { VolunteerTeam, VolunteerStatus } from '@/types';
+import { useTranslation } from '@/lib/i18n';
 
 const COMMON_EQUIPMENT = [
   'Inflatable Rafts & Oars',
@@ -38,6 +39,7 @@ const SPECIALIZATIONS = [
 
 export function TeamCoordination() {
   const { teams, registerTeam, assignTeamArea, updateTeamStatus, resetTeamsToDefault } = useAppState();
+  const { t } = useTranslation();
 
   // Navigation & view states
   const [viewMode, setViewMode] = useState<'split' | 'map' | 'cards'>('split');
@@ -256,10 +258,10 @@ export function TeamCoordination() {
               </div>
               <div>
                 <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-                  Volunteer Team Allocation & Leader Registry
+                  {t('teams.title', 'Volunteer Team Allocation & Leader Registry')}
                 </h3>
                 <p className="text-sm text-slate-500 dark:text-slate-400">
-                  Register volunteer team leaders, assign emergency disaster response areas, and track active field allocations across Nepal.
+                  {t('teams.subtitle', 'Register volunteer team leaders, assign emergency disaster response areas, and track active field allocations across Nepal.')}
                 </p>
               </div>
             </div>
@@ -278,7 +280,7 @@ export function TeamCoordination() {
               }}
             >
               <Plus className="h-4 w-4" />
-              Register Team Leader
+              {t('teams.register_leader', 'Register Team Leader')}
             </Button>
           </div>
         </div>
@@ -287,7 +289,7 @@ export function TeamCoordination() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4">
           <div className="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-lg border border-slate-200/70 dark:border-slate-700/60">
             <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
-              Registered Teams
+              {t('teams.registered_teams', 'Registered Teams')}
             </span>
             <div className="flex items-baseline gap-2 mt-1">
               <span className="text-2xl font-bold text-slate-900 dark:text-white">
@@ -301,7 +303,7 @@ export function TeamCoordination() {
 
           <div className="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-lg border border-slate-200/70 dark:border-slate-700/60">
             <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
-              Mobilized Responders
+              {t('teams.mobilized_responders', 'Mobilized Responders')}
             </span>
             <div className="flex items-baseline gap-2 mt-1">
               <span className="text-2xl font-bold text-slate-900 dark:text-white">
@@ -315,7 +317,7 @@ export function TeamCoordination() {
 
           <div className="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-lg border border-slate-200/70 dark:border-slate-700/60">
             <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
-              Disaster Sectors Covered
+              {t('teams.sectors_covered', 'Disaster Sectors Covered')}
             </span>
             <div className="flex items-baseline gap-2 mt-1">
               <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
@@ -329,7 +331,7 @@ export function TeamCoordination() {
 
           <div className="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-lg border border-slate-200/70 dark:border-slate-700/60">
             <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
-              Deployment Status
+              {t('teams.deployment_status', 'Deployment Status')}
             </span>
             <div className="flex items-baseline gap-2 mt-1">
               <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
@@ -367,7 +369,7 @@ export function TeamCoordination() {
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
             <input
               type="text"
-              placeholder="Search by team, leader, allocated area, or skill..."
+              placeholder={t('teams.search_placeholder', 'Search by team, leader, allocated area, or skill...')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-9 pr-4 py-1.5 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
