@@ -47,6 +47,7 @@ const PRESET_RUMORS = [
 export function MisinfoProtector({ initialClaimText }: { initialClaimText?: string } = {}) {
   const { analyzeClaim, claimAnalyses, updateHumanReviewStatus, userRole } = useAppState();
   const [inputText, setInputText] = useState(initialClaimText || '');
+  const [searchMode, setSearchMode] = useState<'both' | 'nepalfactcheck' | 'web'>('both');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   React.useEffect(() => {
@@ -78,13 +79,14 @@ export function MisinfoProtector({ initialClaimText }: { initialClaimText?: stri
     });
   }, [claimAnalyses, categoryFilter, registrySearch]);
 
-  const handleAnalyze = async (textToAnalyze?: string) => {
+  const handleAnalyze = async (textToAnalyze?: string, customMode?: 'both' | 'nepalfactcheck' | 'web') => {
     const text = textToAnalyze || inputText;
     if (!text.trim()) return;
+    const modeToUse = customMode || searchMode;
     setIsAnalyzing(true);
     setCurrentAnalysis(null);
     try {
-      const result = await analyzeClaim(text, []);
+      const result = await analyzeClaim(text, [], modeToUse);
       setCurrentAnalysis(result);
     } catch (e) {
       console.error(e);
@@ -116,19 +118,65 @@ export function MisinfoProtector({ initialClaimText }: { initialClaimText?: stri
               <h3 className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
                 Misinformation Protector & Rumor Debunker
                 <Badge variant="outline" className="text-[10px] uppercase font-mono tracking-wider border-indigo-200 text-indigo-700 dark:text-indigo-300">
-                  Live Web Grounded
+                  NepalFactCheck.org & Web Grounded
                 </Badge>
               </h3>
-              <p className="text-xs text-slate-500">Cross-reference emergency claims against official Nepal agencies and certified fact-checkers</p>
+              <p className="text-xs text-slate-500">Cross-reference disaster claims and viral forwards with nepalfactcheck.org and live news feeds</p>
             </div>
           </div>
         </div>
         
         <div className="p-6">
           <div className="space-y-4">
+            {/* Search Grounding Source Mode Selection */}
+            <div>
+              <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <Search className="w-3.5 h-3.5 text-indigo-500" />
+                Select Grounding Source:
+              </div>
+              <div className="inline-flex p-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-medium gap-1">
+                <button
+                  type="button"
+                  onClick={() => setSearchMode('both')}
+                  className={`px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5 cursor-pointer ${
+                    searchMode === 'both'
+                      ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 font-bold shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Both (nepalfactcheck.org + Web)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSearchMode('nepalfactcheck')}
+                  className={`px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5 cursor-pointer ${
+                    searchMode === 'nepalfactcheck'
+                      ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 font-bold shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  <CheckCheck className="w-3.5 h-3.5 text-emerald-500" />
+                  NepalFactCheck.org Only
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSearchMode('web')}
+                  className={`px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5 cursor-pointer ${
+                    searchMode === 'web'
+                      ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 font-bold shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  <Newspaper className="w-3.5 h-3.5 text-blue-500" />
+                  Web News Only
+                </button>
+              </div>
+            </div>
+
             <textarea
               className="w-full min-h-[110px] p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all resize-none text-sm placeholder:text-slate-400 text-slate-800 dark:text-slate-100"
-              placeholder="Paste a viral disaster post, forward, or rumor to verify (e.g., dam breach, predicted earthquake, airport flood)..."
+              placeholder="Paste any disaster claim, WhatsApp message, viral TikTok warning, or highway update to verify with nepalfactcheck.org or web news..."
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
             />
@@ -162,12 +210,12 @@ export function MisinfoProtector({ initialClaimText }: { initialClaimText?: stri
                 {isAnalyzing ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Searching Live Web & Fact Checkers...
+                    Searching {searchMode === 'nepalfactcheck' ? 'NepalFactCheck.org' : searchMode === 'web' ? 'Web News' : 'NepalFactCheck.org & Web'}...
                   </>
                 ) : (
                   <>
                     <ShieldCheck className="w-4 h-4" />
-                    Fact-Check Claim
+                    Fact-Check Claim ({searchMode === 'nepalfactcheck' ? 'NepalFactCheck.org' : searchMode === 'web' ? 'Web News' : 'Both Sources'})
                   </>
                 )}
               </button>
@@ -200,6 +248,11 @@ export function MisinfoProtector({ initialClaimText }: { initialClaimText?: stri
                       Authoritative Debunk
                     </span>
                   )}
+                  {currentAnalysis.searchMode && (
+                    <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                      {currentAnalysis.searchMode === 'nepalfactcheck' ? 'NepalFactCheck Only' : currentAnalysis.searchMode === 'web' ? 'Web News Only' : 'NepalFactCheck + Web'}
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-2 bg-white/60 dark:bg-black/20 px-3 py-1 rounded-full text-xs font-semibold">
                   <span>Confidence:</span>
@@ -208,6 +261,24 @@ export function MisinfoProtector({ initialClaimText }: { initialClaimText?: stri
                   </span>
                 </div>
               </div>
+
+              {/* Source Counts Badge if available */}
+              {currentAnalysis.searchSourcesCount && (
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {currentAnalysis.searchSourcesCount.nepalFactCheck > 0 && (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-medium bg-white/70 dark:bg-black/30 px-2 py-0.5 rounded-md border border-current/10">
+                      <CheckCheck className="w-3 h-3 text-emerald-600" />
+                      {currentAnalysis.searchSourcesCount.nepalFactCheck} Articles from nepalfactcheck.org
+                    </span>
+                  )}
+                  {currentAnalysis.searchSourcesCount.webNews > 0 && (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-medium bg-white/70 dark:bg-black/30 px-2 py-0.5 rounded-md border border-current/10">
+                      <Newspaper className="w-3 h-3 text-blue-600" />
+                      {currentAnalysis.searchSourcesCount.webNews} Live Web News Reports
+                    </span>
+                  )}
+                </div>
+              )}
 
               {/* Debunked By / Official Citation */}
               {(currentAnalysis.debunkedBy || currentAnalysis.factCheckUrl) && (
@@ -224,7 +295,7 @@ export function MisinfoProtector({ initialClaimText }: { initialClaimText?: stri
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 font-semibold text-indigo-700 dark:text-indigo-300 hover:underline"
                     >
-                      Official Fact-Check Record <ExternalLink className="w-3.5 h-3.5" />
+                      Read Full Fact-Check Article <ExternalLink className="w-3.5 h-3.5" />
                     </a>
                   )}
                 </div>
@@ -356,36 +427,64 @@ export function MisinfoProtector({ initialClaimText }: { initialClaimText?: stri
                 </span>
               </div>
               <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                {currentAnalysis.sources.map(source => (
-                  <div key={source.id} className="p-4 flex flex-col sm:flex-row items-start justify-between gap-4">
-                    <div className="sm:w-1/3">
-                      <div className="font-semibold text-sm text-slate-800 dark:text-slate-200">
-                        {source.name}
+                {currentAnalysis.sources.map(source => {
+                  const isNepalFactCheck = source.name?.toLowerCase().includes('nepal fact check') || 
+                                          source.url?.includes('nepalfactcheck.org') || 
+                                          source.publisher?.toLowerCase().includes('nepalfactcheck');
+                  return (
+                    <div key={source.id} className="p-4 flex flex-col sm:flex-row items-start justify-between gap-4">
+                      <div className="sm:w-1/3">
+                        <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                          {isNepalFactCheck ? (
+                            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                              NepalFactCheck.org
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                              Web News
+                            </span>
+                          )}
+                        </div>
+                        <div className="font-semibold text-sm text-slate-800 dark:text-slate-200">
+                          {source.name}
+                        </div>
+                        <div className="text-xs text-slate-500 mt-0.5">
+                          {source.publisher}
+                        </div>
+                        <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                          Reliability: {source.reliabilityLevel}
+                        </div>
                       </div>
-                      <div className="text-xs text-slate-500 mt-0.5">
-                        {source.publisher}
-                      </div>
-                      <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                        Reliability: {source.reliabilityLevel}
-                      </div>
-                    </div>
-                    <div className="sm:w-2/3">
-                      <div className="text-xs text-slate-600 dark:text-slate-300 mb-2 leading-relaxed">
-                        {source.contentSummary}
-                      </div>
-                      <div className="text-[11px] flex items-center gap-4 text-slate-500">
-                        <span>Relationship: 
-                          <span className={`ml-1 font-semibold ${
-                            source.relationship === 'SUPPORTING' ? 'text-emerald-600 dark:text-emerald-400' :
-                            source.relationship === 'CONTRADICTING' ? 'text-red-600 dark:text-red-400' : 'text-slate-600'
-                          }`}>
-                            {source.relationship}
+                      <div className="sm:w-2/3">
+                        <div className="text-xs text-slate-600 dark:text-slate-300 mb-2 leading-relaxed">
+                          {source.contentSummary}
+                        </div>
+                        <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500">
+                          <span>Relationship: 
+                            <span className={`ml-1 font-semibold ${
+                              source.relationship === 'SUPPORTING' ? 'text-emerald-600 dark:text-emerald-400' :
+                              source.relationship === 'CONTRADICTING' ? 'text-red-600 dark:text-red-400' : 'text-slate-600'
+                            }`}>
+                              {source.relationship}
+                            </span>
                           </span>
-                        </span>
+
+                          {source.url && (
+                            <a
+                              href={source.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+                            >
+                              <span>Read Original Source</span>
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </Card>
           )}

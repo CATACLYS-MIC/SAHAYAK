@@ -8,7 +8,8 @@ import {
   Road, Bridge, RoadReport,
   HospitalPatientRecord, HospitalMatchResult, HospitalMatchAuditLog, HospitalMatchingNetworkStats,
   DhmRiverStation, DhmHydrologySummary,
-  DorRoadClosure, DorBridge, DorRoadLink, DorRoadSummary, DisasterAwareRouteEvaluation, RoutingProfileMode, CommunityRoadReport
+  DorRoadClosure, DorBridge, DorRoadLink, DorRoadSummary, DisasterAwareRouteEvaluation, RoutingProfileMode, CommunityRoadReport,
+  BipadAlert
 } from '../types';
 import * as mockData from '../data/mock';
 import { 
@@ -83,8 +84,13 @@ interface AppState {
   liveNewsError: string | null;
   liveNewsLastSynced: string | null;
   refreshLiveNews: (category?: string, query?: string) => Promise<void>;
+  bipadAlerts: BipadAlert[];
+  bipadLoading: boolean;
+  bipadError: string | null;
+  bipadLastSynced: string | null;
+  refreshBipadAlerts: (force?: boolean) => Promise<void>;
   claimAnalyses: ClaimAnalysis[];
-  analyzeClaim: (text: string, sources?: EvidenceSource[]) => Promise<ClaimAnalysis>;
+  analyzeClaim: (text: string, sources?: EvidenceSource[], mode?: 'both' | 'nepalfactcheck' | 'web') => Promise<ClaimAnalysis>;
   updateHumanReviewStatus: (id: string, status: 'PENDING' | 'REVIEWED' | 'NOT_REQUIRED') => void;
   supplies: Supply[];
   teams: VolunteerTeam[];
@@ -180,6 +186,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [liveNewsLoading, setLiveNewsLoading] = useState<boolean>(false);
   const [liveNewsError, setLiveNewsError] = useState<string | null>(null);
   const [liveNewsLastSynced, setLiveNewsLastSynced] = useState<string | null>(null);
+  const [bipadAlerts, setBipadAlerts] = useState<BipadAlert[]>([]);
+  const [bipadLoading, setBipadLoading] = useState<boolean>(false);
+  const [bipadError, setBipadError] = useState<string | null>(null);
+  const [bipadLastSynced, setBipadLastSynced] = useState<string | null>(null);
   const [claimAnalyses, setClaimAnalyses] = useState<ClaimAnalysis[]>((mockData as any).MOCK_CLAIM_ANALYSES || []);
   const [supplies] = useState<Supply[]>(MOCK_LOGISTICS_SUPPLIES);
   const [teams] = useState<VolunteerTeam[]>(MOCK_EXTENDED_TEAMS);
@@ -305,12 +315,16 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   };
 
 
-  const analyzeClaim = async (text: string, sources?: EvidenceSource[]) => {
+  const analyzeClaim = async (
+    text: string, 
+    sources?: EvidenceSource[], 
+    mode: 'both' | 'nepalfactcheck' | 'web' = 'both'
+  ) => {
     // Basic deduplication
-    const existing = claimAnalyses.find(c => c.originalText.toLowerCase() === text.toLowerCase());
-    if (existing) return existing;
+    const existing = claimAnalyses.find(c => c.originalText?.toLowerCase() === text.toLowerCase());
+    if (existing && existing.searchMode === mode) return existing;
 
-    const analysis = await submitClaimForAnalysis(text, sources || []);
+    const analysis = await submitClaimForAnalysis(text, sources || [], mode);
     setClaimAnalyses(prev => [analysis, ...prev]);
     return analysis;
   };
@@ -440,6 +454,46 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       setLiveNewsLoading(false);
     }
   };
+
+  const refreshBipadAlerts = async (force: boolean = false) => {
+    setBipadLoading(true);
+    setBipadError(null);
+    try {
+      const res = await fetch(`/api/bipad/alerts${force ? '?refresh=true' : ''}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (data.alerts && Array.isArray(data.alerts)) {
+        setBipadAlerts(data.alerts);
+        setBipadLastSynced(data.lastSynced || new Date().toISOString());
+
+        // Replace demo alerts with real-time BIPAD alerts in App Notifications
+        const realNotifications: AppNotification[] = data.alerts.slice(0, 20).map((a: BipadAlert) => ({
+          id: a.id,
+          title: `${a.hazardName} (${a.hazardNameNe}): ${a.title}`,
+          desc: a.titleNe ? `${a.titleNe}. ${a.description || ''}` : (a.description || a.title),
+          type: a.severity === 'CRITICAL' ? 'critical' : a.severity === 'WARNING' ? 'warning' : 'info',
+          read: false,
+          timestamp: a.formattedDate,
+          category: 'HAZARD',
+          actionUrl: `/news-safety?tab=BIPAD&alertId=${a.id}`
+        }));
+
+        if (realNotifications.length > 0) {
+          setNotifications(realNotifications);
+        }
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('Failed to load BIPAD alerts:', msg);
+      setBipadError(msg || 'Failed to fetch BIPAD alerts');
+    } finally {
+      setBipadLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    refreshBipadAlerts();
+  }, []);
 
   useEffect(() => {
     fetch('/api/live-news')
@@ -1212,6 +1266,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     liveNewsError,
     liveNewsLastSynced,
     refreshLiveNews,
+    bipadAlerts,
+    bipadLoading,
+    bipadError,
+    bipadLastSynced,
+    refreshBipadAlerts,
     claimAnalyses,
     analyzeClaim,
     updateHumanReviewStatus,
