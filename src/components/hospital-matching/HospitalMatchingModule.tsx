@@ -11,6 +11,7 @@ import { HospitalSideBySideReviewModal } from './HospitalSideBySideReviewModal';
 import { HospitalSingleSubmissionForm } from './HospitalSingleSubmissionForm';
 import { HospitalBatchProcessor } from './HospitalBatchProcessor';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n';
 
 export function HospitalMatchingModule() {
   const { 
@@ -24,6 +25,7 @@ export function HospitalMatchingModule() {
     reviewHospitalMatch,
     resetHospitalDemoData
   } = useAppState();
+  const { t, translateDynamic } = useTranslation();
 
   const [activeMainTab, setActiveMainTab] = useState<'MATCHES' | 'SUBMIT' | 'REGISTRY' | 'AUDIT'>('MATCHES');
   const [submissionSubTab, setSubmissionSubTab] = useState<'SINGLE' | 'BATCH'>('SINGLE');
@@ -92,29 +94,29 @@ export function HospitalMatchingModule() {
                 <Stethoscope className="h-5 w-5" />
               </span>
               <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white">
-                Hospital Missing-Person Matching Network
+                {t('Hospital Missing-Person Matching Network')}
               </h1>
               <Badge variant="outline" className="text-[10px] font-bold bg-amber-500/20 text-amber-300 border-amber-500/40">
-                SIMULATED DATA
+                {t('SIMULATED DATA')}
               </Badge>
             </div>
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              Secure trauma clinical workflow enabling authorized Nepal hospitals to correlate unidentified disaster victims against national missing-person reports via AI multi-signal vector matching.
+              {t('Secure trauma clinical workflow enabling authorized Nepal hospitals to correlate unidentified disaster victims against national missing-person reports via AI multi-signal vector matching.')}
             </p>
           </div>
 
           {/* RBAC ROLE SWITCHER */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-slate-800/80 p-3 rounded-xl border border-slate-700/80">
             <div className="text-xs">
-              <span className="text-slate-400 block text-[10px] uppercase font-bold">Authorized Access Level:</span>
+              <span className="text-slate-400 block text-[10px] uppercase font-bold">{t('Authorized Access Level:')}</span>
               <select
                 value={hospitalAccessRole}
                 onChange={(e) => setHospitalAccessRole(e.target.value as any)}
                 className="mt-0.5 bg-slate-900 border border-slate-700 text-teal-300 font-bold text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-teal-500"
               >
-                <option value="HOSPITAL_STAFF">Authorized Hospital Staff (Trauma Desk)</option>
-                <option value="AUTHORITY_RESPONDER">Disaster Verification Authority (Nepal Police / NDRRMA)</option>
-                <option value="PUBLIC">Public Overview (Restricted Redaction)</option>
+                <option value="HOSPITAL_STAFF">{t('Authorized Hospital Staff (Trauma Desk)')}</option>
+                <option value="AUTHORITY_RESPONDER">{t('Disaster Verification Authority (Nepal Police / NDRRMA)')}</option>
+                <option value="PUBLIC">{t('Public Overview (Restricted Redaction)')}</option>
               </select>
             </div>
 
@@ -125,7 +127,7 @@ export function HospitalMatchingModule() {
               className="text-slate-300 hover:text-white border-slate-700 hover:bg-slate-700 text-[11px] h-8 flex items-center gap-1 shrink-0"
             >
               <RefreshCw className="h-3 w-3" />
-              Reset Demo
+              {t('Reset Demo')}
             </Button>
           </div>
         </div>
@@ -135,7 +137,7 @@ export function HospitalMatchingModule() {
           <div className="flex items-center gap-2">
             <Lock className="h-4 w-4 text-teal-400 shrink-0" />
             <span>
-              <strong className="text-white">Privacy Protected:</strong> Clinical intake records are restricted to verified medical desks. Unnecessary medical diagnostics are redacted from correlation algorithms.
+              <strong className="text-white">{t('Privacy Protected:')}</strong> {t('Clinical intake records are restricted to verified medical desks. Unnecessary medical diagnostics are redacted from correlation algorithms.')}
             </span>
           </div>
           <span className="text-[11px] font-mono text-teal-400/90">
@@ -148,49 +150,49 @@ export function HospitalMatchingModule() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
           <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-            Patients Submitted
+            {t('Patients Submitted')}
           </span>
           <div className="flex items-baseline gap-2 mt-1">
             <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100">
               {hospitalMatchingStats.patientsSubmitted}
             </span>
-            <span className="text-xs text-slate-400">unidentified victims</span>
+            <span className="text-xs text-slate-400">{t('unidentified victims')}</span>
           </div>
         </div>
 
         <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-teal-200/80 dark:border-teal-900/60 shadow-xs">
           <span className="text-[11px] font-bold text-teal-700 dark:text-teal-400 uppercase tracking-wider">
-            AI Matches Flagged
+            {t('AI Matches Flagged')}
           </span>
           <div className="flex items-baseline gap-2 mt-1">
             <span className="text-2xl sm:text-3xl font-black text-teal-700 dark:text-teal-300">
               {hospitalMatchingStats.aiMatchesFlagged}
             </span>
-            <span className="text-xs text-teal-600 dark:text-teal-400">similarity candidates</span>
+            <span className="text-xs text-teal-600 dark:text-teal-400">{t('similarity candidates')}</span>
           </div>
         </div>
 
         <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-amber-200/80 dark:border-amber-900/60 shadow-xs">
           <span className="text-[11px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
-            Awaiting Verification
+            {t('Awaiting Verification')}
           </span>
           <div className="flex items-baseline gap-2 mt-1">
             <span className="text-2xl sm:text-3xl font-black text-amber-700 dark:text-amber-300">
               {hospitalMatchingStats.awaitingVerification}
             </span>
-            <span className="text-xs text-amber-600 dark:text-amber-400">human review</span>
+            <span className="text-xs text-amber-600 dark:text-amber-400">{t('human review')}</span>
           </div>
         </div>
 
         <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-emerald-200/80 dark:border-emerald-900/60 shadow-xs">
           <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
-            Confirmed Matches
+            {t('Confirmed Matches')}
           </span>
           <div className="flex items-baseline gap-2 mt-1">
             <span className="text-2xl sm:text-3xl font-black text-emerald-700 dark:text-emerald-300">
               {hospitalMatchingStats.potentialMatchesConfirmed}
             </span>
-            <span className="text-xs text-emerald-600 dark:text-emerald-400">reunited / treated</span>
+            <span className="text-xs text-emerald-600 dark:text-emerald-400">{t('reunited / treated')}</span>
           </div>
         </div>
       </div>
@@ -199,7 +201,7 @@ export function HospitalMatchingModule() {
       <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 flex items-start gap-3">
         <Scale className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
         <div className="text-xs text-amber-900 dark:text-amber-200 leading-relaxed">
-          <strong className="font-bold">Human-in-the-Loop Operational Guardrail:</strong> The SAHAYAK AI system operates exclusively as an advisory decision-support instrument. The matching score indicates multi-variable feature correlation and never automatically declares identity. Verification and case resolution strictly require authorized clinician or authority confirmation.
+          <strong className="font-bold">{t('Human-in-the-Loop Operational Guardrail:')}</strong> {t('The SAHAYAK AI system operates exclusively as an advisory decision-support instrument. The matching score indicates multi-variable feature correlation and never automatically declares identity. Verification and case resolution strictly require authorized clinician or authority confirmation.')}
         </div>
       </div>
 
@@ -215,7 +217,7 @@ export function HospitalMatchingModule() {
           )}
         >
           <Sparkles className="h-4 w-4" />
-          AI Match Center
+          {t('AI Match Center')}
           <Badge variant="primary" className="text-[10px] py-0 px-1.5 bg-teal-600 text-white">
             {hospitalMatches.length}
           </Badge>
@@ -231,7 +233,7 @@ export function HospitalMatchingModule() {
           )}
         >
           <Building2 className="h-4 w-4" />
-          Submit Unidentified Patients
+          {t('Submit Unidentified Patients')}
         </button>
 
         <button
@@ -244,7 +246,7 @@ export function HospitalMatchingModule() {
           )}
         >
           <FileText className="h-4 w-4" />
-          Patient Intake Registry
+          {t('Patient Intake Registry')}
           <span className="text-[10px] text-slate-400 font-mono">({hospitalPatients.length})</span>
         </button>
 
@@ -258,7 +260,7 @@ export function HospitalMatchingModule() {
           )}
         >
           <UserCheck className="h-4 w-4" />
-          Audit Trail & Governance
+          {t('Audit Trail & Governance')}
           <span className="text-[10px] text-slate-400 font-mono">({hospitalAuditLogs.length})</span>
         </button>
       </div>
@@ -277,13 +279,13 @@ export function HospitalMatchingModule() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Filter by patient MRN, missing person name, hospital, or recovery location..."
+                placeholder={t('Filter by patient MRN, missing person name, hospital, or recovery location...')}
                 className="w-full pl-9 pr-3 py-1.5 text-xs rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-teal-500"
               />
             </div>
 
             <div className="flex items-center gap-1.5 overflow-x-auto text-xs">
-              <span className="text-[11px] text-slate-500 font-bold uppercase shrink-0">Filter:</span>
+              <span className="text-[11px] text-slate-500 font-bold uppercase shrink-0">{t('Filter:')}</span>
               <button
                 onClick={() => setConfidenceFilter('ALL')}
                 className={cn(
@@ -293,7 +295,7 @@ export function HospitalMatchingModule() {
                     : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
                 )}
               >
-                All Matches ({hospitalMatches.length})
+                {t('All Matches')} ({hospitalMatches.length})
               </button>
 
               <button
@@ -305,7 +307,7 @@ export function HospitalMatchingModule() {
                     : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
                 )}
               >
-                High Confidence (75%+)
+                {t('High Confidence (75%+)')}
               </button>
 
               <button
@@ -317,7 +319,7 @@ export function HospitalMatchingModule() {
                     : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
                 )}
               >
-                Pending Review
+                {t('Pending Review')}
               </button>
 
               <button
@@ -329,7 +331,7 @@ export function HospitalMatchingModule() {
                     : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
                 )}
               >
-                Confirmed
+                {t('Confirmed')}
               </button>
             </div>
           </div>
@@ -359,21 +361,21 @@ export function HospitalMatchingModule() {
                             : "bg-amber-50 text-amber-700 border-amber-300 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800"
                         )}>
                           <span className="text-xl leading-none">{match.matchConfidence}%</span>
-                          <span className="text-[8px] uppercase tracking-wider font-bold mt-0.5">Match</span>
+                          <span className="text-[8px] uppercase tracking-wider font-bold mt-0.5">{t('Match')}</span>
                         </div>
 
                         <div>
                           <div className="flex items-center gap-2">
                             <span className="text-xs font-mono font-bold text-teal-700 dark:text-teal-400">
-                              MRN: {match.patientMrn}
+                              {t('MRN')}: {match.patientMrn}
                             </span>
                             <span className="text-slate-400">↔</span>
                             <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                              Missing: {match.missingPersonName}
+                              {t('Missing')}: {match.missingPersonName}
                             </span>
                           </div>
                           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                            {match.hospitalName} • Found: {match.foundLocation}
+                            {match.hospitalName} • {t('Found')}: {match.foundLocation}
                           </p>
                         </div>
                       </div>
@@ -391,7 +393,7 @@ export function HospitalMatchingModule() {
                           {match.status === 'CONFIRMED_POSSIBLE_MATCH' && <CheckCircle2 className="h-3 w-3 mr-1" />}
                           {match.status === 'REJECTED' && <XCircle className="h-3 w-3 mr-1" />}
                           {match.status === 'NEEDS_FURTHER_VERIFICATION' && <HelpCircle className="h-3 w-3 mr-1" />}
-                          {(match.status || '').replace(/_/g, ' ')}
+                          {t((match.status || '').replace(/_/g, ' '))}
                         </Badge>
 
                         <Button
@@ -401,7 +403,7 @@ export function HospitalMatchingModule() {
                           className="text-xs font-bold bg-teal-600 hover:bg-teal-700 text-white flex items-center gap-1.5 shadow-xs"
                         >
                           <Eye className="h-3.5 w-3.5" />
-                          Review Side-by-Side Dossier
+                          {t('Review Side-by-Side Dossier')}
                         </Button>
                       </div>
                     </div>
@@ -413,11 +415,11 @@ export function HospitalMatchingModule() {
                       <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800">
                         <span className="font-bold text-slate-700 dark:text-slate-300 block mb-1 flex items-center gap-1">
                           <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-                          Supporting Match Reasons:
+                          {t('Supporting Match Reasons:')}
                         </span>
                         <ul className="space-y-1 text-slate-600 dark:text-slate-400">
                           {match.whyFlagged.slice(0, 2).map((reason, i) => (
-                            <li key={i} className="truncate">• {reason}</li>
+                            <li key={i} className="truncate">• {translateDynamic(reason)}</li>
                           ))}
                         </ul>
                       </div>
@@ -426,21 +428,21 @@ export function HospitalMatchingModule() {
                       <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800">
                         <span className="font-bold text-slate-700 dark:text-slate-300 block mb-1 flex items-center gap-1">
                           <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
-                          Contradictions / Verification Context:
+                          {t('Contradictions / Verification Context:')}
                         </span>
                         {match.reviewedBy ? (
                           <div className="text-slate-600 dark:text-slate-400">
-                            <strong>Reviewed by:</strong> {match.reviewedBy} on {match.reviewedAt}
-                            <div className="text-[11px] text-slate-500 italic mt-0.5 truncate">"{match.reviewNotes}"</div>
+                            <strong>{t('Reviewed by:')}</strong> {match.reviewedBy} {t('on')} {match.reviewedAt}
+                            <div className="text-[11px] text-slate-500 italic mt-0.5 truncate">"{translateDynamic(match.reviewNotes || '')}"</div>
                           </div>
                         ) : match.contradictions && match.contradictions.length > 0 ? (
                           <ul className="space-y-1 text-slate-600 dark:text-slate-400">
                             {match.contradictions.map((c, i) => (
-                              <li key={i} className="truncate">• {c}</li>
+                              <li key={i} className="truncate">• {translateDynamic(c)}</li>
                             ))}
                           </ul>
                         ) : (
-                          <span className="text-slate-500 italic">No contradictions identified. Awaiting authorized clinical sign-off.</span>
+                          <span className="text-slate-500 italic">{t('No contradictions identified. Awaiting authorized clinical sign-off.')}</span>
                         )}
                       </div>
                     </div>

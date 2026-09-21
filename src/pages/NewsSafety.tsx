@@ -46,6 +46,7 @@ export function NewsSafety() {
     userRole,
     setUserRole,
     hospitalMatches
+    ,liveNews, liveNewsLoading, liveNewsLastSynced
   } = useAppState();
 
   const navigate = useNavigate();
@@ -188,6 +189,37 @@ export function NewsSafety() {
           </button>
         </div>
       </div>
+
+      <Card className="border-blue-200 dark:border-blue-900/50 bg-blue-50/40 dark:bg-blue-950/20">
+        <div className="flex items-start justify-between gap-3 mb-3 flex-wrap">
+          <div>
+            <CardHeader title="Live BIPAD Portal Alerts" subtitle="Realtime alerts from the Government of Nepal disaster information portal." />
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="success" className="text-[10px]">BIPAD LIVE</Badge>
+            <Button size="sm" variant="outline" onClick={() => window.location.reload()} disabled={liveNewsLoading} className="text-xs">
+              <RefreshCw className={cn('h-3.5 w-3.5 mr-1', liveNewsLoading && 'animate-spin')} /> Refresh
+            </Button>
+          </div>
+        </div>
+        {liveNews.filter(item => item.id.startsWith('bipad-')).length > 0 ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+            {liveNews.filter(item => item.id.startsWith('bipad-')).slice(0, 8).map(alert => (
+              <div key={alert.id} className="p-3 rounded-lg bg-white dark:bg-slate-900 border border-blue-100 dark:border-slate-800 flex gap-3">
+                <AlertTriangle className={cn('h-4 w-4 shrink-0 mt-0.5', alert.severity === 'CRITICAL' ? 'text-red-500' : alert.severity === 'WARNING' ? 'text-amber-500' : 'text-blue-500')} />
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{alert.title}</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">{alert.summary}</p>
+                  <p className="text-[10px] text-slate-400 mt-1">{alert.source} • {alert.timestamp}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-slate-500">{liveNewsLoading ? 'Synchronizing BIPAD alerts...' : 'No BIPAD alerts available.'}</p>
+        )}
+        {liveNewsLastSynced && <p className="text-[10px] text-slate-400 mt-3">Last synced: {new Date(liveNewsLastSynced).toLocaleString()}</p>}
+      </Card>
 
       {/* MISSING PERSON INTELLIGENCE SYSTEM */}
       <div className="space-y-6">

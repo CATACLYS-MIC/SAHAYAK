@@ -851,6 +851,165 @@ export const TRANSLATIONS: Record<Language, TranslationDictionary> = {
 // COMPREHENSIVE PHRASE GLOSSARY FOR TEXT & DYNAMIC TRANSLATION
 // ==========================================
 const COMMON_PHRASES: Record<string, Record<Language, string>> = {
+  // Weather conditions and alert labels
+  'Clear sky': { ne: 'खुला आकाश', en: 'Clear sky', new: 'स्वच्छ आकाश', mai: 'साफ आकाश', hi: 'साफ़ आसमान' },
+  'Mainly clear': { ne: 'मुख्यतः सफा', en: 'Mainly clear', new: 'मूख्यतः स्वच्छ', mai: 'मुख्य रूपसँ साफ', hi: 'मुख्यतः साफ़' },
+  'Partly cloudy': { ne: 'आंशिक बदली', en: 'Partly cloudy', new: 'केही बदली', mai: 'आंशिक बादल', hi: 'आंशिक बादल' },
+  'Overcast': { ne: 'बादल लागेको', en: 'Overcast', new: 'बादलय् ढाकल', mai: 'बादलसँ ढकल', hi: 'बादल छाए हुए' },
+  'Fog': { ne: 'कुहिरो', en: 'Fog', new: 'कुहिरो', mai: 'कुहासा', hi: 'कोहरा' },
+  'Drizzle': { ne: 'सिमसिमे पानी', en: 'Drizzle', new: 'सिमसिमे वा', mai: 'फुहार', hi: 'फुहार' },
+  'Rain': { ne: 'वर्षा', en: 'Rain', new: 'वा', mai: 'वर्षा', hi: 'बारिश' },
+  'Showers': { ne: 'छिटपुट वर्षा', en: 'Showers', new: 'भचाभचा वा', mai: 'छिटपुट वर्षा', hi: 'बौछार' },
+  'Thunderstorm': { ne: 'मेघगर्जनसहितको वर्षा', en: 'Thunderstorm', new: 'गर्जन सहित वा', mai: 'गरजनासहित वर्षा', hi: 'गरज के साथ तूफ़ान' },
+  'Snow': { ne: 'हिमपात', en: 'Snow', new: 'हिमपात', mai: 'हिमपात', hi: 'बर्फ़बारी' },
+  'Heavy Rain / Downpour': { ne: 'भारी वर्षा / मुसलधारे पानी', en: 'Heavy Rain / Downpour', new: 'तःधंगु वा / मुसलधारे वा', mai: 'भारी वर्षा / मूसलाधार पानी', hi: 'भारी बारिश / मूसलाधार वर्षा' },
+  'Moderate Rain': { ne: 'मध्यम वर्षा', en: 'Moderate Rain', new: 'दथुइगु वा', mai: 'मध्यम वर्षा', hi: 'मध्यम बारिश' },
+  'Light Rain': { ne: 'हल्का वर्षा', en: 'Light Rain', new: 'हलकु वा', mai: 'हल्का वर्षा', hi: 'हल्की बारिश' },
+  'Fog / Mist': { ne: 'कुहिरो / तुवाँलो', en: 'Fog / Mist', new: 'कुहिरो / तुवाँलो', mai: 'कुहासा / कुहिरा', hi: 'कोहरा / धुंध' },
+  'Dry & Clear': { ne: 'सुख्खा र सफा', en: 'Dry & Clear', new: 'गंगु व स्वच्छ', mai: 'सुख्खा आ साफ', hi: 'शुष्क और साफ़' },
+  'Overcast / Chance of Rain': { ne: 'बादल लागेको / वर्षाको सम्भावना', en: 'Overcast / Chance of Rain', new: 'बादलय् ढाकल / वा वइगु सम्भावना', mai: 'बादल / वर्षाक सम्भावना', hi: 'बादल छाए / बारिश की संभावना' },
+  'Normal Weather': { ne: 'सामान्य मौसम', en: 'Normal Weather', new: 'सामान्य मौसम', mai: 'सामान्य मौसम', hi: 'सामान्य मौसम' },
+  'Normal / Safe Conditions': { ne: 'सामान्य / सुरक्षित अवस्था', en: 'Normal / Safe Conditions', new: 'सामान्य / सुरक्षित अवस्था', mai: 'सामान्य / सुरक्षित स्थिति', hi: 'सामान्य / सुरक्षित स्थिति' },
+  'Alerts': { ne: 'सतर्कताहरू', en: 'Alerts', new: 'सतर्कतात', mai: 'सतर्कतासभ', hi: 'अलर्ट' },
+  'Alert': { ne: 'सतर्कता', en: 'Alert', new: 'सतर्कता', mai: 'सतर्कता', hi: 'अलर्ट' },
+  'Dashboard': { ne: 'ड्यासबोर्ड', en: 'Dashboard', new: 'ड्यासबोर्ड', mai: 'ड्यासबोर्ड', hi: 'डैशबोर्ड' },
+  'Situation Overview for': { ne: 'स्थितिको अवलोकन', en: 'Situation Overview for', new: 'स्थितिया अवलोकन', mai: 'स्थितिक अवलोकन', hi: 'स्थिति का अवलोकन' },
+  'REAL TELEMETRY': { ne: 'प्रत्यक्ष तथ्याङ्क', en: 'REAL TELEMETRY', new: 'प्रत्यक्ष तथ्यांक', mai: 'प्रत्यक्ष डेटा', hi: 'लाइव डेटा' },
+  'Live Telemetry Feed': { ne: 'प्रत्यक्ष तथ्याङ्क प्रवाह', en: 'Live Telemetry Feed', new: 'प्रत्यक्ष तथ्यांक प्रवाह', mai: 'प्रत्यक्ष डेटा प्रवाह', hi: 'लाइव डेटा प्रवाह' },
+  'Telemetry': { ne: 'तथ्याङ्क', en: 'Telemetry', new: 'तथ्यांक', mai: 'डेटा', hi: 'डेटा' },
+  'DoR Live': { ne: 'DoR प्रत्यक्ष', en: 'DoR Live', new: 'DoR प्रत्यक्ष', mai: 'DoR लाइव', hi: 'DoR लाइव' },
+  'Road Status': { ne: 'सडकको स्थिति', en: 'Road Status', new: 'लँपुया अवस्था', mai: 'सड़कक स्थिति', hi: 'सड़क की स्थिति' },
+  'Latest Alerts': { ne: 'नवीनतम सतर्कताहरू', en: 'Latest Alerts', new: 'न्हूगु सतर्कतात', mai: 'नवीनतम सतर्कता', hi: 'नवीनतम अलर्ट' },
+  'No recent news.': { ne: 'हालैका कुनै समाचार छैनन्।', en: 'No recent news.', new: 'न्हूगु बुखँ मदु।', mai: 'हालमे कोनो समाचार नहि।', hi: 'हाल की कोई खबर नहीं।' },
+  'View all alerts': { ne: 'सबै सतर्कता हेर्नुहोस्', en: 'View all alerts', new: 'दक्को सतर्कता स्वयादिसँ', mai: 'सब सतर्कता देखू', hi: 'सभी अलर्ट देखें' },
+  'Synchronizing live BIPAD alerts...': { ne: 'प्रत्यक्ष BIPAD सतर्कताहरू समक्रमण हुँदैछ...', en: 'Synchronizing live BIPAD alerts...', new: 'प्रत्यक्ष BIPAD सतर्कता समक्रमण जुयाच्वंगु...', mai: 'प्रत्यक्ष BIPAD सतर्कता सिंक भ रहल अछि...', hi: 'लाइव BIPAD अलर्ट सिंक हो रहे हैं...' },
+  'Missing Persons': { ne: 'हराएका व्यक्तिहरू', en: 'Missing Persons', new: 'तंगु मनूत', mai: 'हेराएल व्यक्ति', hi: 'लापता व्यक्ति' },
+  'Active Reports': { ne: 'सक्रिय रिपोर्टहरू', en: 'Active Reports', new: 'सक्रिय विवरणत', mai: 'सक्रिय रिपोर्ट', hi: 'सक्रिय रिपोर्ट' },
+  'Found/Safe': { ne: 'भेटिएका / सुरक्षित', en: 'Found/Safe', new: 'लुयावःगु / सुरक्षित', mai: 'भेटल / सुरक्षित', hi: 'मिले / सुरक्षित' },
+  'Access Registry': { ne: 'लगत खोल्नुहोस्', en: 'Access Registry', new: 'लगत स्वयादिसँ', mai: 'पंजी खोलू', hi: 'रजिस्टर खोलें' },
+  'Nearby Hospitals': { ne: 'नजिकका अस्पतालहरू', en: 'Nearby Hospitals', new: 'नजिकया अस्पतालत', mai: 'नजदीकी अस्पताल', hi: 'नज़दीकी अस्पताल' },
+  'Nepal MoHP Free Health Portal': { ne: 'नेपाल स्वास्थ्य मन्त्रालय निःशुल्क स्वास्थ्य पोर्टल', en: 'Nepal MoHP Free Health Portal', new: 'नेपाल स्वास्थ्य पोर्टल', mai: 'नेपाल स्वास्थ्य मन्त्रालय निःशुल्क स्वास्थ्य पोर्टल', hi: 'नेपाल स्वास्थ्य मंत्रालय निःशुल्क स्वास्थ्य पोर्टल' },
+  'REAL DATA': { ne: 'वास्तविक तथ्याङ्क', en: 'REAL DATA', new: 'वास्तविक तथ्यांक', mai: 'वास्तविक डेटा', hi: 'वास्तविक डेटा' },
+  'CACHED': { ne: 'सङ्ग्रहित', en: 'CACHED', new: 'संग्रहित', mai: 'संग्रहित', hi: 'कैश्ड' },
+  'beds available': { ne: 'बेड उपलब्ध', en: 'beds available', new: 'बेड उपलब्ध', mai: 'बेड उपलब्ध', hi: 'बेड उपलब्ध' },
+  'occupied': { ne: 'भरिएको', en: 'occupied', new: 'भरल', mai: 'भरल', hi: 'भरे हुए' },
+  'Coords unverified': { ne: 'स्थान पुष्टि भएको छैन', en: 'Coords unverified', new: 'थाय् पुष्टि मदु', mai: 'स्थान सत्यापित नहि', hi: 'स्थान सत्यापित नहीं' },
+  'Loading hospital capacity data...': { ne: 'अस्पताल क्षमता तथ्याङ्क लोड हुँदैछ...', en: 'Loading hospital capacity data...', new: 'अस्पताल क्षमता तथ्यांक लोड जुयाच्वंगु...', mai: 'अस्पताल क्षमता डेटा लोड भ रहल अछि...', hi: 'अस्पताल क्षमता डेटा लोड हो रहा है...' },
+  'Hospital Missing-Person Matching Network': { ne: 'अस्पताल हराएका व्यक्ति मिलान नेटवर्क', en: 'Hospital Missing-Person Matching Network', new: 'अस्पताल तंगु मनू मिलान नेटवर्क', mai: 'अस्पताल हेराएल व्यक्ति मिलान नेटवर्क', hi: 'अस्पताल लापता व्यक्ति मिलान नेटवर्क' },
+  'SIMULATED DATA': { ne: 'सिमुलेट गरिएको तथ्याङ्क', en: 'SIMULATED DATA', new: 'सिमुलेट यानातःगु तथ्यांक', mai: 'सिमुलेट डेटा', hi: 'सिम्युलेटेड डेटा' },
+  'Secure trauma clinical workflow enabling authorized Nepal hospitals to correlate unidentified disaster victims against national missing-person reports via AI multi-signal vector matching.': { ne: 'अधिकृत नेपाली अस्पतालहरूलाई एआई बहु-सङ्केत मिलानमार्फत अज्ञात विपद् पीडितलाई राष्ट्रिय हराएका व्यक्ति रिपोर्टसँग मिलान गर्न सक्षम बनाउने सुरक्षित ट्रमा क्लिनिकल कार्यप्रवाह।', en: 'Secure trauma clinical workflow enabling authorized Nepal hospitals to correlate unidentified disaster victims against national missing-person reports via AI multi-signal vector matching.', new: 'अधिकृत अस्पतालतय् एआई मिलानय् अज्ञात विपद् पीडित व राष्ट्रिय लगत मिलायेगु सुरक्षित कार्यप्रवाह।', mai: 'अधिकृत नेपाली अस्पतालकेँ एआई मिलानसँ अज्ञात विपद् पीड़ितकेँ राष्ट्रिय हेराएल रिपोर्टसँ मिलाबयवाला सुरक्षित ट्रमा कार्यप्रवाह।', hi: 'अधिकृत नेपाली अस्पतालों को एआई बहु-संकेत मिलान से अज्ञात आपदा पीड़ितों को राष्ट्रीय लापता रिपोर्ट से मिलाने वाला सुरक्षित ट्रॉमा कार्यप्रवाह।' },
+  'Authorized Access Level:': { ne: 'अधिकृत पहुँच स्तर:', en: 'Authorized Access Level:', new: 'अधिकृत पहुँच स्तर:', mai: 'अधिकृत पहुँच स्तर:', hi: 'अधिकृत पहुँच स्तर:' },
+  'Authorized Hospital Staff (Trauma Desk)': { ne: 'अधिकृत अस्पताल कर्मचारी (ट्रमा डेस्क)', en: 'Authorized Hospital Staff (Trauma Desk)', new: 'अधिकृत अस्पताल कर्मचारी (ट्रमा डेस्क)', mai: 'अधिकृत अस्पताल कर्मचारी (ट्रमा डेस्क)', hi: 'अधिकृत अस्पताल कर्मचारी (ट्रॉमा डेस्क)' },
+  'Disaster Verification Authority (Nepal Police / NDRRMA)': { ne: 'विपद् प्रमाणीकरण प्राधिकरण (नेपाल प्रहरी / NDRRMA)', en: 'Disaster Verification Authority (Nepal Police / NDRRMA)', new: 'विपद् प्रमाणीकरण प्राधिकरण (नेपाल प्रहरी / NDRRMA)', mai: 'विपद् सत्यापन प्राधिकरण (नेपाल प्रहरी / NDRRMA)', hi: 'आपदा सत्यापन प्राधिकरण (नेपाल पुलिस / NDRRMA)' },
+  'Public Overview (Restricted Redaction)': { ne: 'सार्वजनिक अवलोकन (सीमित विवरण)', en: 'Public Overview (Restricted Redaction)', new: 'सार्वजनिक अवलोकन (सीमित विवरण)', mai: 'सार्वजनिक अवलोकन (सीमित विवरण)', hi: 'सार्वजनिक अवलोकन (सीमित विवरण)' },
+  'Reset Demo': { ne: 'डेमो रिसेट गर्नुहोस्', en: 'Reset Demo', new: 'डेमो रिसेट यानादिसँ', mai: 'डेमो रिसेट करू', hi: 'डेमो रीसेट करें' },
+  'Privacy Protected:': { ne: 'गोपनीयता सुरक्षित:', en: 'Privacy Protected:', new: 'गोपनीयता सुरक्षित:', mai: 'गोपनीयता सुरक्षित:', hi: 'गोपनीयता सुरक्षित:' },
+  'Clinical intake records are restricted to verified medical desks. Unnecessary medical diagnostics are redacted from correlation algorithms.': { ne: 'क्लिनिकल भर्ना अभिलेखहरू प्रमाणित चिकित्सा डेस्कमा मात्र सीमित छन्। अनावश्यक चिकित्सा निदानहरू मिलान एल्गोरिदमबाट हटाइन्छन्।', en: 'Clinical intake records are restricted to verified medical desks. Unnecessary medical diagnostics are redacted from correlation algorithms.', new: 'क्लिनिकल अभिलेखत प्रमाणित चिकित्सा डेस्कय् जक सीमित दु। अनावश्यक निदान मिलान प्रणालीपाखें लिकायेगु दु।', mai: 'क्लिनिकल अभिलेख प्रमाणित चिकित्सा डेस्कमे सीमित अछि। अनावश्यक निदान मिलान प्रणालीसँ हटाओल जाइत अछि।', hi: 'क्लिनिकल प्रवेश रिकॉर्ड केवल सत्यापित चिकित्सा डेस्क तक सीमित हैं। अनावश्यक चिकित्सीय निदान मिलान एल्गोरिदम से हटा दिए जाते हैं।' },
+  'Patients Submitted': { ne: 'पेश गरिएका बिरामी', en: 'Patients Submitted', new: 'दाखिला यानातःगु ल्वगीत', mai: 'जमा कएल बिरामी', hi: 'जमा किए गए मरीज' },
+  'unidentified victims': { ne: 'पहिचान नभएका पीडित', en: 'unidentified victims', new: 'म्हसिका मदूगु पीडित', mai: 'पहचान नहि भेल पीड़ित', hi: 'अज्ञात पीड़ित' },
+  'AI Matches Flagged': { ne: 'एआईले चिन्ह लगाएका मिलान', en: 'AI Matches Flagged', new: 'एआई मिलान चिन्ह लगायल', mai: 'एआई मिलान चिह्नित', hi: 'एआई द्वारा चिह्नित मिलान' },
+  'similarity candidates': { ne: 'समानता भएका सम्भावित मिलान', en: 'similarity candidates', new: 'समानता सम्भावित मिलान', mai: 'समानता सम्भावित मिलान', hi: 'समानता वाले संभावित मिलान' },
+  'Awaiting Verification': { ne: 'प्रमाणीकरणको प्रतीक्षामा', en: 'Awaiting Verification', new: 'प्रमाणीकरणया प्रतीक्षाय्', mai: 'सत्यापनक प्रतीक्षा', hi: 'सत्यापन की प्रतीक्षा' },
+  'human review': { ne: 'मानवीय समीक्षा', en: 'human review', new: 'मनूया समीक्षा', mai: 'मानवीय समीक्षा', hi: 'मानवीय समीक्षा' },
+  'Confirmed Matches': { ne: 'पुष्टि भएका मिलान', en: 'Confirmed Matches', new: 'पुष्टि जूगु मिलान', mai: 'पुष्टि भेल मिलान', hi: 'पुष्ट मिलान' },
+  'reunited / treated': { ne: 'पुनर्मिलन / उपचार', en: 'reunited / treated', new: 'पुनर्मिलान / उपचार', mai: 'पुनर्मिलन / उपचार', hi: 'पुनर्मिलन / उपचार' },
+  'Human-in-the-Loop Operational Guardrail:': { ne: 'मानवीय समीक्षा सहित सञ्चालन सुरक्षा:', en: 'Human-in-the-Loop Operational Guardrail:', new: 'मनूया समीक्षा सञ्चालन सुरक्षा:', mai: 'मानवीय समीक्षा सञ्चालन सुरक्षा:', hi: 'मानवीय समीक्षा संचालन सुरक्षा:' },
+  'The SAHAYAK AI system operates exclusively as an advisory decision-support instrument. The matching score indicates multi-variable feature correlation and never automatically declares identity. Verification and case resolution strictly require authorized clinician or authority confirmation.': { ne: 'SAHAYAK एआई प्रणाली सल्लाह दिने निर्णय-सहायता उपकरणका रूपमा मात्र काम गर्छ। मिलान स्कोरले बहु-चर विशेषता सम्बन्ध देखाउँछ र स्वचालित रूपमा पहिचान घोषणा गर्दैन। प्रमाणीकरण र केस समाधानका लागि अधिकृत चिकित्सक वा प्राधिकरणको पुष्टि अनिवार्य हुन्छ।', en: 'The SAHAYAK AI system operates exclusively as an advisory decision-support instrument. The matching score indicates multi-variable feature correlation and never automatically declares identity. Verification and case resolution strictly require authorized clinician or authority confirmation.', new: 'SAHAYAK एआई प्रणाली सल्लाहया निर्णय-सहायता उपकरण जक दु। मिलान स्कोरय् पहिचान स्वचालित यानातःगु मदु। प्रमाणीकरण अधिकृत चिकित्सकया पुष्टिसँ जक जुयाः।', mai: 'SAHAYAK एआई प्रणाली केवल सलाह देबयवाला निर्णय-सहायता उपकरण अछि। मिलान स्कोर बहु-विशेषता सम्बन्ध देखबैत अछि, पहचान अपने नहि घोषित करैत अछि। सत्यापन आ केस समाधान लेल अधिकृत चिकित्सकक पुष्टि जरूरी अछि।', hi: 'SAHAYAK एआई प्रणाली केवल सलाहकारी निर्णय-सहायता उपकरण है। मिलान स्कोर बहु-चर विशेषताओं का संबंध दिखाता है और स्वतः पहचान घोषित नहीं करता। सत्यापन और केस समाधान के लिए अधिकृत चिकित्सक या प्राधिकरण की पुष्टि आवश्यक है।' },
+  'AI Match Center': { ne: 'एआई मिलान केन्द्र', en: 'AI Match Center', new: 'एआई मिलान केन्द्र', mai: 'एआई मिलान केन्द्र', hi: 'एआई मिलान केंद्र' },
+  'Submit Unidentified Patients': { ne: 'पहिचान नभएका बिरामी पेश गर्नुहोस्', en: 'Submit Unidentified Patients', new: 'म्हसिका मदूगु ल्वगीत दाखिला', mai: 'पहचान नहि भेल बिरामी जमा करू', hi: 'अज्ञात मरीज जमा करें' },
+  'Patient Intake Registry': { ne: 'बिरामी भर्ना लगत', en: 'Patient Intake Registry', new: 'ल्वगी दाखिला लगत', mai: 'बिरामी भर्ना पंजी', hi: 'मरीज प्रवेश रजिस्टर' },
+  'Audit Trail & Governance': { ne: 'अडिट विवरण र शासन', en: 'Audit Trail & Governance', new: 'अडिट विवरण व शासन', mai: 'ऑडिट विवरण आ शासन', hi: 'ऑडिट ट्रेल और शासन' },
+  'Filter by patient MRN, missing person name, hospital, or recovery location...': { ne: 'बिरामी MRN, हराएका व्यक्तिको नाम, अस्पताल वा उद्धार स्थानबाट खोज्नुहोस्...', en: 'Filter by patient MRN, missing person name, hospital, or recovery location...', new: 'ल्वगी MRN, तंगु मनूया नां, अस्पताल वा उद्धार थाय् मालादिसँ...', mai: 'बिरामी MRN, हेराएल व्यक्तिक नाम, अस्पताल वा उद्धार स्थानसँ खोजू...', hi: 'मरीज MRN, लापता व्यक्ति का नाम, अस्पताल या बरामदगी स्थान से खोजें...' },
+  'Filter:': { ne: 'फिल्टर:', en: 'Filter:', new: 'फिल्टर:', mai: 'फिल्टर:', hi: 'फ़िल्टर:' },
+  'All Matches': { ne: 'सबै मिलान', en: 'All Matches', new: 'दक्को मिलान', mai: 'सब मिलान', hi: 'सभी मिलान' },
+  'High Confidence (75%+)': { ne: 'उच्च विश्वास (७५%+)', en: 'High Confidence (75%+)', new: 'उच्च विश्वास (७५%+)', mai: 'उच्च विश्वास (७५%+)', hi: 'उच्च विश्वसनीयता (७५%+)' },
+  'Pending Review': { ne: 'समीक्षा बाँकी', en: 'Pending Review', new: 'समीक्षा जुइ ल्यं', mai: 'समीक्षा बाँकी', hi: 'समीक्षा लंबित' },
+  'Confirmed': { ne: 'पुष्टि भएको', en: 'Confirmed', new: 'पुष्टि जूगु', mai: 'पुष्टि भेल', hi: 'पुष्ट' },
+  'Hospital Missing-Person Matching': { ne: 'अस्पताल हराएका व्यक्ति मिलान', en: 'Hospital Missing-Person Matching', new: 'अस्पताल तंगु मनू मिलान', mai: 'अस्पताल हेराएल व्यक्ति मिलान', hi: 'अस्पताल लापता व्यक्ति मिलान' },
+  'Authorized Trauma Hospital Network • Autonomous Multimodal Identification': { ne: 'अधिकृत ट्रमा अस्पताल नेटवर्क • स्वचालित बहु-माध्यम पहिचान', en: 'Authorized Trauma Hospital Network • Autonomous Multimodal Identification', new: 'अधिकृत ट्रमा अस्पताल नेटवर्क • स्वचालित पहिचान', mai: 'अधिकृत ट्रमा अस्पताल नेटवर्क • स्वचालित बहु-माध्यम पहिचान', hi: 'अधिकृत ट्रॉमा अस्पताल नेटवर्क • स्वचालित बहु-माध्यम पहचान' },
+  'unidentified': { ne: 'पहिचान नभएका', en: 'unidentified', new: 'म्हसिका मदूगु', mai: 'पहचान नहि भेल', hi: 'अज्ञात' },
+  'candidates': { ne: 'सम्भावित मिलान', en: 'candidates', new: 'सम्भावित मिलान', mai: 'सम्भावित मिलान', hi: 'संभावित मिलान' },
+  'Matches Confirmed': { ne: 'पुष्टि भएका मिलान', en: 'Matches Confirmed', new: 'पुष्टि जूगु मिलान', mai: 'पुष्टि भेल मिलान', hi: 'पुष्ट मिलान' },
+  'verified safe': { ne: 'सुरक्षित पुष्टि', en: 'verified safe', new: 'सुरक्षित पुष्टि', mai: 'सुरक्षित पुष्टि', hi: 'सुरक्षित पुष्टि' },
+  'High-Confidence AI Candidate(s) Require Medical Verification': { ne: 'उच्च-विश्वास भएका एआई सम्भावित मिलानलाई चिकित्सा प्रमाणीकरण आवश्यक', en: 'High-Confidence AI Candidate(s) Require Medical Verification', new: 'उच्च-विश्वास एआई मिलानया चिकित्सा प्रमाणीकरण माःगु', mai: 'उच्च-विश्वास एआई सम्भावित मिलानक चिकित्सा सत्यापन आवश्यक', hi: 'उच्च-विश्वसनीय एआई संभावित मिलान के लिए चिकित्सा सत्यापन आवश्यक' },
+  'AI decision support engine • Human verification required for all closures': { ne: 'एआई निर्णय सहायता प्रणाली • सबै निष्कर्षका लागि मानवीय प्रमाणीकरण आवश्यक', en: 'AI decision support engine • Human verification required for all closures', new: 'एआई निर्णय सहायता • दक्को निष्कर्षया मनूया प्रमाणीकरण माःगु', mai: 'एआई निर्णय सहायता प्रणाली • सब निष्कर्ष लेल मानवीय सत्यापन आवश्यक', hi: 'एआई निर्णय सहायता प्रणाली • सभी निष्कर्षों के लिए मानवीय सत्यापन आवश्यक' },
+  'Open Hospital Matching Portal': { ne: 'अस्पताल मिलान पोर्टल खोल्नुहोस्', en: 'Open Hospital Matching Portal', new: 'अस्पताल मिलान पोर्टल खोलादिसँ', mai: 'अस्पताल मिलान पोर्टल खोलू', hi: 'अस्पताल मिलान पोर्टल खोलें' },
+  'Match': { ne: 'मिलान', en: 'Match', new: 'मिलान', mai: 'मिलान', hi: 'मिलान' },
+  'MRN': { ne: 'MRN', en: 'MRN', new: 'MRN', mai: 'MRN', hi: 'MRN' },
+  'Missing': { ne: 'हराएका', en: 'Missing', new: 'तंगु', mai: 'हेराएल', hi: 'लापता' },
+  'Found': { ne: 'भेटिएको स्थान', en: 'Found', new: 'खंगु', mai: 'भेटल', hi: 'मिला' },
+  'Review Side-by-Side Dossier': { ne: 'छेउछाउ विवरण समीक्षा गर्नुहोस्', en: 'Review Side-by-Side Dossier', new: 'छेउछाउ विवरण समीक्षा यानादिसँ', mai: 'छेउ-छेउ विवरण समीक्षा करू', hi: 'साथ-साथ विवरण समीक्षा करें' },
+  'Supporting Match Reasons:': { ne: 'मिलानका समर्थन कारणहरू:', en: 'Supporting Match Reasons:', new: 'मिलानया समर्थन कारणत:', mai: 'मिलानक समर्थन कारण:', hi: 'मिलान के समर्थन कारण:' },
+  'Contradictions / Verification Context:': { ne: 'विरोधाभास / प्रमाणीकरण सन्दर्भ:', en: 'Contradictions / Verification Context:', new: 'विरोधाभास / प्रमाणीकरण सन्दर्भ:', mai: 'विरोधाभास / सत्यापन सन्दर्भ:', hi: 'विरोधाभास / सत्यापन संदर्भ:' },
+  'Reviewed by:': { ne: 'समीक्षा गर्ने:', en: 'Reviewed by:', new: 'समीक्षा यानिगु:', mai: 'समीक्षा कएलक:', hi: 'समीक्षा करने वाला:' },
+  'on': { ne: 'मा', en: 'on', new: 'य्', mai: 'पर', hi: 'को' },
+  'No contradictions identified. Awaiting authorized clinical sign-off.': { ne: 'कुनै विरोधाभास पहिचान भएन। अधिकृत क्लिनिकल स्वीकृतिको प्रतीक्षा।', en: 'No contradictions identified. Awaiting authorized clinical sign-off.', new: 'छुं विरोधाभास मदु। अधिकृत क्लिनिकल स्वीकृतिया प्रतीक्षा।', mai: 'कोनो विरोधाभास नहि भेटल। अधिकृत क्लिनिकल स्वीकृतिक प्रतीक्षा।', hi: 'कोई विरोधाभास नहीं मिला। अधिकृत क्लिनिकल स्वीकृति की प्रतीक्षा।' },
+  'Side-by-Side Match Verification Dossier': { ne: 'छेउछाउ मिलान प्रमाणीकरण विवरण', en: 'Side-by-Side Match Verification Dossier', new: 'छेउछाउ मिलान प्रमाणीकरण विवरण', mai: 'छेउ-छेउ मिलान सत्यापन विवरण', hi: 'साथ-साथ मिलान सत्यापन विवरण' },
+  'Hospital MRN:': { ne: 'अस्पताल MRN:', en: 'Hospital MRN:', new: 'अस्पताल MRN:', mai: 'अस्पताल MRN:', hi: 'अस्पताल MRN:' },
+  'Missing Case:': { ne: 'हराएको केस:', en: 'Missing Case:', new: 'तंगु केस:', mai: 'हेराएल केस:', hi: 'लापता केस:' },
+  'MANDATORY HUMAN-IN-THE-LOOP ETHICAL STANDARD:': { ne: 'अनिवार्य मानवीय समीक्षा नैतिक मापदण्ड:', en: 'MANDATORY HUMAN-IN-THE-LOOP ETHICAL STANDARD:', new: 'अनिवार्य मनूया समीक्षा नैतिक मापदण्ड:', mai: 'अनिवार्य मानवीय समीक्षा नैतिक मानक:', hi: 'अनिवार्य मानवीय समीक्षा नैतिक मानक:' },
+  'The AI engine does NOT declare or confirm legal identity. The AI matching score is an indicator of multi-signal feature similarity, not proof. Final verification must always be performed and signed off by authorized hospital staff, designated law enforcement, or verified family liaisons.': { ne: 'एआई प्रणालीले कानुनी पहिचान घोषणा वा पुष्टि गर्दैन। एआई मिलान स्कोर बहु-सङ्केत विशेषता समानताको सूचक मात्र हो, प्रमाण होइन। अन्तिम प्रमाणीकरण अधिकृत अस्पताल कर्मचारी, तोकिएको कानून कार्यान्वयन निकाय वा प्रमाणित पारिवारिक प्रतिनिधिले गर्नुपर्छ।', en: 'The AI engine does NOT declare or confirm legal identity. The AI matching score is an indicator of multi-signal feature similarity, not proof. Final verification must always be performed and signed off by authorized hospital staff, designated law enforcement, or verified family liaisons.', new: 'एआई प्रणाली कानुनी पहिचान घोषणा वा पुष्टि यायेगु मदु। अन्तिम प्रमाणीकरण अधिकृत अस्पताल कर्मचारी वा सम्बन्धित प्राधिकरणया पुष्टिसँ जुयाः।', mai: 'एआई प्रणाली कानूनी पहचान घोषित वा पुष्टि नहि करैत अछि। अन्तिम सत्यापन अधिकृत अस्पताल कर्मचारी वा सम्बन्धित प्राधिकरणेँ करबाक अछि।', hi: 'एआई प्रणाली कानूनी पहचान घोषित या पुष्ट नहीं करती। अंतिम सत्यापन अधिकृत अस्पताल कर्मचारी या संबंधित प्राधिकरण द्वारा किया जाना चाहिए।' },
+  'AI Match Indicator': { ne: 'एआई मिलान सूचक', en: 'AI Match Indicator', new: 'एआई मिलान सूचक', mai: 'एआई मिलान सूचक', hi: 'एआई मिलान संकेतक' },
+  'Autonomous Multimodal Match Assessment': { ne: 'स्वचालित बहु-माध्यम मिलान मूल्याङ्कन', en: 'Autonomous Multimodal Match Assessment', new: 'स्वचालित बहु-माध्यम मिलान मूल्याङ्कन', mai: 'स्वचालित बहु-माध्यम मिलान मूल्यांकन', hi: 'स्वचालित बहु-माध्यम मिलान मूल्यांकन' },
+  'Engine evaluated physical tokens, age bracket compatibility, clothing remnants, and river drainage corridor flow from': { ne: 'प्रणालीले शारीरिक संकेत, उमेर समूह, कपडाका अवशेष र नदी निकास मार्गको बहाव मूल्याङ्कन गर्‍यो', en: 'Engine evaluated physical tokens, age bracket compatibility, clothing remnants, and river drainage corridor flow from', new: 'प्रणालीय् शारीरिक संकेत, उमेर, वसःया अवशेष व नदी बहाव मूल्याङ्कन याःगु', mai: 'प्रणाली शारीरिक संकेत, उमेर, कपड़ा अवशेष आ नदी बहाव मूल्यांकन कएलक', hi: 'प्रणाली ने शारीरिक संकेत, आयु, कपड़ों के अवशेष और नदी प्रवाह का मूल्यांकन किया' },
+  'to': { ne: 'देखि', en: 'to', new: 'पाखें', mai: 'सँ', hi: 'से' },
+  'Visual / Attire': { ne: 'दृश्य / पहिरन', en: 'Visual / Attire', new: 'दृश्य / वसः', mai: 'दृश्य / पोशाक', hi: 'दृश्य / पहनावा' },
+  'Corridor / Flow': { ne: 'मार्ग / बहाव', en: 'Corridor / Flow', new: 'लँपु / बहाव', mai: 'मार्ग / बहाव', hi: 'मार्ग / प्रवाह' },
+  'Chronology': { ne: 'समयक्रम', en: 'Chronology', new: 'समयक्रम', mai: 'समयक्रम', hi: 'कालक्रम' },
+  'MISSING PERSON RECORD': { ne: 'हराएका व्यक्ति विवरण', en: 'MISSING PERSON RECORD', new: 'तंगु मनू विवरण', mai: 'हेराएल व्यक्ति विवरण', hi: 'लापता व्यक्ति रिकॉर्ड' },
+  'Last seen:': { ne: 'अन्तिम पटक देखिएको:', en: 'Last seen:', new: 'अन्तिम खंगु:', mai: 'अन्तिम देखल:', hi: 'अंतिम बार देखा गया:' },
+  'Reported': { ne: 'रिपोर्ट गरिएको', en: 'Reported', new: 'रिपोर्ट यानातःगु', mai: 'रिपोर्ट कएल', hi: 'रिपोर्ट किया गया' },
+  'Reported Clothing:': { ne: 'रिपोर्ट गरिएको पहिरन:', en: 'Reported Clothing:', new: 'रिपोर्ट यानातःगु वसः:', mai: 'रिपोर्ट कएल पोशाक:', hi: 'रिपोर्ट किया गया पहनावा:' },
+  'Not specified in initial report': { ne: 'प्रारम्भिक रिपोर्टमा उल्लेख छैन', en: 'Not specified in initial report', new: 'न्हापां रिपोर्टय् उल्लेख मदु', mai: 'प्रारम्भिक रिपोर्टमे उल्लेख नहि', hi: 'प्रारंभिक रिपोर्ट में निर्दिष्ट नहीं' },
+  'Physical Traits & Context:': { ne: 'शारीरिक विशेषता र सन्दर्भ:', en: 'Physical Traits & Context:', new: 'शारीरिक विशेषता व सन्दर्भ:', mai: 'शारीरिक विशेषता आ सन्दर्भ:', hi: 'शारीरिक विशेषताएं और संदर्भ:' },
+  'Standard profile recorded.': { ne: 'सामान्य प्रोफाइल अभिलेख गरिएको छ।', en: 'Standard profile recorded.', new: 'सामान्य प्रोफाइल अभिलेख यानातःगु।', mai: 'सामान्य प्रोफाइल दर्ज अछि।', hi: 'सामान्य प्रोफ़ाइल दर्ज है।' },
+  'Reported By:': { ne: 'रिपोर्ट गर्ने:', en: 'Reported By:', new: 'रिपोर्ट यानिगु:', mai: 'रिपोर्ट कएनिहार:', hi: 'रिपोर्ट करने वाला:' },
+  'Authorized Registry': { ne: 'अधिकृत लगत', en: 'Authorized Registry', new: 'अधिकृत लगत', mai: 'अधिकृत पंजी', hi: 'अधिकृत रजिस्टर' },
+  'Contact:': { ne: 'सम्पर्क:', en: 'Contact:', new: 'सम्पर्क:', mai: 'सम्पर्क:', hi: 'संपर्क:' },
+  'Authority Desk': { ne: 'प्राधिकरण डेस्क', en: 'Authority Desk', new: 'प्राधिकरण डेस्क', mai: 'प्राधिकरण डेस्क', hi: 'प्राधिकरण डेस्क' },
+  'HOSPITAL PATIENT RECORD': { ne: 'अस्पताल बिरामी विवरण', en: 'HOSPITAL PATIENT RECORD', new: 'अस्पताल ल्वगी विवरण', mai: 'अस्पताल बिरामी विवरण', hi: 'अस्पताल मरीज रिकॉर्ड' },
+  'Intake Photo': { ne: 'भर्ना फोटो', en: 'Intake Photo', new: 'दाखिला फोटो', mai: 'भर्ना फोटो', hi: 'प्रवेश फोटो' },
+  'Unidentified Patient': { ne: 'पहिचान नभएको बिरामी', en: 'Unidentified Patient', new: 'म्हसिका मदूगु ल्वगी', mai: 'पहचान नहि भेल बिरामी', hi: 'अज्ञात मरीज' },
+  'Est. Age:': { ne: 'अनुमानित उमेर:', en: 'Est. Age:', new: 'अनुमानित उमेर:', mai: 'अनुमानित उमेर:', hi: 'अनुमानित आयु:' },
+  'Sex:': { ne: 'लिङ्ग:', en: 'Sex:', new: 'लिङ्ग:', mai: 'लिङ्ग:', hi: 'लिंग:' },
+  'Found:': { ne: 'भेटिएको:', en: 'Found:', new: 'खंगु:', mai: 'भेटल:', hi: 'मिला:' },
+  'Observed Clothing on Intake:': { ne: 'भर्ना गर्दा देखिएको पहिरन:', en: 'Observed Clothing on Intake:', new: 'दाखिला समयय् खंगु वसः:', mai: 'भर्ना समय देखल पोशाक:', hi: 'प्रवेश के समय देखा गया पहनावा:' },
+  'Distinguishing Characteristics & Belongings:': { ne: 'पहिचानयोग्य विशेषता र सामान:', en: 'Distinguishing Characteristics & Belongings:', new: 'पहिचानया विशेषता व सामान:', mai: 'पहिचान योग्य विशेषता आ सामान:', hi: 'पहचान योग्य विशेषताएं और सामान:' },
+  'None cataloged': { ne: 'कुनै अभिलेख छैन', en: 'None cataloged', new: 'छुं अभिलेख मदु', mai: 'कोनो अभिलेख नहि', hi: 'कोई रिकॉर्ड नहीं' },
+  'Admitted:': { ne: 'भर्ना:', en: 'Admitted:', new: 'दाखिला:', mai: 'भर्ना:', hi: 'भर्ती:' },
+  'Submitted by:': { ne: 'पेश गर्ने:', en: 'Submitted by:', new: 'दाखिला यानिगु:', mai: 'जमा कएनिहार:', hi: 'जमा करने वाला:' },
+  'PENDING HUMAN REVIEW': { ne: 'मानवीय समीक्षा बाँकी', en: 'PENDING HUMAN REVIEW', new: 'मनूया समीक्षा जुइ ल्यं', mai: 'मानवीय समीक्षा बाँकी', hi: 'मानवीय समीक्षा लंबित' },
+  'CONFIRMED POSSIBLE MATCH': { ne: 'सम्भावित मिलान पुष्टि', en: 'CONFIRMED POSSIBLE MATCH', new: 'सम्भावित मिलान पुष्टि', mai: 'सम्भावित मिलान पुष्टि', hi: 'संभावित मिलान पुष्ट' },
+  'NEEDS FURTHER VERIFICATION': { ne: 'थप प्रमाणीकरण आवश्यक', en: 'NEEDS FURTHER VERIFICATION', new: 'मेगु प्रमाणीकरण माःगु', mai: 'अतिरिक्त सत्यापन आवश्यक', hi: 'अतिरिक्त सत्यापन आवश्यक' },
+  'REJECTED': { ne: 'अस्वीकृत', en: 'REJECTED', new: 'अस्वीकृत', mai: 'अस्वीकृत', hi: 'अस्वीकृत' },
+  'Strong visual resemblance in facial structure, hair color, and athletic build': { ne: 'अनुहारको बनोट, कपालको रङ र खेलाडी शरीरमा बलियो दृश्य समानता', en: 'Strong visual resemblance in facial structure, hair color, and athletic build', new: 'अनुहारया बनोट, कपालया रङ व खेलाडी शरीरय् बलियो दृश्य समानता', mai: 'अनुहारक बनोट, कपालक रंग आ एथलेटिक शरीरमे मजबूत दृश्य समानता', hi: 'चेहरे की बनावट, बालों के रंग और एथलेटिक शरीर में मजबूत दृश्य समानता' },
+  'Compatible estimated age range (Patient: 30-35 vs Missing Report: 34 years)': { ne: 'अनुमानित उमेर दायरा मिल्दोजुल्दो (बिरामी: ३०-३५ वर्ष, हराएको रिपोर्ट: ३४ वर्ष)', en: 'Compatible estimated age range (Patient: 30-35 vs Missing Report: 34 years)', new: 'अनुमानित उमेर मिल्दो (ल्वगी: ३०-३५, तंगु रिपोर्ट: ३४ वर्ष)', mai: 'अनुमानित उमेरक दायरा मिलैत अछि (बिरामी: ३०-३५, हेराएल रिपोर्ट: ३४ वर्ष)', hi: 'अनुमानित आयु सीमा मेल खाती है (मरीज: ३०-३५, लापता रिपोर्ट: ३४ वर्ष)' },
+  'Geographic corridor alignment: Melamchi flood water drainage path connects downriver to Bagmati / Balkhu basin': { ne: 'भौगोलिक मार्ग मिलान: मेलम्ची बाढीको पानी निकास मार्ग नदीको बहावसँगै बागमती / बल्खु बेसिनमा जोडिन्छ', en: 'Geographic corridor alignment: Melamchi flood water drainage path connects downriver to Bagmati / Balkhu basin', new: 'भौगोलिक लँपु मिलान: मेलम्ची खुसिया निकास बागमती / बल्खु बेसिनय् थ्यन', mai: 'भौगोलिक मार्ग मिलान: मेलम्ची बाढिक निकास बागमती / बल्खु बेसिनसँ जुड़ैत अछि', hi: 'भौगोलिक मार्ग मिलान: मेलम्ची बाढ़ जल निकासी मार्ग नीचे की ओर बागमती / बल्खु बेसिन से जुड़ता है' },
+  'Patient admitted with slight facial abrasions and mud covering not present in family photo': { ne: 'बिरामीको अनुहारमा सामान्य चोट र हिलो लागेको छ, जुन पारिवारिक फोटोमा देखिँदैन', en: 'Patient admitted with slight facial abrasions and mud covering not present in family photo', new: 'ल्वगीया अनुहारय् सामान्य चोट व हिलो दु, परिवारया फोटोय् मदु', mai: 'बिरामीक अनुहार पर हल्का चोट आ माटि अछि, जे पारिवारिक फोटोमे नहि अछि', hi: 'मरीज के चेहरे पर हल्की खरोंच और मिट्टी है, जो पारिवारिक फोटो में नहीं है' },
+  'Location of recovery (Balkhu) is downstream from initial last seen point (Melamchi)': { ne: 'उद्धार स्थान (बल्खु) सुरुमा अन्तिम पटक देखिएको स्थान (मेलम्ची) भन्दा नदीको तल्लो बहावमा छ', en: 'Location of recovery (Balkhu) is downstream from initial last seen point (Melamchi)', new: 'उद्धार थाय् (बल्खु) न्हापां अन्तिम खंगु थाय् (मेलम्ची) पाखें खुसिया बहावय् दु', mai: 'उद्धार स्थान (बल्खु) अन्तिम देखल स्थान (मेलम्ची) सँ नीचाँ धारमे अछि', hi: 'बरामदगी स्थान (बल्खु) प्रारंभिक अंतिम दृश्य स्थान (मेलम्ची) से नीचे की ओर है' },
+  'Precise demographic alignment: Female child, age 7-9 (Reported: 8 years old, 3ft 10in)': { ne: 'ठ्याक्कै जनसांख्यिक मिलान: बालिका, उमेर ७-९ (रिपोर्ट: ८ वर्ष, ३ फिट १० इन्च)', en: 'Precise demographic alignment: Female child, age 7-9 (Reported: 8 years old, 3ft 10in)', new: 'ठ्याक्कै जनसांख्यिक मिलान: मचा, उमेर ७-९ (रिपोर्ट: ८ वर्ष, ३ फिट १० इन्च)', mai: 'सटीक जनसांख्यिक मिलान: बच्ची, उमेर ७-९ (रिपोर्ट: ८ वर्ष, ३ फिट १० इन्च)', hi: 'सटीक जनसांख्यिक मिलान: बालिका, आयु ७-९ (रिपोर्ट: ८ वर्ष, ३ फीट १० इंच)' },
+  'Exact attire correspondence: Navy blue pleated school uniform skirt, white shirt, red hair ribbons': { ne: 'ठ्याक्कै पहिरन मिलान: गाढा नीलो चुन्नट भएको स्कुल स्कर्ट, सेतो सर्ट र रातो कपालको रिबन', en: 'Exact attire correspondence: Navy blue pleated school uniform skirt, white shirt, red hair ribbons', new: 'ठ्याक्कै वसः मिलान: गाढा नीलो स्कुल स्कर्ट, सेतो सर्ट व रातो कपालया रिबन', mai: 'ठीक पोशाक मिलान: गाढा नील स्कुल स्कर्ट, सेतो सर्ट आ रातो कपाल रिबन', hi: 'सटीक पहनावा मिलान: गहरे नीले रंग की स्कूल स्कर्ट, सफेद शर्ट और लाल बाल रिबन' },
+  'Minor water staining and wear on uniform compared to pristine school photograph': { ne: 'सफा स्कुल फोटोको तुलनामा युनिफर्ममा पानीको सामान्य दाग र घिसावट', en: 'Minor water staining and wear on uniform compared to pristine school photograph', new: 'सफा स्कुल फोटोया तुलनामय् वसःय् सामान्य लःया दाग व घिसावट', mai: 'साफ स्कुल फोटोसँ तुलना करैत पोशाक पर हल्का पानिक दाग आ घिसावट', hi: 'साफ स्कूल फोटो की तुलना में यूनिफॉर्म पर हल्के पानी के दाग और घिसावट' },
+  'Strong visual similarity in facial features, silver hair, and spectacles': { ne: 'अनुहारका विशेषता, फुलेको कपाल र चस्मामा बलियो दृश्य समानता', en: 'Strong visual similarity in facial features, silver hair, and spectacles', new: 'अनुहारया विशेषता, फुला कपाल व चश्माय् बलियो दृश्य समानता', mai: 'अनुहारक विशेषता, सफेद कपाल आ चश्मामे मजबूत दृश्य समानता', hi: 'चेहरे की विशेषताओं, सफेद बालों और चश्मे में मजबूत दृश्य समानता' },
+  'Demographic match: Male, estimated age 60-65 (Reported: 62 years old, ~5ft 6in)': { ne: 'जनसांख्यिक मिलान: पुरुष, अनुमानित उमेर ६०-६५ (रिपोर्ट: ६२ वर्ष, करिब ५ फिट ६ इन्च)', en: 'Demographic match: Male, estimated age 60-65 (Reported: 62 years old, ~5ft 6in)', new: 'जनसांख्यिक मिलान: पुरुष, उमेर ६०-६५ (रिपोर्ट: ६२ वर्ष)', mai: 'जनसांख्यिक मिलान: पुरुष, अनुमानित उमेर ६०-६५ (रिपोर्ट: ६२ वर्ष)', hi: 'जनसांख्यिक मिलान: पुरुष, अनुमानित आयु ६०-६५ (रिपोर्ट: ६२ वर्ष, लगभग ५ फीट ६ इंच)' },
+  'Administrator': { ne: 'प्रशासक', en: 'Administrator', new: 'प्रशासक', mai: 'प्रशासक', hi: 'प्रशासक' },
+  'Full Access': { ne: 'पूर्ण पहुँच', en: 'Full Access', new: 'पूर्ण पहुँच', mai: 'पूर्ण पहुँच', hi: 'पूर्ण पहुँच' },
+  'Citizen Access': { ne: 'नागरिक पहुँच', en: 'Citizen Access', new: 'नागरिक पहुँच', mai: 'नागरिक पहुँच', hi: 'नागरिक पहुँच' },
+  'General User': { ne: 'सामान्य प्रयोगकर्ता', en: 'General User', new: 'सामान्य प्रयोगकर्ता', mai: 'सामान्य प्रयोगकर्ता', hi: 'सामान्य उपयोगकर्ता' },
+  'Exit': { ne: 'बाहिर निस्कनुहोस्', en: 'Exit', new: 'पिहाँ वनेगु', mai: 'बाहर जाउ', hi: 'बाहर निकलें' },
+  'Auto-detected': { ne: 'स्वचालित रूपमा पहिचान', en: 'Auto-detected', new: 'स्वचालित पहिचान', mai: 'स्वतः पहिचान', hi: 'स्वचालित रूप से पहचाना गया' },
+  'ALERT': { ne: 'सतर्कता', en: 'ALERT', new: 'सतर्कता', mai: 'सतर्कता', hi: 'अलर्ट' },
+  'ALERT LEVEL 2': { ne: 'सतर्कता तह २', en: 'ALERT LEVEL 2', new: 'सतर्कता स्तर २', mai: 'सतर्कता स्तर २', hi: 'अलर्ट स्तर २' },
+  'ALERT LEVEL 3': { ne: 'सतर्कता तह ३', en: 'ALERT LEVEL 3', new: 'सतर्कता स्तर ३', mai: 'सतर्कता स्तर ३', hi: 'अलर्ट स्तर ३' },
+  'WARNING': { ne: 'चेतावनी', en: 'WARNING', new: 'सतर्कता', mai: 'चेतावनी', hi: 'चेतावनी' },
+  'CRITICAL': { ne: 'अति गम्भीर', en: 'CRITICAL', new: 'तसकं गम्भीर', mai: 'अति गम्भीर', hi: 'अति गंभीर' },
+  'LOW': { ne: 'न्यून', en: 'LOW', new: 'न्यून', mai: 'न्यून', hi: 'कम' },
+  'MODERATE': { ne: 'मध्यम', en: 'MODERATE', new: 'दथुइगु', mai: 'मध्यम', hi: 'मध्यम' },
+  'HIGH': { ne: 'उच्च', en: 'HIGH', new: 'तःधंगु', mai: 'उच्च', hi: 'उच्च' },
+  'NORMAL': { ne: 'सामान्य', en: 'NORMAL', new: 'सामान्य', mai: 'सामान्य', hi: 'सामान्य' },
+  'ALL CLEAR': { ne: 'सबै सुरक्षित', en: 'ALL CLEAR', new: 'दक्को सुरक्षित', mai: 'सब सुरक्षित', hi: 'सब सुरक्षित' },
+  'No Active Threat': { ne: 'कुनै सक्रिय खतरा छैन', en: 'No Active Threat', new: 'छुं नं खतरा मदु', mai: 'कोनो सक्रिय खतरा नहि', hi: 'कोई सक्रिय खतरा नहीं' },
+
   // Navigation & Directions
   'Turn left': { ne: 'बायाँ मोडिनुहोस्', en: 'Turn left', new: 'देपाः पाखे वनेगु', mai: 'बायाँ मुडू', hi: 'बाएं मुड़ें' },
   'Turn right': { ne: 'दायाँ मोडिनुहोस्', en: 'Turn right', new: 'ज्वपाः पाखे वनेगु', mai: 'दायाँ मुडू', hi: 'दाएं मुड़ें' },
@@ -1085,7 +1244,6 @@ const COMMON_PHRASES: Record<string, Record<Language, string>> = {
   'Extreme Rain': { ne: 'अत्यधिक वर्षा', en: 'Extreme Rain', new: 'अति भारी वा', mai: 'अत्यधिक वर्षा', hi: 'अत्यधिक बारिश' },
   'Flash Flood': { ne: 'आकस्मिक बाढी', en: 'Flash Flood', new: 'आकस्मिक खुसिबाः', mai: 'अचानक बाढि', hi: 'अचानक बाढ़' },
   'Normal Conditions': { ne: 'सामान्य अवस्था', en: 'Normal Conditions', new: 'सामान्य अवस्था', mai: 'सामान्य स्थिति', hi: 'सामान्य स्थिति' },
-  'No Active Threat': { ne: 'कुनै सक्रिय खतरा छैन', en: 'No Active Threat', new: 'छुं नं खतरा मदु', mai: 'कोनो खतरा नहि', hi: 'कोई सक्रिय खतरा नहीं' },
   'Synchronized live': { ne: 'प्रत्यक्ष अद्यावधिक', en: 'Synchronized live', new: 'प्रत्यक्ष अद्यावधिक', mai: 'प्रत्यक्ष अद्यावधिक', hi: 'लाइव अपडेट' },
   'DHM Ground Telemetry': { ne: 'जल तथा मौसम विभाग प्रत्यक्ष तथ्याङ्क', en: 'DHM Ground Telemetry', new: 'जल तथा मौसम विभाग प्रत्यक्ष तथ्यांक', mai: 'जल तथा मौसम विभाग डेटा', hi: 'जल एवं मौसम विभाग डेटा' },
 
@@ -1109,6 +1267,30 @@ const COMMON_PHRASES: Record<string, Record<Language, string>> = {
   'Clear All': { ne: 'सबै हटाउनुहोस्', en: 'Clear All', new: 'दक्को लिकायेगु', mai: 'सब हटाउ', hi: 'सभी हटाएं' },
   'Demo Search Results': { ne: 'डेमो खोज परिणामहरू', en: 'Demo Search Results', new: 'खोज लिच्वः', mai: 'खोज परिणाम', hi: 'खोज परिणाम' }
 };
+
+function restoreEnglishText(text: string): string {
+  const trimmed = text.trim();
+  if (!trimmed) return text;
+
+  for (const dictionary of Object.values(TRANSLATIONS)) {
+    for (const [key, value] of Object.entries(dictionary)) {
+      if (value === trimmed && TRANSLATIONS.en[key] !== undefined) {
+        return text.replace(trimmed, TRANSLATIONS.en[key]);
+      }
+    }
+  }
+
+  for (const [phrase, translations] of Object.entries(COMMON_PHRASES)) {
+    if (translations.en === trimmed) return text;
+    for (const language of SUPPORTED_LANGUAGES) {
+      if (language.code !== 'en' && translations[language.code] === trimmed) {
+        return text.replace(trimmed, translations.en);
+      }
+    }
+  }
+
+  return text;
+}
 
 interface LanguageContextType {
   language: Language;
@@ -1284,25 +1466,27 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
         let node: Node | null;
         while ((node = walker.nextNode())) {
-          if ((node as any).__sahayak_orig_text !== undefined) {
-            node.nodeValue = (node as any).__sahayak_orig_text;
-          }
+          const currentText = node.nodeValue || '';
+          const cachedText = (node as any).__sahayak_orig_text;
+          const restoredText = restoreEnglishText(currentText);
+          const cachedRestoredText = cachedText ? restoreEnglishText(cachedText) : '';
+          node.nodeValue = restoredText !== currentText ? restoredText : (cachedRestoredText || currentText);
         }
         // Restore input placeholders
         document.querySelectorAll('input, textarea').forEach(el => {
           const input = el as HTMLInputElement | HTMLTextAreaElement;
           if ((input as any).__sahayak_orig_placeholder !== undefined) {
-            input.placeholder = (input as any).__sahayak_orig_placeholder;
+            input.placeholder = restoreEnglishText(input.placeholder) || restoreEnglishText((input as any).__sahayak_orig_placeholder);
           }
         });
         // Restore title and aria-label
         document.querySelectorAll('[title], [aria-label]').forEach(el => {
           const htmlEl = el as HTMLElement;
           if ((htmlEl as any).__sahayak_orig_title !== undefined) {
-            htmlEl.title = (htmlEl as any).__sahayak_orig_title;
+            htmlEl.title = restoreEnglishText(htmlEl.title) || restoreEnglishText((htmlEl as any).__sahayak_orig_title);
           }
           if ((htmlEl as any).__sahayak_orig_arialabel !== undefined) {
-            htmlEl.setAttribute('aria-label', (htmlEl as any).__sahayak_orig_arialabel);
+            htmlEl.setAttribute('aria-label', restoreEnglishText(htmlEl.getAttribute('aria-label') || '') || restoreEnglishText((htmlEl as any).__sahayak_orig_arialabel));
           }
         });
         return;

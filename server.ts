@@ -714,6 +714,180 @@ async function startServer() {
     return cachedLiveNews.length > 0 ? cachedLiveNews : [];
   }
 
+  interface BipadAlert {
+    id: string;
+    title: string;
+    titleNe?: string;
+    summary: string;
+    source: string;
+    timestamp: string;
+    startedOn: string;
+    severity: 'INFO' | 'WARNING' | 'CRITICAL';
+    category: string;
+    district?: string;
+    latitude?: number;
+    longitude?: number;
+    verified: boolean;
+    public: boolean;
+    sourceUrl: string;
+    referenceType?: string;
+  }
+
+  let cachedBipadAlerts: BipadAlert[] = [];
+  let lastBipadFetchTime = 0;
+  const BIPAD_CACHE_TTL_MS = 60 * 1000;
+
+  function classifyBipadAlert(title: string, description: string, referenceType = ''): { category: string; severity: BipadAlert['severity'] } {
+    const text = `${title} ${description} ${referenceType}`.toLowerCase();
+    const category = text.includes('flood') || text.includes('river') || text.includes('rain') || text.includes('pollution')
+      ? 'Weather & Environmental Alert'
+      : text.includes('landslide') || text.includes('road')
+        ? 'Landslide & Infrastructure'
+        : text.includes('earthquake') || text.includes('tremor')
+          ? 'Earthquake'
+          : text.includes('fire')
+            ? 'Fire'
+            : text.includes('snake') || text.includes('bite') || text.includes('wildlife')
+              ? 'Operational Incident'
+              : 'Disaster Alert';
+    const severity = text.includes('danger') || text.includes('critical') || text.includes('severe') || text.includes('warning') || text.includes('landslide') || text.includes('flood')
+      ? (text.includes('danger') || text.includes('critical') || text.includes('severe') ? 'CRITICAL' : 'WARNING')
+      : 'INFO';
+    return { category, severity };
+  }
+
+  async function fetchBipadAlerts(forceRefresh = false): Promise<BipadAlert[]> {
+    const now = Date.now();
+    if (!forceRefresh && cachedBipadAlerts.length > 0 && now - lastBipadFetchTime < BIPAD_CACHE_TTL_MS) {
+      return cachedBipadAlerts;
+    }
+
+    try {
+      const start = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const end = new Date().toISOString();
+      const url = new URL('https://bipadportal.gov.np/api/v1/alert/');
+      url.searchParams.set('limit', '100');
+      url.searchParams.set('expand', 'event');
+      url.searchParams.set('ordering', '-started_on');
+      url.searchParams.set('started_on__gt', start);
+      url.searchParams.set('started_on__lt', end);
+      const response = await fetch(url, { headers: { 'Accept': 'application/json', 'User-Agent': 'SAHAYAK-Nepal-Disaster-Platform/1.0' } });
+      if (!response.ok) throw new Error(`BIPAD HTTP ${response.status}`);
+      const payload = await response.json() as { results?: any[] };
+      const results = Array.isArray(payload.results) ? payload.results : [];
+      cachedBipadAlerts = results.map((item: any) => {
+        const title = item.title || item.titleNe || 'BIPAD Portal Alert';
+        const summary = item.description || title;
+        const meta = classifyBipadAlert(title, summary, item.referenceType);
+        const coords = item.point?.coordinates;
+        return {
+          id: `bipad-${item.id}`,
+          title,
+          titleNe: item.titleNe,
+          summary,
+          source: 'BIPAD Portal, Government of Nepal',
+          timestamp: formatRelativeTime(item.startedOn || item.createdOn),
+          startedOn: item.startedOn || item.createdOn || new Date().toISOString(),
+          severity: meta.severity,
+          category: meta.category,
+          district: item.event?.district?.name || item.district || undefined,
+          latitude: Array.isArray(coords) ? coords[1] : undefined,
+          longitude: Array.isArray(coords) ? coords[0] : undefined,
+          verified: Boolean(item.verified),
+          public: item.public !== false,
+          sourceUrl: 'https://bipadportal.gov.np/',
+          referenceType: item.referenceType
+        };
+      });
+      lastBipadFetchTime = now;
+    } catch (error) {
+      console.warn('BIPAD alert fetch failed; serving cached alerts:', error);
+    }
+    return cachedBipadAlerts;
+  }
+
+  app.get('/api/bipad-alerts', async (req, res) => {
+    const role = (req.query.role as string || 'PUBLIC').toUpperCase();
+    const allAlerts = await fetchBipadAlerts(req.query.refresh === 'true');
+    const alerts = allAlerts.filter(alert => role === 'ADMIN' || !['Operational Incident'].includes(alert.category));
+    res.json({
+      success: true,
+      source: 'BIPAD Portal, Government of Nepal',
+      sourceUrl: 'https://bipadportal.gov.np/',
+      lastSynced: new Date(lastBipadFetchTime || Date.now()).toISOString(),
+      isCached: Date.now() - lastBipadFetchTime < BIPAD_CACHE_TTL_MS,
+      alerts
+    });
+  });
+
+  interface DrrReliefArea {
+    area: string;
+    district: string;
+    received: number;
+    required: number;
+    coveragePercent: number;
+    sourceUrl: string;
+  }
+
+  function stripHtml(value: string): string {
+    return value.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
+  }
+
+  function parseDrrReliefTable(html: string, sourceUrl: string): DrrReliefArea[] {
+    const areas: DrrReliefArea[] = [];
+    const rowRegex = /<tr[\s\S]*?<\/tr>/gi;
+    let rowMatch: RegExpExecArray | null;
+    while ((rowMatch = rowRegex.exec(html)) !== null) {
+      const cells = [...rowMatch[0].matchAll(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi)].map(match => stripHtml(match[1]));
+      if (cells.length < 3) continue;
+      const numbers = cells.map(cell => Number(cell.replace(/,/g, '').replace(/[^0-9.\-]/g, ''))).filter(value => Number.isFinite(value));
+      if (numbers.length < 2) continue;
+      const area = cells.find(cell => /[A-Za-z\u0900-\u097F]/.test(cell) && cell.length > 2);
+      if (!area) continue;
+      const received = numbers[numbers.length - 2];
+      const required = numbers[numbers.length - 1];
+      if (required <= 0 || received < 0) continue;
+      areas.push({
+        area,
+        district: area,
+        received,
+        required,
+        coveragePercent: Math.max(0, Math.min(100, Math.round((received / required) * 100))),
+        sourceUrl
+      });
+    }
+    return areas.slice(0, 100);
+  }
+
+  app.get('/api/drr-relief-resources', async (_req, res) => {
+    const urls = ['http://drrportal.gov.np/obtained', 'http://drrportal.gov.np/distribution'];
+    const results: DrrReliefArea[] = [];
+    const errors: string[] = [];
+    for (const url of urls) {
+      try {
+        const response = await fetch(url, { headers: { 'User-Agent': 'SAHAYAK-Nepal-Disaster-Platform/1.0' } });
+        const html = await response.text();
+        if (!response.ok) {
+          errors.push(`${url}: HTTP ${response.status}`);
+          continue;
+        }
+        results.push(...parseDrrReliefTable(html, url));
+      } catch (error: any) {
+        errors.push(`${url}: ${error?.message || 'request failed'}`);
+      }
+    }
+    const deduped = [...new Map(results.map(area => [`${area.area}-${area.received}-${area.required}`, area])).values()];
+    res.json({
+      success: deduped.length > 0,
+      dataSource: deduped.length > 0 ? 'LIVE' : 'UNAVAILABLE',
+      sourceAttribution: 'Nepal Disaster Risk Reduction Portal, Government of Nepal',
+      sourceUrls: urls,
+      retrievedAt: new Date().toISOString(),
+      areas: deduped,
+      errors
+    });
+  });
+
   // GET /api/live-news - Real-time RSS News Feed from Newsrooms & Emergency Portals
   app.get('/api/live-news', async (req, res) => {
     const forceRefresh = req.query.refresh === 'true';

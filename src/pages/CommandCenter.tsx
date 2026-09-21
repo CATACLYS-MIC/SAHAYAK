@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Card, Badge, Button, BaseMap } from '@/components/ui';
 import { RadioTower, Users, ShieldAlert, Activity, Eye, Maximize2, Stethoscope, Navigation, Package } from 'lucide-react';
 import { useAppState } from '@/lib/store';
@@ -55,7 +55,9 @@ export function CommandCenter() {
     dorSummary,
     dorLoading,
     coverageGaps,
-    supplies
+    supplies,
+    liveNews,
+    governmentHospitals
   } = useAppState();
    
 
@@ -66,6 +68,12 @@ export function CommandCenter() {
     
   const localFacilities = facilities.filter(f => f.locationId === currentLocationId || f.isRealSourceData);
     const overallRisk = hazardRisks.find(r => r.hazard === 'Overall');
+  const nationalAlerts = liveNews.filter(alert => alert.id.startsWith('bipad-'));
+  const capacityHospitals = useMemo(() => [...governmentHospitals]
+    .sort((a, b) => (b.occupancyPercentage || 0) - (a.occupancyPercentage || 0))
+    .slice(0, 5), [governmentHospitals]);
+  const communicationAlerts = nationalAlerts.filter(alert => /communication|telecom|network|internet|radio|telephone/i.test(`${alert.title} ${alert.summary}`));
+  const helipadFacilities = facilities.filter(facility => /helipad|heliport|airstrip/i.test(`${facility.name} ${facility.type}`));
 
   const getRouteColor = (status: string) => {
     if (status === 'OPEN') return '#10b981';
@@ -157,6 +165,31 @@ export function CommandCenter() {
                 </div>
               </div>
             </div>
+          </Card>
+
+          <Card className="bg-slate-950 border-slate-800 flex flex-col shrink-0" noPadding>
+            <div className="p-3 border-b border-slate-800 flex justify-between items-center bg-slate-900">
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center"><ShieldAlert className="mr-2 h-4 w-4 text-red-400" /> National BIPAD Picture</h3>
+              <Badge variant={nationalAlerts.length > 0 ? 'success' : 'outline'} className="text-[9px]">{nationalAlerts.length > 0 ? 'LIVE' : 'SYNCING'}</Badge>
+            </div>
+            <div className="p-3 space-y-2 text-xs">
+              <div className="grid grid-cols-3 gap-1.5 text-center">
+                <div className="bg-slate-900 rounded border border-slate-800 p-2"><b className="text-red-400 text-base">{nationalAlerts.filter(a => a.severity === 'CRITICAL').length}</b><span className="block text-[9px] text-slate-500 uppercase">Critical</span></div>
+                <div className="bg-slate-900 rounded border border-slate-800 p-2"><b className="text-amber-400 text-base">{nationalAlerts.filter(a => a.severity === 'WARNING').length}</b><span className="block text-[9px] text-slate-500 uppercase">Warnings</span></div>
+                <div className="bg-slate-900 rounded border border-slate-800 p-2"><b className="text-blue-400 text-base">{nationalAlerts.length}</b><span className="block text-[9px] text-slate-500 uppercase">Live Alerts</span></div>
+              </div>
+              <p className="text-slate-500">Source: BIPAD Portal, Government of Nepal. Alert markers are plotted on the national map when coordinates are available.</p>
+            </div>
+          </Card>
+
+          <Card className="bg-slate-950 border-slate-800 flex flex-col shrink-0" noPadding>
+            <div className="p-3 border-b border-slate-800 flex justify-between items-center bg-slate-900"><h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center"><Stethoscope className="mr-2 h-4 w-4 text-red-400" /> Hospitals at Maximum Capacity</h3><Badge variant="critical" className="text-[9px]">MoHP LIVE</Badge></div>
+            <div className="p-3 space-y-2 text-xs">{capacityHospitals.length ? capacityHospitals.map(hospital => <div key={hospital.id} className="flex items-center justify-between gap-2 border-b border-slate-800 pb-2 last:border-0"><span className="truncate text-slate-300">{hospital.name}</span><span className={cn('font-bold shrink-0', (hospital.occupancyPercentage || 0) >= 90 ? 'text-red-400' : 'text-amber-400')}>{hospital.occupancyPercentage || 0}%</span></div>) : <p className="text-slate-500">Hospital capacity data loading.</p>}</div>
+          </Card>
+
+          <Card className="bg-slate-950 border-slate-800 flex flex-col shrink-0" noPadding>
+            <div className="p-3 border-b border-slate-800 flex justify-between items-center bg-slate-900"><h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Communications & Helipads</h3><Badge variant="outline" className="text-[9px]">SOURCE STATUS</Badge></div>
+            <div className="p-3 space-y-2 text-xs"><div className="flex justify-between"><span className="text-slate-400">Communication closures</span><b className="text-amber-400">{communicationAlerts.length || 'No verified records'}</b></div><div className="flex justify-between"><span className="text-slate-400">Mapped helipads</span><b className="text-blue-400">{helipadFacilities.length || 'No verified feed'}</b></div><p className="text-slate-500">Only records supplied by connected government feeds are shown; no locations are fabricated.</p></div>
           </Card>
 
           {/* GOVERNMENT HOSPITAL NETWORK (MOHP REAL SOURCE) */}
@@ -358,6 +391,14 @@ export function CommandCenter() {
                   </Popup>
                 </Marker>
              ))}
+
+             {/* Live BIPAD national alert markers */}
+             {nationalAlerts.filter(alert => alert.latitude !== undefined && alert.longitude !== undefined).map(alert => {
+               const latitude = alert.latitude!;
+               const longitude = alert.longitude!;
+               if (typeof latitude !== 'number' || typeof longitude !== 'number') return null;
+               return <Marker key={`bipad-${alert.id}`} position={[latitude, longitude]} icon={createIncidentIcon(alert.severity === 'CRITICAL' ? 90 : alert.severity === 'WARNING' ? 70 : 40)}><Popup><div className="p-1 min-w-[180px]"><b>{alert.title}</b><p className="text-xs mt-1">{alert.summary}</p><small>{alert.source} • {alert.timestamp}</small></div></Popup></Marker>;
+             })}
 
              {/* Render facilities (small markers) */}
              {localFacilities.filter(fac => fac.lat && fac.lng).map(fac => (

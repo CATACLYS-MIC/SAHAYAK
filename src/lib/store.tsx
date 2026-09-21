@@ -32,6 +32,7 @@ import { performAiAssistedMatch } from './aiMatchingService';
 import { fetchGovernmentHospitals } from './hospitalDataService';
 import { fetchRescueReports, FetchRescueOptions } from './rescueDataService';
 import { DhmHydrologyService } from './dhmHydrologyService';
+import { useAuth } from './auth';
 
 import { 
   MOCK_LOGISTICS_SUPPLIES, MOCK_EXTENDED_TEAMS, MOCK_COVERAGE_GAPS,
@@ -165,6 +166,7 @@ interface AppState {
 const AppStateContext = createContext<AppState | undefined>(undefined);
 
 export function AppStateProvider({ children }: { children: ReactNode }) {
+  const { session } = useAuth();
   const [currentLocationId, setCurrentLocationId] = useState<string>(mockData.LOCATIONS[0].id);
   const [locations] = useState<Location[]>(mockData.LOCATIONS);
   const [weather] = useState<Record<string, Weather>>(mockData.MOCK_WEATHER);
@@ -425,7 +427,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       if (data.news && Array.isArray(data.news)) {
-        setLiveNews(data.news);
+        setLiveNews(prev => [
+          ...prev.filter(item => item.id.startsWith('bipad-')),
+          ...data.news.filter((item: News) => !item.id.startsWith('bipad-'))
+        ]);
         setLiveNewsLastSynced(data.lastSynced || new Date().toISOString());
       }
     } catch (err: unknown) {
@@ -442,12 +447,77 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       .then(r => r.json())
       .then(d => {
         if (d.news && Array.isArray(d.news)) {
-          setLiveNews(d.news);
+          setLiveNews(prev => [
+            ...prev.filter(item => item.id.startsWith('bipad-')),
+            ...d.news.filter((item: News) => !item.id.startsWith('bipad-'))
+          ]);
           setLiveNewsLastSynced(d.lastSynced || new Date().toISOString());
         }
       })
       .catch(e => console.warn('Initial live news fetch error:', e));
   }, []);
+
+  useEffect(() => {
+    const role = session?.role === 'ADMIN' ? 'ADMIN' : 'PUBLIC';
+    let cancelled = false;
+    const refreshBipadAlerts = async () => {
+      try {
+        const response = await fetch(`/api/bipad-alerts?role=${role}&refresh=true`);
+        if (!response.ok) return;
+        const data = await response.json();
+        if (cancelled || !Array.isArray(data.alerts)) return;
+
+        const bipadNews: News[] = data.alerts.map((alert: any) => ({
+          id: alert.id,
+          title: alert.title,
+          source: alert.source,
+          timestamp: alert.timestamp,
+          locationId: 'loc-1',
+          category: alert.category,
+          severity: alert.severity,
+          verified: alert.verified,
+          verificationStatus: 'VERIFIED',
+          verificationExplanation: 'Live alert received from the BIPAD Portal, Government of Nepal.',
+          verificationLastUpdated: alert.startedOn,
+          summary: alert.summary,
+          sourceUrl: alert.sourceUrl,
+          officialAgency: 'BIPAD Portal, Government of Nepal',
+          district: alert.district,
+          latitude: alert.latitude,
+          longitude: alert.longitude,
+          isRealBulletin: true,
+          isLiveWire: true,
+          link: alert.sourceUrl,
+          pubDate: alert.startedOn
+        }));
+        setLiveNews(prev => [...bipadNews, ...prev.filter(item => !item.id.startsWith('bipad-'))]);
+
+        const newNotifications = bipadNews
+          .filter(item => item.severity !== 'INFO' || session?.role === 'ADMIN')
+          .slice(0, 12)
+          .map(item => ({
+            id: `notif-${item.id}`,
+            title: item.title,
+            desc: item.summary,
+            type: item.severity === 'CRITICAL' ? 'critical' as const : item.severity === 'WARNING' ? 'warning' as const : 'info' as const,
+            read: false,
+            timestamp: item.timestamp
+          }));
+        setNotifications(prev => {
+          const existing = new Set(prev.map(notification => notification.id));
+          return [...newNotifications.filter(notification => !existing.has(notification.id)), ...prev];
+        });
+      } catch (error) {
+        console.warn('BIPAD alert sync unavailable:', error);
+      }
+    };
+    refreshBipadAlerts();
+    const interval = window.setInterval(refreshBipadAlerts, 60 * 1000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, [session?.role]);
 
   useEffect(() => {
     refreshDorRoads();

@@ -7,6 +7,7 @@ import { useAppState } from '@/lib/store';
 import { useTranslation } from '@/lib/i18n';
 import { getShortageStatus, calculateDistanceKm } from '@/lib/calculations';
 import { HospitalMatchingNetworkCard } from '@/components/hospital-matching/HospitalMatchingNetworkCard';
+import { useAuth } from '@/lib/auth';
 import { Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 
@@ -27,7 +28,7 @@ export function Home() {
     weather, 
     incidents, 
     roads, bridges, 
-    news, 
+    liveNews,
     missingPersons, 
     supplies, 
     fusedWeather, 
@@ -43,6 +44,7 @@ export function Home() {
   const currentWeather = weather[currentLocationId];
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { session } = useAuth();
   
   const overallRisk = hazardRisks.find(r => r.hazard === 'Overall');
   const topHazard = hazardRisks.reduce((prev, current) => (prev.score > current.score) ? prev : current, hazardRisks[0]);
@@ -62,7 +64,10 @@ export function Home() {
     ? dorSummary.passablePercentage 
     : ((roads && roads.length > 0) ? Math.round(((roads.length - blockedRoads) / roads.length) * 100) : 100);
 
-  const recentNews = [...news].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).slice(0, 3);
+  const recentNews = liveNews
+    .filter(alert => alert.id.startsWith('bipad-'))
+    .sort((a, b) => new Date(b.pubDate || b.verificationLastUpdated || 0).getTime() - new Date(a.pubDate || a.verificationLastUpdated || 0).getTime())
+    .slice(0, 3);
   const missingActive = missingPersons.filter(m => m.status === 'MISSING').length;
   const missingFound = missingPersons.filter(m => m.status === 'FOUND').length;
 
@@ -109,7 +114,7 @@ export function Home() {
           <p className="text-slate-600 dark:text-slate-400 mt-1">
             {t('home.hero_subtitle', 'Situation Overview for')} <strong className="text-slate-900 dark:text-slate-200">{currentLocation?.name}</strong> 
             <Badge variant="outline" className="ml-2 text-[10px] border-emerald-500 text-emerald-700 dark:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-950/30">
-              REAL TELEMETRY
+              {t('REAL TELEMETRY')}
             </Badge>
           </p>
         </div>
@@ -119,7 +124,7 @@ export function Home() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
             </span>
-            Live Telemetry Feed
+            {t('Live Telemetry Feed')}
           </span>
           <Badge variant={overallRisk?.level === 'CRITICAL' ? 'critical' : overallRisk?.level === 'HIGH' ? 'danger' : 'success'}>
             {overallRisk?.level === 'CRITICAL' ? 'ALERT LEVEL 3' : overallRisk?.level === 'HIGH' ? 'ALERT LEVEL 2' : 'NORMAL'}
@@ -172,7 +177,7 @@ export function Home() {
               className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5 font-semibold"
               title="Inspect real-time meteorological source"
             >
-              <span>Telemetry</span>
+              <span>{t('Telemetry')}</span>
               <ExternalLink className="h-2.5 w-2.5" />
             </a>
           </div>
@@ -214,7 +219,7 @@ export function Home() {
               onClick={() => navigate('/routes')} 
               className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5 font-semibold"
             >
-              <span>DoR Live</span>
+              <span>{t('DoR Live')}</span>
               <ArrowRight className="h-2.5 w-2.5" />
             </button>
           </div>
@@ -232,11 +237,12 @@ export function Home() {
         </Card>
       </div>
 
-      {/* HOSPITAL MISSING-PERSON MATCHING NETWORK */}
-      <HospitalMatchingNetworkCard 
-        onOpenPortal={() => navigate('/hospital-matching')} 
-        className="mt-8" 
-      />
+      {session?.role === 'ADMIN' && (
+        <HospitalMatchingNetworkCard 
+          onOpenPortal={() => navigate('/hospital-matching')} 
+          className="mt-8" 
+        />
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
         {/* MAP SECTION */}
@@ -293,7 +299,7 @@ export function Home() {
         {/* SUMMARY SECTION */}
         <div className="space-y-4">
           <Card>
-            <CardHeader title="Latest Alerts" />
+            <CardHeader title={t('Latest Alerts')} />
             <div className="space-y-3">
               {recentNews.length > 0 ? recentNews.map((alert, i) => (
                 <div key={i} className="flex gap-3 pb-3 border-b border-slate-100 dark:border-slate-800 last:border-0 last:pb-0">
@@ -308,25 +314,25 @@ export function Home() {
                   </div>
                 </div>
               )) : (
-                <p className="text-sm text-slate-500">No recent news.</p>
+                <p className="text-sm text-slate-500">{t('Synchronizing live BIPAD alerts...')}</p>
               )}
-              <Button variant="ghost" size="sm" className="w-full mt-2 text-xs font-semibold">View all alerts</Button>
+              <Button variant="ghost" size="sm" onClick={() => navigate('/news-safety')} className="w-full mt-2 text-xs font-semibold">{t('View all alerts')}</Button>
             </div>
           </Card>
           
           <Card>
-            <CardHeader title="Missing Persons" />
+            <CardHeader title={t('Missing Persons')} />
             <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-950 rounded-lg border border-slate-200 dark:border-slate-800 mb-3">
               <div>
                 <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{missingActive}</p>
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Active Reports</p>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t('Active Reports')}</p>
               </div>
               <div>
                 <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{missingFound}</p>
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Found/Safe</p>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t('Found/Safe')}</p>
               </div>
             </div>
-            <Button variant="outline" className="w-full">Access Registry</Button>
+            <Button variant="outline" className="w-full">{t('Access Registry')}</Button>
           </Card>
 
           {/* NEARBY HOSPITALS (NEPAL GOV MOHP REAL DATA) */}
@@ -335,14 +341,14 @@ export function Home() {
               <div>
                 <h3 className="font-semibold text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-1.5">
                   <Stethoscope className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                  Nearby Hospitals
+                  {t('Nearby Hospitals')}
                 </h3>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
-                  Nepal MoHP Free Health Portal
+                  {t('Nepal MoHP Free Health Portal')}
                 </p>
               </div>
               <Badge variant={hospitalSourceStatus === 'LIVE' ? 'success' : 'outline'} className="text-[9px]">
-                {hospitalSourceStatus === 'LIVE' ? 'REAL DATA' : 'CACHED'}
+                {hospitalSourceStatus === 'LIVE' ? t('REAL DATA') : t('CACHED')}
               </Badge>
             </div>
 
@@ -366,10 +372,10 @@ export function Home() {
 
                     <div className="mt-1.5 flex items-center justify-between text-xs">
                       <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                        {h.availableBeds} beds available
+                        {h.availableBeds} {t('beds available')}
                       </span>
                       <span className="text-slate-500 font-medium">
-                        {h.occupancyPercentage}% occupied
+                        {h.occupancyPercentage}% {t('occupied')}
                       </span>
                     </div>
 
@@ -378,13 +384,13 @@ export function Home() {
                       {getFacilityDistance(h.lat, h.lng) != null ? (
                         <span>~{getFacilityDistance(h.lat, h.lng)} km</span>
                       ) : (
-                        <span>Coords unverified</span>
+                        <span>{t('Coords unverified')}</span>
                       )}
                     </div>
                   </div>
                 ))
               ) : (
-                <p className="text-xs text-slate-500 py-3 text-center">Loading hospital capacity data...</p>
+                <p className="text-xs text-slate-500 py-3 text-center">{t('Loading hospital capacity data...')}</p>
               )}
             </div>
           </Card>

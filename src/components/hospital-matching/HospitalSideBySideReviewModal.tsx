@@ -8,6 +8,7 @@ import {
 import { HospitalMatchResult, HospitalPatientRecord, MissingPerson } from '@/types';
 import { useAppState } from '@/lib/store';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n';
 
 interface HospitalSideBySideReviewModalProps {
   match: HospitalMatchResult;
@@ -29,6 +30,7 @@ export function HospitalSideBySideReviewModal({
   onRequestMoreInfo
 }: HospitalSideBySideReviewModalProps) {
   const { hospitalAccessRole } = useAppState();
+  const { t, translateDynamic } = useTranslation();
   const [reviewerName, setReviewerName] = useState(
     hospitalAccessRole === 'HOSPITAL_STAFF' 
       ? 'Dr. S. Koirala (Trauma Registrar)' 
@@ -72,14 +74,14 @@ export function HospitalSideBySideReviewModal({
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                  Side-by-Side Match Verification Dossier
+                  {t('Side-by-Side Match Verification Dossier')}
                 </h2>
                 <Badge variant="outline" className="text-[10px] bg-amber-50 text-amber-800 border-amber-300 dark:bg-amber-950/40 dark:text-amber-300">
-                  SIMULATED DATA
+                  {t('SIMULATED DATA')}
                 </Badge>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Hospital MRN: <strong className="text-slate-800 dark:text-slate-200">{patient.mrn}</strong> ↔ Missing Case: <strong className="text-slate-800 dark:text-slate-200">{missingPerson.name} ({missingPerson.id})</strong>
+                {t('Hospital MRN:')} <strong className="text-slate-800 dark:text-slate-200">{patient.mrn}</strong> ↔ {t('Missing Case:')} <strong className="text-slate-800 dark:text-slate-200">{missingPerson.name} ({missingPerson.id})</strong>
               </p>
             </div>
           </div>
@@ -95,7 +97,7 @@ export function HospitalSideBySideReviewModal({
         <div className="px-5 py-2.5 bg-amber-50 dark:bg-amber-950/40 border-b border-amber-200/80 dark:border-amber-800/60 flex items-start gap-2.5">
           <ShieldAlert className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
           <div className="text-xs text-amber-900 dark:text-amber-200 leading-snug">
-            <span className="font-bold">MANDATORY HUMAN-IN-THE-LOOP ETHICAL STANDARD:</span> The AI engine does NOT declare or confirm legal identity. The AI matching score is an indicator of multi-signal feature similarity, not proof. Final verification must always be performed and signed off by authorized hospital staff, designated law enforcement, or verified family liaisons.
+            <span className="font-bold">{t('MANDATORY HUMAN-IN-THE-LOOP ETHICAL STANDARD:')}</span> {t('The AI engine does NOT declare or confirm legal identity. The AI matching score is an indicator of multi-signal feature similarity, not proof. Final verification must always be performed and signed off by authorized hospital staff, designated law enforcement, or verified family liaisons.')}
           </div>
         </div>
 
@@ -108,17 +110,17 @@ export function HospitalSideBySideReviewModal({
               <div className="flex items-center gap-4">
                 <div className={cn("px-4 py-3 rounded-xl border text-center font-black shrink-0", getScoreColor(match.matchConfidence))}>
                   <div className="text-3xl tracking-tight">{match.matchConfidence}%</div>
-                  <div className="text-[10px] font-bold uppercase tracking-wider">AI Match Indicator</div>
+                  <div className="text-[10px] font-bold uppercase tracking-wider">{t('AI Match Indicator')}</div>
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
                     <Sparkles className="h-4 w-4 text-teal-600 dark:text-teal-400" />
                     <h3 className="font-bold text-slate-900 dark:text-slate-100 text-base">
-                      Autonomous Multimodal Match Assessment
+                      {t('Autonomous Multimodal Match Assessment')}
                     </h3>
                   </div>
                   <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 max-w-xl">
-                    Engine evaluated physical tokens, age bracket compatibility, clothing remnants, and river drainage corridor flow from <strong className="text-slate-800 dark:text-slate-200">{missingPerson.lastKnownLocation}</strong> to <strong className="text-slate-800 dark:text-slate-200">{patient.hospitalName}</strong>.
+                    {t('Engine evaluated physical tokens, age bracket compatibility, clothing remnants, and river drainage corridor flow from')} <strong className="text-slate-800 dark:text-slate-200">{missingPerson.lastKnownLocation}</strong> {t('to')} <strong className="text-slate-800 dark:text-slate-200">{patient.hospitalName}</strong>.
                   </p>
                 </div>
               </div>
@@ -126,19 +128,19 @@ export function HospitalSideBySideReviewModal({
               {/* SIGNAL SCORES */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
                 <div className="p-2 bg-white/80 dark:bg-slate-900/80 rounded-lg border border-slate-200/60 dark:border-slate-800/60">
-                  <div className="text-slate-500 dark:text-slate-400 text-[10px] font-semibold">Visual / Attire</div>
+                  <div className="text-slate-500 dark:text-slate-400 text-[10px] font-semibold">{t('Visual / Attire')}</div>
                   <div className="font-bold text-slate-900 dark:text-slate-100 text-sm mt-0.5">{match.visualSimilarityScore}%</div>
                 </div>
                 <div className="p-2 bg-white/80 dark:bg-slate-900/80 rounded-lg border border-slate-200/60 dark:border-slate-800/60">
-                  <div className="text-slate-500 dark:text-slate-400 text-[10px] font-semibold">Demographics</div>
+                  <div className="text-slate-500 dark:text-slate-400 text-[10px] font-semibold">{t('Demographics')}</div>
                   <div className="font-bold text-slate-900 dark:text-slate-100 text-sm mt-0.5">{match.demographicScore}%</div>
                 </div>
                 <div className="p-2 bg-white/80 dark:bg-slate-900/80 rounded-lg border border-slate-200/60 dark:border-slate-800/60">
-                  <div className="text-slate-500 dark:text-slate-400 text-[10px] font-semibold">Corridor / Flow</div>
+                  <div className="text-slate-500 dark:text-slate-400 text-[10px] font-semibold">{t('Corridor / Flow')}</div>
                   <div className="font-bold text-slate-900 dark:text-slate-100 text-sm mt-0.5">{match.locationScore}%</div>
                 </div>
                 <div className="p-2 bg-white/80 dark:bg-slate-900/80 rounded-lg border border-slate-200/60 dark:border-slate-800/60">
-                  <div className="text-slate-500 dark:text-slate-400 text-[10px] font-semibold">Chronology</div>
+                  <div className="text-slate-500 dark:text-slate-400 text-[10px] font-semibold">{t('Chronology')}</div>
                   <div className="font-bold text-slate-900 dark:text-slate-100 text-sm mt-0.5">{match.timeframeScore}%</div>
                 </div>
               </div>
@@ -153,12 +155,12 @@ export function HospitalSideBySideReviewModal({
               <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
                 <div className="flex items-center gap-2">
                   <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800 text-[10px] font-bold">
-                    MISSING PERSON RECORD
+                    {t('MISSING PERSON RECORD')}
                   </Badge>
                   <span className="text-xs font-mono text-slate-500">ID: {missingPerson.id}</span>
                 </div>
                 <Badge variant={missingPerson.status === 'FOUND' ? 'success' : 'danger'} className="text-[10px]">
-                  {missingPerson.status}
+                  {t(missingPerson.status)}
                 </Badge>
               </div>
 
@@ -188,7 +190,7 @@ export function HospitalSideBySideReviewModal({
                   </p>
                   <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-1">
                     <Clock className="h-3.5 w-3.5 text-slate-400" />
-                    Last seen: {missingPerson.lastSeen} ({missingPerson.lastSeenDateTime || 'Reported'})
+                    {t('Last seen:')} {missingPerson.lastSeen} ({missingPerson.lastSeenDateTime || t('Reported')})
                   </div>
                   <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
                     <MapPin className="h-3.5 w-3.5 text-slate-400" />
@@ -200,22 +202,22 @@ export function HospitalSideBySideReviewModal({
               {/* Physical & Attire Details */}
               <div className="space-y-2 text-xs">
                 <div className="p-2.5 bg-white dark:bg-slate-900 rounded-lg border border-slate-200/80 dark:border-slate-800/80">
-                  <span className="font-bold text-slate-700 dark:text-slate-300 block mb-0.5">Reported Clothing:</span>
+                  <span className="font-bold text-slate-700 dark:text-slate-300 block mb-0.5">{t('Reported Clothing:')}</span>
                   <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                    {missingPerson.clothing || 'Not specified in initial report'}
+                    {translateDynamic(missingPerson.clothing || t('Not specified in initial report'))}
                   </p>
                 </div>
 
                 <div className="p-2.5 bg-white dark:bg-slate-900 rounded-lg border border-slate-200/80 dark:border-slate-800/80">
-                  <span className="font-bold text-slate-700 dark:text-slate-300 block mb-0.5">Physical Traits & Context:</span>
+                  <span className="font-bold text-slate-700 dark:text-slate-300 block mb-0.5">{t('Physical Traits & Context:')}</span>
                   <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                    {missingPerson.physicalDescription || missingPerson.description || 'Standard profile recorded.'}
+                    {translateDynamic(missingPerson.physicalDescription || missingPerson.description || t('Standard profile recorded.'))}
                   </p>
                 </div>
 
                 <div className="p-2.5 bg-white dark:bg-slate-900 rounded-lg border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between text-[11px] text-slate-500">
-                  <span>Reported By: {missingPerson.reportedBy || 'Authorized Registry'}</span>
-                  <span>Contact: {missingPerson.contactInfo || 'Authority Desk'}</span>
+                  <span>{t('Reported By:')} {missingPerson.reportedBy || t('Authorized Registry')}</span>
+                  <span>{t('Contact:')} {missingPerson.contactInfo || t('Authority Desk')}</span>
                 </div>
               </div>
             </div>
@@ -225,12 +227,12 @@ export function HospitalSideBySideReviewModal({
               <div className="flex items-center justify-between border-b border-teal-200/60 dark:border-teal-800/40 pb-3">
                 <div className="flex items-center gap-2">
                   <Badge variant="outline" className="bg-teal-100 text-teal-800 border-teal-300 dark:bg-teal-950 dark:text-teal-300 dark:border-teal-700 text-[10px] font-bold">
-                    HOSPITAL PATIENT RECORD
+                    {t('HOSPITAL PATIENT RECORD')}
                   </Badge>
-                  <span className="text-xs font-mono text-slate-500">MRN: {patient.mrn}</span>
+                  <span className="text-xs font-mono text-slate-500">{t('MRN:')} {patient.mrn}</span>
                 </div>
                 <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950 dark:text-amber-300 text-[10px]">
-                  {patient.status}
+                  {t(patient.status)}
                 </Badge>
               </div>
 
@@ -250,16 +252,16 @@ export function HospitalSideBySideReviewModal({
                     </div>
                   )}
                   <div className="absolute bottom-0 inset-x-0 bg-slate-900/70 text-white text-[9px] text-center py-0.5 font-bold">
-                    Intake Photo
+                    {t('Intake Photo')}
                   </div>
                 </div>
 
                 <div className="flex-1 space-y-1">
                   <h4 className="text-base font-bold text-slate-900 dark:text-slate-100 leading-tight">
-                    Unidentified Patient ({patient.mrn})
+                    {t('Unidentified Patient')} ({patient.mrn})
                   </h4>
                   <p className="text-xs font-semibold text-teal-700 dark:text-teal-400">
-                    Est. Age: {patient.approximateAge} • Sex: {patient.sex} {patient.approximateHeight ? `• ${patient.approximateHeight}` : ''}
+                    {t('Est. Age:')} {patient.approximateAge} • {t('Sex:')} {t(patient.sex)} {patient.approximateHeight ? `• ${patient.approximateHeight}` : ''}
                   </p>
                   <div className="text-xs text-slate-600 dark:text-slate-400 flex items-center gap-1 mt-1">
                     <Building2 className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400 shrink-0" />
@@ -267,7 +269,7 @@ export function HospitalSideBySideReviewModal({
                   </div>
                   <div className="text-xs text-slate-600 dark:text-slate-400 flex items-center gap-1">
                     <MapPin className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400 shrink-0" />
-                    <span className="truncate">Found: {patient.foundLocation}</span>
+                    <span className="truncate">{t('Found:')} {patient.foundLocation}</span>
                   </div>
                 </div>
               </div>
@@ -275,23 +277,23 @@ export function HospitalSideBySideReviewModal({
               {/* Physical & Hospital Details */}
               <div className="space-y-2 text-xs">
                 <div className="p-2.5 bg-white dark:bg-slate-900 rounded-lg border border-teal-200/70 dark:border-teal-900/60">
-                  <span className="font-bold text-slate-700 dark:text-slate-300 block mb-0.5">Observed Clothing on Intake:</span>
+                  <span className="font-bold text-slate-700 dark:text-slate-300 block mb-0.5">{t('Observed Clothing on Intake:')}</span>
                   <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
                     {patient.clothingAppearance}
                   </p>
                 </div>
 
                 <div className="p-2.5 bg-white dark:bg-slate-900 rounded-lg border border-teal-200/70 dark:border-teal-900/60">
-                  <span className="font-bold text-slate-700 dark:text-slate-300 block mb-0.5">Distinguishing Characteristics & Belongings:</span>
+                  <span className="font-bold text-slate-700 dark:text-slate-300 block mb-0.5">{t('Distinguishing Characteristics & Belongings:')}</span>
                   <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                    {patient.distinguishingCharacteristics || 'None cataloged'}
+                    {translateDynamic(patient.distinguishingCharacteristics || t('None cataloged'))}
                     {patient.otherIdentifyingInfo ? ` • ${patient.otherIdentifyingInfo}` : ''}
                   </p>
                 </div>
 
                 <div className="p-2.5 bg-white dark:bg-slate-900 rounded-lg border border-teal-200/70 dark:border-teal-900/60 flex items-center justify-between text-[11px] text-slate-500">
-                  <span>Admitted: {patient.admissionDateTime}</span>
-                  <span>Submitted by: {patient.submittedBy}</span>
+                  <span>{t('Admitted:')} {patient.admissionDateTime}</span>
+                  <span>{t('Submitted by:')} {patient.submittedBy}</span>
                 </div>
               </div>
             </div>

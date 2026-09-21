@@ -3,13 +3,14 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { 
   Home, CloudLightning, ShieldAlert, Map, Building2, Users, 
   ClipboardCheck, RadioTower, Menu, Search, Bell, 
-  MapPin, UserCircle, Moon, Sun, X, Stethoscope
+  MapPin, UserCircle, Moon, Sun, X, Stethoscope, PanelLeftClose, PanelLeftOpen
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/lib/theme';
 import { useTranslation } from '@/lib/i18n';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { useAppState } from '@/lib/store';
+import { useAuth } from '@/lib/auth';
 
 const NAV_ITEMS = [
   { key: 'nav.home', defaultName: 'HOME', path: '/', icon: Home },
@@ -17,19 +18,21 @@ const NAV_ITEMS = [
   { key: 'nav.news_safety', defaultName: 'NEWS & SAFETY', path: '/news-safety', icon: ShieldAlert },
   { key: 'nav.routes', defaultName: 'ROUTES', path: '/routes', icon: Map },
   { key: 'nav.facilities', defaultName: 'FACILITIES', path: '/facilities', icon: Building2 },
-  { key: 'nav.hospital_matching', defaultName: 'HOSPITAL MATCHING', path: '/hospital-matching', icon: Stethoscope },
-  { key: 'nav.logistics', defaultName: 'LOGISTICS & TEAM', path: '/logistics', icon: Users },
-  { key: 'nav.assessment', defaultName: 'ASSESSMENT', path: '/assessment', icon: ClipboardCheck },
+  { key: 'nav.hospital_matching', defaultName: 'HOSPITAL MATCHING', path: '/hospital-matching', icon: Stethoscope, role: 'ADMIN' },
+  { key: 'nav.logistics', defaultName: 'LOGISTICS & TEAM', path: '/logistics', icon: Users, role: 'ADMIN' },
+  { key: 'nav.assessment', defaultName: 'ASSESSMENT', path: '/assessment', icon: ClipboardCheck, role: 'ADMIN' },
   { key: 'nav.command_center', defaultName: 'COMMAND CENTER', path: '/command-center', icon: RadioTower, role: 'COMMANDER' },
 ];
 
 export function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
   const { theme, setTheme } = useTheme();
   const { t } = useTranslation();
+  const { session, signOut } = useAuth();
   const { 
     locations, 
     currentLocationId, 
@@ -45,6 +48,7 @@ export function Layout() {
   const unreadCount = notifications.filter(n => !n.read).length;
   const pendingMatchCount = (candidateMatches || []).filter(m => m.status === 'PENDING_REVIEW').length;
   const pendingHospitalMatchCount = (hospitalMatches || []).filter(m => m.status === 'PENDING_HUMAN_REVIEW').length;
+  const visibleNavItems = NAV_ITEMS.filter(item => !item.role || session?.role === 'ADMIN');
 
   // Simple global search simulation
   const handleSearch = (e: React.FormEvent) => {
@@ -69,61 +73,70 @@ export function Layout() {
       {/* Sidebar */}
       <aside 
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 flex flex-col shadow-lg lg:shadow-none",
+          "fixed inset-y-0 left-0 z-50 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transition-[width,transform] duration-300 ease-in-out lg:static lg:translate-x-0 flex flex-col shadow-lg lg:shadow-none",
+          sidebarCollapsed ? "lg:w-[76px]" : "lg:w-64",
+          "w-64",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="h-16 flex items-center px-4 border-b border-slate-200 dark:border-slate-800 shrink-0">
+        <div className={cn("h-16 flex items-center border-b border-slate-200 dark:border-slate-800 shrink-0", sidebarCollapsed ? "lg:justify-center lg:px-2" : "px-4")}>
           <ShieldAlert className="h-6 w-6 text-blue-600 dark:text-blue-500 mr-2" />
-          <h1 className="font-bold text-lg tracking-tight uppercase text-slate-900 dark:text-white">SAHAY<span className="text-blue-600 dark:text-blue-500">AK</span></h1>
+          <h1 className={cn("font-bold text-lg tracking-tight uppercase text-slate-900 dark:text-white", sidebarCollapsed && "lg:hidden")}>SAHAY<span className="text-blue-600 dark:text-blue-500">AK</span></h1>
+          <button
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className={cn("hidden lg:flex p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:text-slate-200 dark:hover:bg-slate-800", sidebarCollapsed ? "" : "ml-auto")}
+            aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {sidebarCollapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+          </button>
         </div>
         
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-          {NAV_ITEMS.map((item) => (
+          {visibleNavItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
               onClick={() => setSidebarOpen(false)}
+              title={sidebarCollapsed ? t(item.key, item.defaultName) : undefined}
               className={({ isActive }) => cn(
                 "flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 group",
+                sidebarCollapsed ? "lg:justify-center lg:px-0" : "",
                 isActive 
                   ? "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400" 
                   : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800/50"
               )}
             >
-              <item.icon className={cn("h-5 w-5 mr-3 shrink-0", 
+              <item.icon className={cn("h-5 w-5 mr-3 shrink-0", sidebarCollapsed && "lg:mr-0", 
                 item.key === 'nav.command_center' && !sidebarOpen ? 'text-red-500/80' : ''
               )} />
-              <span className="truncate">{t(item.key, item.defaultName)}</span>
+              <span className={cn("truncate", sidebarCollapsed && "lg:hidden")}>{t(item.key, item.defaultName)}</span>
               {item.key === 'nav.weather_risk' && ((dhmSummary?.criticalRiskCount ?? 0) > 0 || (dhmSummary?.highRiskCount ?? 0) > 0) && (
-                <span className="ml-auto px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-600 text-white animate-pulse">
+                <span className={cn("ml-auto px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-600 text-white animate-pulse", sidebarCollapsed && "lg:hidden")}>
                   DHM {(dhmSummary?.criticalRiskCount ?? 0) + (dhmSummary?.highRiskCount ?? 0)}
                 </span>
               )}
               {item.key === 'nav.news_safety' && pendingMatchCount > 0 && (
-                <span className="ml-auto px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-500 text-white animate-pulse">
+                <span className={cn("ml-auto px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-500 text-white animate-pulse", sidebarCollapsed && "lg:hidden")}>
                   {pendingMatchCount}
                 </span>
               )}
               {item.key === 'nav.hospital_matching' && pendingHospitalMatchCount > 0 && (
-                <span className="ml-auto px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-teal-500 text-white animate-pulse">
+                <span className={cn("ml-auto px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-teal-500 text-white animate-pulse", sidebarCollapsed && "lg:hidden")}>
                   {pendingHospitalMatchCount}
                 </span>
               )}
               {item.role && (
-                <span className="ml-auto flex h-1.5 w-1.5 rounded-full bg-red-500"></span>
+                <span className={cn("ml-auto flex h-1.5 w-1.5 rounded-full bg-red-500", sidebarCollapsed && "lg:hidden")}></span>
               )}
             </NavLink>
           ))}
         </nav>
         
-        <div className="p-4 border-t border-slate-200 dark:border-slate-800 shrink-0 bg-slate-50/50 dark:bg-transparent space-y-3">
-          {/* Mobile / Sidebar Language Selector */}
-          <LanguageSelector variant="sidebar" />
-
-          <div className="bg-white dark:bg-slate-950 rounded-lg p-3 border border-slate-200 dark:border-slate-800/60 flex items-center shadow-sm dark:shadow-none">
-            <RadioTower className="h-8 w-8 text-slate-400 dark:text-slate-500 mr-3 shrink-0" />
-            <div>
+        <div className={cn("p-4 border-t border-slate-200 dark:border-slate-800 shrink-0 bg-slate-50/50 dark:bg-transparent", sidebarCollapsed ? "lg:p-3" : "") }>
+          <div className={cn("bg-white dark:bg-slate-950 rounded-lg p-3 border border-slate-200 dark:border-slate-800/60 flex items-center shadow-sm dark:shadow-none", sidebarCollapsed && "lg:justify-center lg:p-2")}>
+            <RadioTower className={cn("h-8 w-8 text-slate-400 dark:text-slate-500 shrink-0", !sidebarCollapsed && "mr-3")} />
+            <div className={cn(sidebarCollapsed && "lg:hidden")}>
               <p className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">
                 {t('nav.system_status', 'System Status')}
               </p>
@@ -245,9 +258,10 @@ export function Layout() {
               <div className="flex items-center ml-1 sm:ml-2 cursor-pointer hover:opacity-80 transition-opacity">
                 <UserCircle className="h-8 w-8 text-slate-400 dark:text-slate-500" />
                 <div className="ml-2 hidden lg:block text-left">
-                  <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 leading-tight">Admin User</p>
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Commander</p>
+                  <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 leading-tight">{session?.role === 'ADMIN' ? t('Administrator') : session?.profile?.name || t('General User', 'General User')}</p>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{session?.role === 'ADMIN' ? t('Full Access') : t('Citizen Access')}</p>
                 </div>
+                <button onClick={signOut} className="ml-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 hover:text-red-500" title={t('Exit')}>{t('Exit')}</button>
               </div>
             </div>
           </div>

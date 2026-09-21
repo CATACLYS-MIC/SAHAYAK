@@ -480,6 +480,14 @@ export function Routes() {
     ? 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png'
     : (theme === 'dark' ? '/api/galli-tiles/dark/{z}/{x}/{y}.png' : '/api/galli-tiles/light/{z}/{x}/{y}.png');
 
+  const mapRoads = roads.filter(road => road.status === 'OPEN' || dorDemoMode);
+  const confirmedAvoidRoute = disasterEvaluations.find(route =>
+    !route.isRecommended && (
+      route.dorRoadStatus === 'BLOCKED' ||
+      route.dhmRiverFloodRisk === 'CRITICAL'
+    )
+  );
+
   const recommendedDisasterRoute = disasterEvaluations[0];
 
   return (
@@ -1008,7 +1016,7 @@ export function Routes() {
               />
 
               {/* Highway Network Polylines */}
-              {roads.map(road => {
+              {mapRoads.map(road => {
                 if (!road.geometry || road.geometry.length < 2) return null;
                 const positions = road.geometry.map((g: any) => [g.lat, g.lng]);
                 const statusColor = getRoadStatusColor(road.status);
@@ -1051,9 +1059,9 @@ export function Routes() {
                       opacity: 0.95
                     }}
                   >
-                    <Tooltip sticky>
+                    <Tooltip direction="top">
                       <div className="text-xs font-bold text-emerald-700">
-                        Recommended Safest Route ({formatDuration(activeRoute.duration)})
+                        Recommended Safest Route ({formatDuration(activeRoute?.duration ?? (recommendedDisasterRoute?.estimatedTimeMin ?? 0) * 60)})
                       </div>
                     </Tooltip>
                   </Polyline>
@@ -1061,10 +1069,8 @@ export function Routes() {
               )}
 
               {/* Alternative Route to Avoid (Red Polyline with Warning) */}
-              {disasterEvaluations.length > 1 && (() => {
-                const avoidEval = disasterEvaluations.find(e => e.dorRoadStatus === 'BLOCKED' || e.overallRiskLevel === 'CRITICAL') || disasterEvaluations[1];
-                if (!avoidEval || !avoidEval.path || avoidEval.path.length < 2) return null;
-                const avoidCoords = avoidEval.path.map(pt => [pt.lat, pt.lng] as [number, number]);
+              {confirmedAvoidRoute && confirmedAvoidRoute.path.length > 1 && (() => {
+                const avoidCoords = confirmedAvoidRoute.path.map(pt => [pt.lat, pt.lng] as [number, number]);
                 return (
                   <>
                     <Polyline
@@ -1088,7 +1094,7 @@ export function Routes() {
                         <div className="p-1 text-xs">
                           <span className="font-extrabold text-red-600 uppercase block">⛔ ROUTE TO AVOID</span>
                           <span className="font-medium text-slate-800 dark:text-slate-200">
-                            {avoidEval.name}: {avoidEval.warnings[0] || 'Confirmed DOR Landslide or Flood Hazard'}
+                            {confirmedAvoidRoute.name}: {confirmedAvoidRoute.warnings[0] || 'Confirmed DOR or DHM hazard'}
                           </span>
                         </div>
                       </Tooltip>

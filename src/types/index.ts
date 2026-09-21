@@ -257,6 +257,8 @@ export interface News {
   pubDate?: string;
   publisherLogo?: string;
   detectedTopics?: string[];
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface CaseTimelineEvent {
