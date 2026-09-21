@@ -1294,3 +1294,182 @@ export interface AIDistributionPlanProposal {
   reviewedAt?: string;
   reviewNotes?: string;
 }
+
+// =========================================================================
+// BIPAD CAPACITY & RESOURCES / COMMAND CENTER INTELLIGENCE
+// Source: https://bipadportal.gov.np/risk-info/#/capacity-and-resources
+// =========================================================================
+
+export interface BipadHelipad {
+  id: string;
+  bipadId?: number;
+  title: string;
+  titleNe?: string | null;
+  resourceType: 'helipad';
+  district: string;
+  province: string;
+  lat: number;
+  lng: number;
+  altitudeM: number;
+  surfaceType: string;
+  status: 'OPERATIONAL' | 'WEATHER_ALERT' | 'RESTRICTED' | 'CLOSED';
+  weatherFlightStatus: 'CLEAR_VFR' | 'MARGINAL' | 'BELOW_MINIMUMS';
+  helicopterSuitability: string;
+  fuelAvailable: boolean;
+  nightLighting: boolean;
+  windIndicator: boolean;
+  emergencyLandingGrade: string;
+  operatingAgency: string;
+  focalPerson: string;
+  contactPhone: string;
+  sourceUrl: string;
+}
+
+export interface BipadEvacuationCenter {
+  id: string;
+  bipadId?: number;
+  title: string;
+  titleNe?: string | null;
+  type: 'EVACUATION_CENTRE' | 'HUMANITARIAN_OPEN_SPACE';
+  district: string;
+  province: string;
+  lat: number;
+  lng: number;
+  totalCapacity: number;
+  currentOccupancy: number;
+  availableCapacity: number;
+  occupancyRate: number;
+  status: 'AVAILABLE' | 'NEAR_CAPACITY' | 'AT_CAPACITY' | 'STANDBY';
+  hasDrinkingWater: boolean;
+  hasToilet: boolean;
+  toiletCount: number;
+  hasHandWashing: boolean;
+  hasElectricity: boolean;
+  hasSolarBackup: boolean;
+  hasDisableFriendly: boolean;
+  structureType: string;
+  managedBy: string;
+  description: string;
+  contactPhone: string;
+  sourceUrl: string;
+}
+
+export interface BipadCommunicationChannel {
+  id: string;
+  bipadId?: number;
+  title: string;
+  titleNe?: string | null;
+  type: 'CELLULAR_TOWER' | 'VHF_RADIO' | 'HF_EMERGENCY_NET' | 'FM_BROADCAST' | 'SATELLITE_GATEWAY' | 'OPTICAL_FIBER';
+  operator: 'NTC' | 'Ncell' | 'Nepal Police' | 'Armed Police Force' | 'Radio Nepal' | 'Emergency Satellite' | 'Government DEOC' | string;
+  district: string;
+  province: string;
+  lat: number;
+  lng: number;
+  status: 'WORKING' | 'DEGRADED' | 'DOWN';
+  outageReason: string | null;
+  frequency: string | null;
+  coverageRadiusKm: number;
+  backupChannel: string;
+  lastCheckIn: string;
+  sourceUrl: string;
+}
+
+export interface BipadWarehouse {
+  id: string;
+  bipadId?: number;
+  title: string;
+  titleNe?: string | null;
+  district: string;
+  province: string;
+  lat: number;
+  lng: number;
+  agency: string;
+  supplies: {
+    tarpaulins: number;
+    familyRations: number;
+    tents: number;
+    blankets: number;
+    waterPurificationKits: number;
+    rescueBoats: number;
+  };
+  status: 'READY' | 'DEPLOYING' | 'LOW_STOCK';
+  focalPerson: string;
+  contactPhone: string;
+  sourceUrl: string;
+}
+
+export interface BipadFireApparatus {
+  id: string;
+  bipadId?: number;
+  title: string;
+  titleNe?: string | null;
+  district: string;
+  province: string;
+  lat: number;
+  lng: number;
+  equipmentType: string;
+  operator: string;
+  status: 'STANDBY' | 'DEPLOYED' | 'MAINTENANCE';
+  contact: string;
+  sourceUrl: string;
+}
+
+export interface CommandCenterDataPayload {
+  source: string;
+  sourceUrl: string;
+  apiBase: string;
+  lastUpdated: string;
+  totals: {
+    helipads: number;
+    operationalHelipads: number;
+    evacuationCenters: number;
+    totalEvacuationCapacity: number;
+    currentEvacueesSheltered: number;
+    availableEvacuationSlots: number;
+    communicationChannels: number;
+    workingCommunications: number;
+    downCommunications: number;
+    degradedCommunications: number;
+    warehouses: number;
+    fireApparatusAndMachinery: number;
+  };
+  helipads: BipadHelipad[];
+  evacuationCenters: BipadEvacuationCenter[];
+  communications: BipadCommunicationChannel[];
+  warehouses: BipadWarehouse[];
+  fireApparatus: BipadFireApparatus[];
+}
+
+export interface CommandCenterAIGuidance {
+  threatLevel: 'CRITICAL' | 'HIGH' | 'ELEVATED' | 'ROUTINE';
+  sitrep: string;
+  primaryDirectives: Array<{
+    id: number;
+    action: string;
+    priority: 'IMMEDIATE' | 'HIGH' | 'ROUTINE';
+    targetResource: string;
+    department: string;
+  }>;
+  evacuationGuidance: {
+    recommendedCenters: string[];
+    totalCapacityReady: number;
+    safeMovementCorridors: string[];
+    warnings: string[];
+  };
+  helipadGuidance: {
+    clearedHelipads: string[];
+    weatherLimitations: string[];
+    airliftViability: 'HIGH' | 'RESTRICTED' | 'GROUNDED';
+    recommendedAircraft: string;
+  };
+  communicationsGuidance: {
+    blackoutDistricts: string[];
+    fallbackFrequencies: string[];
+    urgentRestorationTargets: string[];
+  };
+  logisticsGuidance: {
+    sourceWarehouses: string[];
+    machineryDispatch: string[];
+  };
+  suggestedQuestions: string[];
+}
