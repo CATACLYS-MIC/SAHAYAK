@@ -676,7 +676,7 @@ export function GoogleMapsFullscreenNav({
 
           {/* Exit Fullscreen */}
           <Button
-            variant="default"
+            variant="danger"
             size="sm"
             onClick={onClose}
             className="h-10 px-3.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold gap-1.5 shadow-md border border-red-500"
@@ -1236,7 +1236,7 @@ export function GoogleMapsFullscreenNav({
               <SkipBack className="w-3.5 h-3.5" />
             </Button>
             <Button
-              variant={isSimulating ? 'destructive' : 'default'}
+              variant={isSimulating ? 'danger' : 'primary'}
               size="sm"
               onClick={() => setIsSimulating(!isSimulating)}
               className="h-7 px-3 text-xs font-bold gap-1 bg-emerald-600 hover:bg-emerald-700 text-white"
@@ -1426,7 +1426,7 @@ export function GoogleMapsFullscreenNav({
                   <AlertOctagon className="w-4 h-4 text-red-500" />
                   <span>{t('routes.critical_hazards', 'CRITICAL HAZARDS: Why This Route Must Be Avoided')}</span>
                 </span>
-                <Badge variant="destructive" className="text-[10px] font-bold">
+                <Badge variant="critical" className="text-[10px] font-bold">
                   {avoidRouteEval?.overallRiskLevel || 'CRITICAL'} {t('routes.risk', 'RISK')}
                 </Badge>
               </div>

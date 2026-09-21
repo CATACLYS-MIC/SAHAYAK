@@ -397,7 +397,7 @@ export function Routes() {
   const routeToNearestHospital = () => {
     const operationalHosp = governmentHospitals.find(h => (h.availableBeds || 0) > 5) || facilities.find(f => f.type === 'Hospital');
     if (operationalHosp) {
-      const cityName = operationalHosp.district || operationalHosp.location?.split(',')[0] || 'Kathmandu';
+      const cityName = operationalHosp.district || operationalHosp.address?.split(',')[0] || 'Kathmandu';
       if (CITIES[cityName]) {
         setEndLoc(cityName);
       } else {
@@ -412,7 +412,7 @@ export function Routes() {
   const routeToNearestShelter = () => {
     const shelter = facilities.find(f => f.type === 'Shelter');
     if (shelter) {
-      const cityName = shelter.location?.split(',')[0] || 'Chitwan';
+      const cityName = shelter.district || shelter.address?.split(',')[0] || 'Chitwan';
       if (CITIES[cityName]) {
         setEndLoc(cityName);
       } else {
@@ -491,7 +491,7 @@ export function Routes() {
   const recommendedDisasterRoute = disasterEvaluations[0];
 
   return (
-    <div className="p-3 sm:p-5 lg:p-6 space-y-4 max-w-[1700px] mx-auto min-h-[calc(100vh-4rem)] flex flex-col">
+    <div className="p-3 sm:p-5 lg:p-6 space-y-4 max-w-[1700px] mx-auto pb-16">
       
       {/* 1. TOP INTELLIGENCE BAR: DEPARTMENT OF ROADS (DOR) NAVIGATE INTEGRATION */}
       <div className="bg-slate-900 text-white rounded-xl p-3.5 shadow-md border border-slate-800 flex flex-wrap items-center justify-between gap-3">
@@ -550,13 +550,13 @@ export function Routes() {
       </div>
 
       {/* 2. MAIN NAVIGATION CONTAINER */}
-      <div className="flex-1 flex flex-col lg:flex-row gap-5 min-h-0">
+      <div className="flex flex-col lg:flex-row gap-5 items-start">
         
         {/* LEFT PANEL: PLANNER, RESPONDER MODE, EVALUATIONS */}
-        <div className="lg:w-[480px] shrink-0 flex flex-col h-auto lg:h-[calc(100vh-12.5rem)] space-y-3.5 overflow-hidden">
+        <div className="w-full lg:w-[480px] shrink-0 flex flex-col space-y-4">
           
           {/* Planner Controls Card */}
-          <Card className="shrink-0 p-4 shadow-sm border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+          <Card className="p-4 shadow-sm border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
             
             {/* Responder Routing Profile Selector */}
             <div className="mb-3.5 pb-3 border-b border-slate-100 dark:border-slate-800">
@@ -689,7 +689,7 @@ export function Routes() {
               <div className="flex gap-1">
                 <Button 
                   size="sm" 
-                  variant={demoScenario === 0 ? 'default' : 'ghost'} 
+                  variant={demoScenario === 0 ? 'secondary' : 'ghost'} 
                   className="h-6 text-[11px] px-2"
                   onClick={() => applyDemoScenario(0)}
                 >
@@ -697,7 +697,7 @@ export function Routes() {
                 </Button>
                 <Button 
                   size="sm" 
-                  variant={demoScenario === 1 ? 'default' : 'ghost'} 
+                  variant={demoScenario === 1 ? 'secondary' : 'ghost'} 
                   className="h-6 text-[11px] px-2 text-amber-600 dark:text-amber-400"
                   onClick={() => applyDemoScenario(1)}
                 >
@@ -705,7 +705,7 @@ export function Routes() {
                 </Button>
                 <Button 
                   size="sm" 
-                  variant={demoScenario === 2 ? 'default' : 'ghost'} 
+                  variant={demoScenario === 2 ? 'secondary' : 'ghost'} 
                   className="h-6 text-[11px] px-2 text-blue-600 dark:text-blue-400"
                   onClick={() => applyDemoScenario(2)}
                 >
@@ -736,7 +736,7 @@ export function Routes() {
           </Card>
 
           {/* Route Alternatives & Evidence-Based AI Explanation */}
-          <div className="flex-1 overflow-y-auto pr-1 space-y-3 pb-6">
+          <div className="space-y-4">
             
             {/* SAFEST APPROPRIATE ROUTE AI RATIONALE */}
             {aiExplanation && (
@@ -795,7 +795,7 @@ export function Routes() {
                             {routeEval.name}
                           </span>
                         </div>
-                        <Badge variant={isBlocked ? 'destructive' : routeEval.overallRiskLevel === 'HIGH' ? 'warning' : 'default'} className="text-[10px]">
+                        <Badge variant={isBlocked ? 'critical' : routeEval.overallRiskLevel === 'HIGH' ? 'warning' : 'default'} className="text-[10px]">
                           {routeEval.overallRiskLevel} RISK
                         </Badge>
                       </div>
@@ -852,7 +852,7 @@ export function Routes() {
                   <span className="text-[10px] text-slate-400">{formatDuration(activeRoute.duration)} • {(activeRoute.distance / 1000).toFixed(1)} km</span>
                 </div>
 
-                <div className="space-y-1.5 max-h-[160px] overflow-y-auto pr-1">
+                <div className="space-y-1.5 max-h-[260px] overflow-y-auto pr-1">
                   {activeRoute.steps && activeRoute.steps.length > 0 ? (
                     activeRoute.steps.slice(0, 8).map((step: any, sIdx: number) => (
                       <div key={sIdx} className="flex items-start gap-2 text-xs text-slate-700 dark:text-slate-300 py-1 border-b border-slate-100 dark:border-slate-800/60 last:border-0">
@@ -895,7 +895,7 @@ export function Routes() {
                 </Button>
               </div>
 
-              <div className="space-y-1.5 max-h-[160px] overflow-y-auto pr-1">
+              <div className="space-y-1.5 max-h-[260px] overflow-y-auto pr-1">
                 {communityRoadReports.map(rep => (
                   <div key={rep.id} className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs">
                     <div className="flex items-center justify-between">
@@ -924,7 +924,7 @@ export function Routes() {
         </div>
 
         {/* RIGHT PANEL: INTERACTIVE MAP VISUALIZATION */}
-        <Card className="flex-1 flex flex-col h-[520px] lg:h-[calc(100vh-12.5rem)] min-h-[480px] p-0 overflow-hidden border-slate-200 dark:border-slate-800 shadow-md relative" noPadding>
+        <Card className="w-full flex-1 flex flex-col h-[520px] lg:h-[calc(100vh-6.5rem)] lg:sticky lg:top-4 min-h-[500px] p-0 overflow-hidden border-slate-200 dark:border-slate-800 shadow-md relative" noPadding>
           
           {/* Map Header Controls */}
           <div className="p-3 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-wrap gap-3 items-center justify-between shrink-0 z-10">
@@ -1171,7 +1171,7 @@ export function Routes() {
                             {bridge.status}
                           </span>
                         </div>
-                        <p className="text-slate-600 text-[11px]">River: {bridge.river} • {bridge.location}</p>
+                        <p className="text-slate-600 text-[11px]">River: {bridge.river} • Road: {bridge.roadId}</p>
                         {bridge.threatLevel && (
                           <p className="text-[10px] font-medium" style={{ color: statusColor }}>
                             Threat Level: {bridge.threatLevel}

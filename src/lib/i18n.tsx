@@ -1582,7 +1582,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         'Exceeds DHM 50 mm Caution Mark': { ne: 'DHM को ५० मिमि सावधानी चिन्हभन्दा बढी', en: condition, new: 'DHM ५० मिमि सावधानी चिन्हया च्वे', mai: 'DHM ५० मिमि सावधानी चिन्हसँ अधिक', hi: 'DHM के ५० मिमी सावधानी चिह्न से अधिक' }
       };
       const translatedCondition = conditions[condition]?.[lang] || condition;
-      return `${lang === 'en' ? '24-Hour Rainfall' : lang === 'hi' ? '२४ घंटे की वर्षा' : lang === 'mai' ? '२४ घंटाक वर्षा' : '२४ घण्टे वर्षा'}: ${amount} mm (${translatedCondition})`;
+      return `${lang === 'hi' ? '२४ घंटे की वर्षा' : lang === 'mai' ? '२४ घंटाक वर्षा' : '२४ घण्टे वर्षा'}: ${amount} mm (${translatedCondition})`;
     }
 
     const fixedFactors: Record<string, Record<Language, string>> = {

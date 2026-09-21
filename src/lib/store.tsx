@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode, useMemo, useEffect } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useMemo, useEffect, useCallback } from 'react';
 import { 
   Location, Weather, Facility, Route, News, MissingPerson, Sighting, CandidateMatch, CaseTimelineEvent,
   Supply, Volunteer, Assessment, Incident, AppNotification, VolunteerTeam, VolunteerStatus, CoverageGap, DistributionAuditLog, DetailedLocationResourceDemand, AIDistributionPlanProposal, LogisticsDeliveryRoutePlan,
@@ -86,6 +86,8 @@ interface AppState {
   coverageGaps: CoverageGap[];
   resourceDemands: DetailedLocationResourceDemand[];
   distributionPlans: AIDistributionPlanProposal[];
+  addDistributionPlan: (plan: AIDistributionPlanProposal) => void;
+  updateDistributionPlan: (id: string, updates: Partial<AIDistributionPlanProposal>) => void;
   deliveryRoutes: LogisticsDeliveryRoutePlan[];
   distributionAuditLogs: DistributionAuditLog[];
   missingPersons: MissingPerson[];
@@ -198,7 +200,13 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   });
   const [coverageGaps, setCoverageGaps] = useState<CoverageGap[]>(MOCK_COVERAGE_GAPS);
   const [resourceDemands] = useState<DetailedLocationResourceDemand[]>(MOCK_LOCATION_RESOURCE_DEMANDS);
-  const [distributionPlans] = useState<AIDistributionPlanProposal[]>(MOCK_AI_DISTRIBUTION_PLANS);
+  const [distributionPlans, setDistributionPlans] = useState<AIDistributionPlanProposal[]>(MOCK_AI_DISTRIBUTION_PLANS);
+  const addDistributionPlan = useCallback((plan: AIDistributionPlanProposal) => {
+    setDistributionPlans(prev => [plan, ...prev]);
+  }, []);
+  const updateDistributionPlan = useCallback((id: string, updates: Partial<AIDistributionPlanProposal>) => {
+    setDistributionPlans(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
+  }, []);
   const [deliveryRoutes] = useState<LogisticsDeliveryRoutePlan[]>(MOCK_LOGISTICS_DELIVERY_ROUTES);
   const [distributionAuditLogs] = useState<DistributionAuditLog[]>(MOCK_DISTRIBUTION_AUDIT_LOGS);
   const [missingPersons, setMissingPersons] = useState<MissingPerson[]>(mockData.MOCK_MISSING);
@@ -1428,6 +1436,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     coverageGaps,
     resourceDemands,
     distributionPlans,
+    addDistributionPlan,
+    updateDistributionPlan,
     deliveryRoutes,
     distributionAuditLogs,
     missingPersons,

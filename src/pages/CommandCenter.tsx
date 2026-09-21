@@ -846,7 +846,7 @@ export function CommandCenter() {
                 <Popup>
                   <div className="p-1 min-w-[180px] text-slate-900 text-xs">
                     <h4 className="font-bold text-red-600 mb-1">🚨 {inc.title}</h4>
-                    <p className="text-[11px] text-slate-600 mb-1">{inc.description}</p>
+                    <p className="text-[11px] text-slate-600 mb-1">{inc.description || inc.desc}</p>
                     <p className="text-[10px] text-slate-500 font-bold">Priority Score: {calculatePriorityScore(inc)}</p>
                   </div>
                 </Popup>

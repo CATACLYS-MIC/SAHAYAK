@@ -553,7 +553,7 @@ export interface ShortagePrediction {
   status: 'STABLE' | 'WARNING' | 'CRITICAL_FUTURE';
 }
 
-export type VolunteerStatus = 'AVAILABLE' | 'ASSIGNED' | 'DEPLOYED' | 'ON TASK' | 'RETURNING' | 'UNAVAILABLE';
+export type VolunteerStatus = 'AVAILABLE' | 'ASSIGNED' | 'DEPLOYED' | 'ON TASK' | 'RETURNING' | 'UNAVAILABLE' | 'STANDBY';
 export type VerificationStatus = 'VERIFIED' | 'PENDING_VERIFICATION';
 
 export interface Volunteer {
@@ -628,10 +628,14 @@ export interface CoverageGap {
   district: string;
   severity: 'CRITICAL' | 'HIGH' | 'MODERATE';
   needType: string;
+  type?: string;
   requiredVolunteers: number;
+  requiredPersonnel?: number;
   assignedVolunteers: number;
+  assignedPersonnel?: number;
   gapCount: number;
   missingCriticalSkills: string[];
+  missingSkillOrResource?: string;
   resourceShortageSummary: string;
   accessCondition: string;
   recommendedAction: string;
@@ -645,8 +649,8 @@ export interface DisasterAwareRouteOption {
   distanceKm: number;
   estimatedMinutes: number;
   dorRoadStatus: 'OPEN' | 'CAUTION' | 'RESTRICTED' | 'BLOCKED';
-  floodExposure: 'LOW' | 'MODERATE' | 'HIGH';
-  landslideRisk: 'LOW' | 'MODERATE' | 'HIGH';
+  floodExposure: 'LOW' | 'MODERATE' | 'HIGH' | 'CRITICAL';
+  landslideRisk: 'LOW' | 'MODERATE' | 'HIGH' | 'CRITICAL';
   safetyPenaltyScore: number;
   isRecommended: boolean;
   recommendationReason: string;
@@ -731,6 +735,7 @@ export interface Incident {
   id: string;
   title: string;
   desc: string;
+  description?: string;
   locationId: string;
   type: string;
   lat: number;
@@ -903,6 +908,8 @@ export interface HospitalMatchResult {
   patientMrn: string;
   hospitalName: string;
   missingPersonId: string;
+  missingPersonName?: string;
+  foundLocation?: string;
   matchConfidence: number; // 0-100 (AI matching score / indicator)
   visualSimilarityScore: number; // 0-100
   demographicScore: number; // 0-100
@@ -1071,7 +1078,9 @@ export type RoutingProfileMode =
 export type RoadDataSourceType = 
   | 'DOR_DATA' 
   | 'VERIFIED_REPORT' 
+  | 'VERIFIED_RESPONDER'
   | 'USER_REPORT' 
+  | 'CITIZEN_REPORT'
   | 'AI_INFERENCE' 
   | 'SIMULATED_DATA';
 
@@ -1148,10 +1157,14 @@ export interface DorLandslideRiskRecord {
 
 export interface DorRoadSummary {
   totalRoadLinks: number;
+  totalRoadsMonitored?: number;
   totalClosures: number;
   activeRoadblocks: number; // BLOCKED / FULL_CLOSURE
+  blockedRoads?: number;
   partialRestrictions: number; // RESTRICTED / CAUTION
+  partiallyBlockedRoads?: number;
   openRoadsCount: number;
+  passablePercentage?: number;
   totalBridges: number;
   bridgesWithRestrictions: number;
   highLandslideRiskLinks: number;
@@ -1225,13 +1238,15 @@ export interface DisasterAwareRouteEvaluation {
 export interface CommunityRoadReport {
   id: string;
   locationName: string;
-  location: { lat: number; lng: number };
-  issueType: 'ROAD_BLOCKED' | 'LANDSLIDE' | 'FLOODED' | 'BRIDGE_DAMAGED' | 'TRAFFIC_OBSTRUCTION' | 'ROAD_REOPENED' | 'OTHER_HAZARD';
+  district?: string;
+  location?: { lat: number; lng: number };
+  issueType: 'ROAD_BLOCKED' | 'LANDSLIDE' | 'FLOODED' | 'BRIDGE_DAMAGED' | 'TRAFFIC_OBSTRUCTION' | 'ROAD_REOPENED' | 'ROUGH_PASSABLE' | 'OTHER_HAZARD';
   passableFor?: string;
   description: string;
   sourceType: RoadDataSourceType;
   reporterName: string;
-  reporterRole: string; // e.g. "DOR Field Inspector", "Nepal Police Highway Patrol", "Red Cross Volunteer", "Citizen"
+  reporterRole?: string; // e.g. "DOR Field Inspector", "Nepal Police Highway Patrol", "Red Cross Volunteer", "Citizen"
+  contactInfo?: string;
   timestamp: string;
   photoUrl?: string;
   verifiedBy?: string;

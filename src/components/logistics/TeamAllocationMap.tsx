@@ -187,7 +187,7 @@ export function TeamAllocationMap({
                         </span>
                       </div>
                       <Badge 
-                        variant={team.status === 'DEPLOYED' ? 'default' : 'secondary'}
+                        variant={team.status === 'DEPLOYED' ? 'success' : 'warning'}
                         className={`text-[10px] uppercase font-bold shrink-0 ${
                           team.status === 'DEPLOYED' 
                             ? 'bg-emerald-600 text-white' 

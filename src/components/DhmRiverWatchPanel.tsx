@@ -178,7 +178,7 @@ export function DhmRiverWatchPanel() {
           {/* Action buttons */}
           <div className="flex items-center gap-3 shrink-0 flex-wrap">
             <Button
-              variant={dhmDemoMode ? 'warning' : 'outline'}
+              variant={dhmDemoMode ? 'secondary' : 'outline'}
               size="sm"
               onClick={handleToggleDemoMode}
               className={`border-blue-400/40 text-xs font-semibold ${dhmDemoMode ? 'bg-amber-500 text-slate-950 hover:bg-amber-400' : 'bg-blue-950/60 text-blue-200 hover:bg-blue-900'}`}

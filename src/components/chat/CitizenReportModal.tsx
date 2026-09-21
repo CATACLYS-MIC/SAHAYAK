@@ -82,7 +82,7 @@ export function CitizenReportModal({
         id: reportId,
         locationName: fullLoc,
         location: gpsCoordinates || { lat: 27.7, lng: 85.3 },
-        issueType: disasterType === 'ROAD_BLOCKAGE' ? 'ROAD_BLOCKED' : disasterType === 'FLOOD' ? 'FLOODED' : 'LANDSLIDE',
+        issueType: disasterType === 'ROAD_BLOCKAGE' ? 'BLOCKAGE' : disasterType === 'FLOOD' ? 'FLOOD' : 'LANDSLIDE',
         description: `[${severity} SEVERITY] ${description} | Reporter: ${reporterName} ${contactNumber ? `(${contactNumber})` : ''}`,
         timestamp: new Date().toISOString(),
         status: isResp ? 'VERIFIED' : 'UNVERIFIED',
@@ -93,6 +93,7 @@ export function CitizenReportModal({
       addCommunityRoadReport({
         locationName: locationName.trim(),
         district,
+        location: gpsCoordinates || { lat: 27.7, lng: 85.3 },
         issueType: disasterType === 'ROAD_BLOCKAGE' ? 'ROAD_BLOCKED' : disasterType === 'FLOOD' ? 'FLOODED' : 'LANDSLIDE',
         description,
         passableFor: severity === 'CRITICAL' ? 'NONE' : severity === 'HIGH' ? 'NONE' : 'LIGHT_VEHICLES_ONLY',

@@ -27,25 +27,25 @@ export function CoverageGapAnalysis() {
                 <Badge variant={gap.severity === 'CRITICAL' ? 'critical' : gap.severity === 'HIGH' ? 'danger' : 'warning'}>
                   {gap.severity} GAP
                 </Badge>
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{gap.type}</span>
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{gap.type || gap.needType}</span>
               </div>
               
               <h4 className="font-bold text-lg text-slate-900 dark:text-slate-100 mb-1">{gap.locationName}</h4>
-              <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-4">{gap.missingSkillOrResource}</p>
+              <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-4">{gap.missingSkillOrResource || gap.resourceShortageSummary}</p>
               
-              {gap.type === 'PERSONNEL' && (
+              {(gap.type === 'PERSONNEL' || gap.needType === 'PERSONNEL' || (gap.requiredPersonnel || gap.requiredVolunteers)) && (
                 <div className="bg-slate-50 dark:bg-slate-900 rounded p-3 mb-4">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-xs font-bold text-slate-500 uppercase">Requirement</span>
-                    <span className="text-sm font-bold text-slate-800 dark:text-slate-200">{gap.requiredPersonnel} volunteers</span>
+                    <span className="text-sm font-bold text-slate-800 dark:text-slate-200">{gap.requiredPersonnel ?? gap.requiredVolunteers} volunteers</span>
                   </div>
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-xs font-bold text-slate-500 uppercase">Currently Assigned</span>
-                    <span className="text-sm font-bold text-slate-800 dark:text-slate-200">{gap.assignedPersonnel} volunteers</span>
+                    <span className="text-sm font-bold text-slate-800 dark:text-slate-200">{gap.assignedPersonnel ?? gap.assignedVolunteers} volunteers</span>
                   </div>
                   <div className="flex justify-between items-center pt-2 border-t border-slate-200 dark:border-slate-800">
                     <span className="text-xs font-bold text-red-500 uppercase">Gap</span>
-                    <span className="text-sm font-bold text-red-600 dark:text-red-400">{(gap.requiredPersonnel || 0) - (gap.assignedPersonnel || 0)} volunteers</span>
+                    <span className="text-sm font-bold text-red-600 dark:text-red-400">{(gap.requiredPersonnel ?? gap.requiredVolunteers ?? 0) - (gap.assignedPersonnel ?? gap.assignedVolunteers ?? 0)} volunteers</span>
                   </div>
                 </div>
               )}

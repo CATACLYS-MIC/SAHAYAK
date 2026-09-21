@@ -218,7 +218,7 @@ export function HospitalMatchingModule() {
         >
           <Sparkles className="h-4 w-4" />
           {t('AI Match Center')}
-          <Badge variant="primary" className="text-[10px] py-0 px-1.5 bg-teal-600 text-white">
+          <Badge variant="info" className="text-[10px] py-0 px-1.5 bg-teal-600 text-white">
             {hospitalMatches.length}
           </Badge>
         </button>
@@ -574,7 +574,7 @@ export function HospitalMatchingModule() {
                       <Badge 
                         variant={
                           pat.status === 'MATCH_CONFIRMED' ? 'success' :
-                          pat.status === 'ANALYZED' ? 'primary' : 'outline'
+                          pat.status === 'ANALYZED' ? 'info' : 'outline'
                         }
                         className="text-[10px]"
                       >

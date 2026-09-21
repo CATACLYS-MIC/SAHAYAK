@@ -13,7 +13,7 @@ export function Card({ className, children, noPadding = false, ...props }: React
   );
 }
 
-export function CardHeader({ title, subtitle, action, className, ...props }: React.HTMLAttributes<HTMLDivElement> & { title: React.ReactNode, subtitle?: React.ReactNode, action?: React.ReactNode, className?: string }) {
+export function CardHeader({ title, subtitle, action, className, ...props }: Omit<React.HTMLAttributes<HTMLDivElement>, 'title'> & { title: React.ReactNode, subtitle?: React.ReactNode, action?: React.ReactNode, className?: string }) {
   return (
     <div className={cn("flex items-start justify-between mb-4", className)} {...props}>
       <div>

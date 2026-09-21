@@ -17,9 +17,17 @@ export function ThemeProvider({
   defaultTheme = 'light',
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(() => {
+    if (typeof window === 'undefined') return defaultTheme;
     const stored = localStorage.getItem('sahayak-theme');
-    if (stored === 'dark' || stored === 'light') return stored;
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : defaultTheme;
+    if (stored === 'dark' || stored === 'light') {
+      window.document.documentElement.classList.remove('light', 'dark');
+      window.document.documentElement.classList.add(stored);
+      return stored;
+    }
+    const preferred = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : defaultTheme;
+    window.document.documentElement.classList.remove('light', 'dark');
+    window.document.documentElement.classList.add(preferred);
+    return preferred;
   });
 
   useEffect(() => {
@@ -27,6 +35,15 @@ export function ThemeProvider({
     root.classList.remove('light', 'dark');
     root.classList.add(theme);
     localStorage.setItem('sahayak-theme', theme);
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'sahayak-theme' && (e.newValue === 'dark' || e.newValue === 'light')) {
+        setTheme(e.newValue);
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
   }, [theme]);
 
   return (

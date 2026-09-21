@@ -69,7 +69,12 @@ export function AIDistributionPlanner() {
   };
 
   const handleApprove = (planId: string) => {
-    updateDistributionPlan(planId, 'APPROVED', 'Command Center Ops');
+    updateDistributionPlan(planId, {
+      status: 'APPROVED',
+      reviewedBy: 'Command Center Ops',
+      reviewedAt: new Date().toISOString(),
+      reviewNotes: 'Approved by field command'
+    });
   };
 
 

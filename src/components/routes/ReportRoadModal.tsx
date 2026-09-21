@@ -42,6 +42,7 @@ export function ReportRoadModal({ isOpen, onClose }: ReportRoadModalProps) {
     addCommunityRoadReport({
       locationName: road,
       district,
+      location: { lat: 27.7, lng: 85.3 },
       issueType: issue,
       description,
       passableFor,
@@ -67,7 +68,7 @@ export function ReportRoadModal({ isOpen, onClose }: ReportRoadModalProps) {
               <p className="text-xs text-slate-500">Submissions feed directly into SAHAYAK's Disaster-Aware Route Engine</p>
             </div>
           </div>
-          <Button variant="ghost" size="icon" onClick={onClose}><X className="w-4 h-4" /></Button>
+          <Button variant="ghost" size="sm" onClick={onClose}><X className="w-4 h-4" /></Button>
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-4">

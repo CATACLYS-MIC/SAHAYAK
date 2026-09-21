@@ -54,14 +54,14 @@ export function Home() {
   const criticalIncidents = localIncidents.filter(i => i.severity >= 8);
   
   const blockedRoads = dorSummary 
-    ? dorSummary.blockedRoads 
+    ? (dorSummary.blockedRoads ?? dorSummary.activeRoadblocks ?? 0)
     : (roads || []).filter(r => r.status === 'BLOCKED').length;
   const blockedBridges = (bridges || []).filter(r => r.status === 'BLOCKED').length;
   const totalDisruptions = dorSummary 
-    ? (dorSummary.blockedRoads + dorSummary.partiallyBlockedRoads) 
+    ? ((dorSummary.blockedRoads ?? dorSummary.activeRoadblocks ?? 0) + (dorSummary.partiallyBlockedRoads ?? dorSummary.partialRestrictions ?? 0))
     : (blockedRoads + blockedBridges);
   const routeOpenPercentage = dorSummary 
-    ? dorSummary.passablePercentage 
+    ? (dorSummary.passablePercentage ?? (dorSummary.totalRoadLinks > 0 ? Math.round((dorSummary.openRoadsCount / dorSummary.totalRoadLinks) * 100) : 100))
     : ((roads && roads.length > 0) ? Math.round(((roads.length - blockedRoads) / roads.length) * 100) : 100);
 
   const recentNews = liveNews
@@ -232,7 +232,7 @@ export function Home() {
             <span className="text-sm font-bold text-slate-500 dark:text-slate-400">Passable</span>
           </div>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-2 font-medium">
-            {dorSummary ? `${totalDisruptions} active DoR closures • ${dorSummary.totalRoadsMonitored} highways monitored` : `${totalDisruptions} major disruption(s)`}
+            {dorSummary ? `${totalDisruptions} active DoR closures • ${dorSummary.totalRoadsMonitored ?? dorSummary.totalRoadLinks} highways monitored` : `${totalDisruptions} major disruption(s)`}
           </p>
         </Card>
       </div>
