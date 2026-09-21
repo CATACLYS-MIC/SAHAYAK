@@ -826,7 +826,39 @@ async function startServer() {
     received: number;
     required: number;
     coveragePercent: number;
+    lat?: number;
+    lng?: number;
     sourceUrl: string;
+  }
+
+  const NEPAL_DISTRICT_CENTROIDS: Record<string, [number, number]> = {
+    kathmandu: [27.7172, 85.3240], lalitpur: [27.6588, 85.3247], bhaktapur: [27.6710, 85.4298],
+    sindhupalchok: [27.9500, 85.6800], kavrepalanchok: [27.5260, 85.5700], rasuwa: [28.1200, 85.3900],
+    nuwakot: [27.9100, 85.1700], dhading: [27.9200, 84.8900], chitwan: [27.5291, 84.3542], makwanpur: [27.4300, 85.0300],
+    dolakha: [27.7800, 86.1800], ramechhap: [27.3800, 86.0900], sindhuli: [27.2500, 85.9700],
+    pokhara: [28.2096, 83.9856], kaski: [28.2096, 83.9856], lamjung: [28.2800, 84.3700], tanahun: [27.9300, 84.2500],
+    gorkha: [28.0000, 84.6300], manang: [28.6700, 84.0200], mustang: [28.9900, 83.8500], myagdi: [28.4700, 83.4900],
+    baglung: [28.2700, 83.5900], parbat: [28.2200, 83.7000], syangja: [28.0900, 83.8700],
+    morang: [26.5000, 87.3000], sunsari: [26.6200, 87.1500], jhapa: [26.6400, 87.9000], ilam: [26.9100, 87.9200],
+    panchthar: [27.1500, 87.8200], taplejung: [27.3500, 87.6700], sankhuwasabha: [27.5500, 87.2000],
+    bhojpur: [27.1800, 87.0500], dhankuta: [26.9800, 87.3500], terhathum: [27.1300, 87.5500],
+    solukhumbu: [27.7900, 86.7100], okhaldhunga: [27.3100, 86.5000], khotang: [27.2000, 86.8000], udayapur: [26.9000, 86.7000],
+    saptari: [26.6300, 86.7500], siraha: [26.6500, 86.2000], dhanusha: [26.8100, 86.0400], mahottari: [26.8500, 85.8000],
+    sarlahi: [26.9700, 85.5600], rautahat: [27.0000, 85.2800], bara: [27.0000, 85.0500], parsa: [27.1300, 84.8500],
+    rupandehi: [27.5000, 83.4500], kapilvastu: [27.5500, 83.0500], palpa: [27.8700, 83.5500], gulmi: [28.0800, 83.2500],
+    arghakhanchi: [27.9500, 83.1300], dang: [28.0500, 82.4800], pyuthan: [28.0900, 82.8500], rolpa: [28.3800, 82.6500],
+    easternrukum: [28.6300, 82.4800], banke: [28.0500, 81.6200], bardiya: [28.3000, 81.3500],
+    surkhet: [28.6000, 81.6300], dailekh: [28.8500, 81.7100], jुम्ला: [29.2700, 82.1800], jumla: [29.2700, 82.1800],
+    kalikot: [29.2000, 81.7300], mugu: [29.6000, 82.1000], humla: [29.9700, 81.8200], dolpa: [29.0000, 82.8200],
+    bajura: [29.5000, 81.4800], bajhang: [29.5500, 81.2000], achham: [29.0500, 81.2500], doti: [29.2600, 80.9400],
+    kailali: [28.7000, 80.6000], kanchanpur: [28.8400, 80.3200], dadeldhura: [29.3000, 80.5800], baitadi: [29.5200, 80.4300],
+    darchula: [29.8500, 80.5500]
+  };
+
+  function findDistrictCentroid(value: string): [number, number] | undefined {
+    const normalized = value.toLowerCase().replace(/[^a-z\u0900-\u097f]/g, '');
+    const key = Object.keys(NEPAL_DISTRICT_CENTROIDS).find(candidate => normalized.includes(candidate) || candidate.includes(normalized));
+    return key ? NEPAL_DISTRICT_CENTROIDS[key] : undefined;
   }
 
   function stripHtml(value: string): string {
@@ -847,12 +879,15 @@ async function startServer() {
       const received = numbers[numbers.length - 2];
       const required = numbers[numbers.length - 1];
       if (required <= 0 || received < 0) continue;
+      const centroid = findDistrictCentroid(area);
       areas.push({
         area,
         district: area,
         received,
         required,
         coveragePercent: Math.max(0, Math.min(100, Math.round((received / required) * 100))),
+        lat: centroid?.[0],
+        lng: centroid?.[1],
         sourceUrl
       });
     }
@@ -860,20 +895,35 @@ async function startServer() {
   }
 
   app.get('/api/drr-relief-resources', async (_req, res) => {
-    const urls = ['http://drrportal.gov.np/obtained', 'http://drrportal.gov.np/distribution'];
+    const urls = ['http://drrportal.gov.np/vdcdistribution', 'http://drrportal.gov.np/distributed_country'];
     const results: DrrReliefArea[] = [];
     const errors: string[] = [];
     for (const url of urls) {
-      try {
-        const response = await fetch(url, { headers: { 'User-Agent': 'SAHAYAK-Nepal-Disaster-Platform/1.0' } });
-        const html = await response.text();
-        if (!response.ok) {
-          errors.push(`${url}: HTTP ${response.status}`);
-          continue;
+      const candidates = [url, url.replace(/^http:/, 'https:')];
+      let loaded = false;
+      for (const candidate of candidates) {
+        for (let attempt = 0; attempt < 2 && !loaded; attempt += 1) {
+          try {
+            const response = await fetch(candidate, {
+              redirect: 'follow',
+              headers: {
+                Accept: 'text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.9',
+                Referer: 'http://drrportal.gov.np/',
+                'User-Agent': 'Mozilla/5.0 (compatible; SAHAYAK-Nepal-Disaster-Platform/1.0)'
+              }
+            });
+            const html = await response.text();
+            if (!response.ok) {
+              if (attempt === 1 && candidate === candidates[candidates.length - 1]) errors.push(`${url}: HTTP ${response.status}`);
+              continue;
+            }
+            results.push(...parseDrrReliefTable(html, url));
+            loaded = true;
+          } catch (error: any) {
+            if (attempt === 1 && candidate === candidates[candidates.length - 1]) errors.push(`${url}: ${error?.message || 'request failed'}`);
+          }
         }
-        results.push(...parseDrrReliefTable(html, url));
-      } catch (error: any) {
-        errors.push(`${url}: ${error?.message || 'request failed'}`);
       }
     }
     const deduped = [...new Map(results.map(area => [`${area.area}-${area.received}-${area.required}`, area])).values()];
@@ -884,6 +934,53 @@ async function startServer() {
       sourceUrls: urls,
       retrievedAt: new Date().toISOString(),
       areas: deduped,
+      errors
+    });
+  });
+
+  app.get('/api/bipad-capacity-resources', async (_req, res) => {
+    const sourceUrl = 'https://bipadportal.gov.np/risk-info/#/capacity-and-resources';
+    const apiBase = 'https://bipadportal.gov.np/api/v1/resource/';
+    const categories = [
+      ['health', 'Health'], ['education', 'Education'], ['finance', 'Banking & Finance'], ['governance', 'Governance'],
+      ['hotelandrestaurant', 'Hotel & Restaurant'], ['cultural', 'Culture'], ['industry', 'Industry'], ['communication', 'Communication'],
+      ['helipad', 'Helipad'], ['bridge', 'Bridge'], ['electricity', 'Electricity'], ['sanitation', 'Sanitation Service'],
+      ['watersupply', 'Water Supply Infrastructure'], ['airway', 'Airway'], ['waterway', 'Waterway'], ['roadway', 'Roadway'],
+      ['firefightingapparatus', 'Fire Fighting Apparatus'], ['evacuationcentre', 'Evacuation Centre'], ['openspace', 'Humanitarian Open Space'],
+      ['communityspace', 'Community Space'], ['warehouse', 'Godam']
+    ] as const;
+    const headers = { Accept: 'application/json', 'User-Agent': 'Mozilla/5.0 (compatible; SAHAYAK-Nepal-Disaster-Platform/1.0)' };
+    const summaries: Array<{ resourceType: string; label: string; count: number }> = [];
+    const points: Array<{ id: number; title: string; resourceType: string; label: string; lat: number; lng: number }> = [];
+    const errors: string[] = [];
+
+    await Promise.all(categories.map(async ([resourceType, label]) => {
+      try {
+        const response = await fetch(`${apiBase}?resource_type=${encodeURIComponent(resourceType)}&limit=-1`, { headers });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const payload = await response.json() as { results?: Array<{ id: number; title?: string; point?: { coordinates?: [number, number] } }> };
+        const results = Array.isArray(payload.results) ? payload.results : [];
+        summaries.push({ resourceType, label, count: results.length });
+        results.slice(0, 300).forEach(resource => {
+          const coordinates = resource.point?.coordinates;
+          if (resource.id && coordinates?.length === 2 && Number.isFinite(coordinates[0]) && Number.isFinite(coordinates[1])) {
+            points.push({ id: resource.id, title: resource.title || label, resourceType, label, lng: coordinates[0], lat: coordinates[1] });
+          }
+        });
+      } catch (error: any) {
+        errors.push(`${resourceType}: ${error?.message || 'request failed'}`);
+        summaries.push({ resourceType, label, count: 0 });
+      }
+    }));
+
+    res.json({
+      success: summaries.some(item => item.count > 0),
+      dataSource: summaries.some(item => item.count > 0) ? 'LIVE' : 'UNAVAILABLE',
+      sourceUrl,
+      apiBase,
+      retrievedAt: new Date().toISOString(),
+      summaries: summaries.sort((a, b) => b.count - a.count),
+      points,
       errors
     });
   });

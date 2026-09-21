@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Badge, Button, BaseMap } from '@/components/ui';
 import { 
@@ -9,7 +9,7 @@ import {
 import { useAppState } from '@/lib/store';
 import { getOccupancyColor, calculateDistanceKm } from '@/lib/calculations';
 import { cn } from '@/lib/utils';
-import { Marker, Popup } from 'react-leaflet';
+import { Marker, Popup, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import { GovernmentHospital, Facility } from '@/types';
 import { HospitalDetailModal } from '@/components/HospitalDetailModal';
@@ -52,6 +52,29 @@ const PROVINCES = [
   'Sudurpashchim Province'
 ];
 
+interface BipadResourceSummary {
+  resourceType: string;
+  label: string;
+  count: number;
+}
+
+interface BipadResourcePoint {
+  id: number;
+  title: string;
+  resourceType: string;
+  label: string;
+  lat: number;
+  lng: number;
+}
+
+interface DrrDistributionSummary {
+  areaCount: number;
+  received: number;
+  required: number;
+  coveragePercent: number;
+  sourceState: 'LIVE' | 'UNAVAILABLE';
+}
+
 export function Facilities() {
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<'table' | 'card' | 'map'>('card');
@@ -63,6 +86,11 @@ export function Facilities() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [sortBy, setSortBy] = useState<'name' | 'available' | 'occupancy' | 'distance'>('available');
   const [selectedHospital, setSelectedHospital] = useState<GovernmentHospital | null>(null);
+  const [bipadResourceSummaries, setBipadResourceSummaries] = useState<BipadResourceSummary[]>([]);
+  const [bipadResourcePoints, setBipadResourcePoints] = useState<BipadResourcePoint[]>([]);
+  const [bipadResourceSource, setBipadResourceSource] = useState<'LIVE' | 'UNAVAILABLE'>('UNAVAILABLE');
+  const [bipadResourceRetrievedAt, setBipadResourceRetrievedAt] = useState<string | null>(null);
+  const [drrDistribution, setDrrDistribution] = useState<DrrDistributionSummary>({ areaCount: 0, received: 0, required: 0, coveragePercent: 0, sourceState: 'UNAVAILABLE' });
 
   const { 
     facilities, 
@@ -78,6 +106,34 @@ export function Facilities() {
     currentLocationId, currentLocation, userGeolocation,
     locations 
   } = useAppState();
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      fetch('/api/bipad-capacity-resources').then(response => response.json()),
+      fetch('/api/drr-relief-resources').then(response => response.json())
+    ]).then(([data, drrData]) => {
+        if (cancelled) return;
+        setBipadResourceSummaries(Array.isArray(data.summaries) ? data.summaries : []);
+        setBipadResourcePoints(Array.isArray(data.points) ? data.points : []);
+        setBipadResourceSource(data.dataSource === 'LIVE' ? 'LIVE' : 'UNAVAILABLE');
+        setBipadResourceRetrievedAt(data.retrievedAt || null);
+        const drrAreas = Array.isArray(drrData.areas) ? drrData.areas : [];
+        const received = drrAreas.reduce((sum: number, area: { received?: number }) => sum + (Number(area.received) || 0), 0);
+        const required = drrAreas.reduce((sum: number, area: { required?: number }) => sum + (Number(area.required) || 0), 0);
+        setDrrDistribution({
+          areaCount: drrAreas.length,
+          received,
+          required,
+          coveragePercent: required > 0 ? Math.round((received / required) * 100) : 0,
+          sourceState: drrData.dataSource === 'LIVE' ? 'LIVE' : 'UNAVAILABLE'
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setBipadResourceSource('UNAVAILABLE');
+      });
+    return () => { cancelled = true; };
+  }, []);
 
    
 
@@ -308,6 +364,31 @@ export function Facilities() {
             </a>
           </div>
         </div>
+      </div>
+
+      <div className="bg-blue-50/40 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/50 rounded-xl p-4 shadow-xs">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div>
+            <h3 className="font-bold text-slate-900 dark:text-slate-100">BIPAD Capacity &amp; Resources</h3>
+            <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">Official Nepal disaster resource inventory across health, roads, water, shelters, warehouses, and critical infrastructure.</p>
+          </div>
+          <Badge variant={bipadResourceSource === 'LIVE' ? 'success' : 'warning'}>{bipadResourceSource === 'LIVE' ? 'BIPAD LIVE' : 'BIPAD UNAVAILABLE'}</Badge>
+        </div>
+        {bipadResourceSource === 'LIVE' && (
+          <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+            {bipadResourceSummaries.filter(item => item.count > 0).slice(0, 10).map(item => (
+              <div key={item.resourceType} className="shrink-0 rounded-lg border border-blue-200 dark:border-blue-900 bg-white/70 dark:bg-slate-900/70 px-3 py-2 text-xs">
+                <span className="block text-slate-500 dark:text-slate-400">{item.label}</span>
+                <strong className="text-blue-700 dark:text-blue-300">{item.count.toLocaleString()}</strong>
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="mt-3 flex items-center gap-3 flex-wrap text-xs">
+          <Badge variant={drrDistribution.sourceState === 'LIVE' ? 'success' : 'warning'}>{drrDistribution.sourceState === 'LIVE' ? 'DRR DISTRIBUTION LIVE' : 'DRR DISTRIBUTION UNAVAILABLE'}</Badge>
+          {drrDistribution.sourceState === 'LIVE' && <span className="text-slate-600 dark:text-slate-400">{drrDistribution.areaCount} areas • {drrDistribution.received.toLocaleString()} received / {drrDistribution.required.toLocaleString()} required • {drrDistribution.coveragePercent}% coverage</span>}
+        </div>
+        {bipadResourceRetrievedAt && <p className="mt-2 text-[10px] text-slate-400">Source: BIPAD Portal • Retrieved {new Date(bipadResourceRetrievedAt).toLocaleString()}</p>}
       </div>
 
       {/* SUMMARY CAPACITY STRIP */}
@@ -598,6 +679,21 @@ export function Facilities() {
                   </div>
                 </Popup>
               </Marker>
+            ))}
+
+            {bipadResourcePoints.map(resource => (
+              <Circle
+                key={`bipad-resource-${resource.id}`}
+                center={[resource.lat, resource.lng]}
+                radius={1800}
+                pathOptions={{ color: '#0ea5e9', fillColor: '#38bdf8', fillOpacity: 0.28, weight: 1 }}
+              >
+                <Popup>
+                  <strong>{resource.title}</strong><br />
+                  {resource.label}<br />
+                  <span>Official BIPAD capacity/resource record</span>
+                </Popup>
+              </Circle>
             ))}
           </BaseMap>
         </Card>

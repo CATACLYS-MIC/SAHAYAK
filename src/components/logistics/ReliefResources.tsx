@@ -13,6 +13,8 @@ interface DrrReliefArea {
   received: number;
   required: number;
   coveragePercent: number;
+  lat?: number;
+  lng?: number;
   sourceUrl: string;
 }
 
@@ -50,7 +52,7 @@ export function ReliefResources() {
       const name = `${candidate.name} ${candidate.region}`.toLowerCase();
       return name.includes(area.district.toLowerCase()) || area.district.toLowerCase().includes(candidate.name.toLowerCase());
     });
-    return { ...area, location };
+    return { ...area, location: area.lat && area.lng ? { lat: area.lat, lng: area.lng } : location };
   }), [areas, locations]);
 
   const getCoverageColor = (coverage: number) => coverage < 40 ? '#dc2626' : coverage < 70 ? '#f59e0b' : '#16a34a';
