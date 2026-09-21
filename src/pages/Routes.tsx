@@ -21,6 +21,8 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { useTheme } from '@/lib/theme';
 import { useTranslation } from '@/lib/i18n';
+import { getMapTileConfig } from '@/lib/mapTiles';
+import { ReliableTileLayer } from '@/components/ReliableTileLayer';
 
 // Fix default Leaflet icon assets
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -476,9 +478,7 @@ export function Routes() {
     return undefined;
   }, [activeRoute?.latlngs, disasterEvaluations]);
 
-  const tileUrl = mapLayer === 'topo'
-    ? 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png'
-    : (theme === 'dark' ? '/api/galli-tiles/dark/{z}/{x}/{y}.png' : '/api/galli-tiles/light/{z}/{x}/{y}.png');
+  const tileConfig = getMapTileConfig(theme, mapLayer);
 
   const mapRoads = roads.filter(road => road.status === 'OPEN' || dorDemoMode);
   const confirmedAvoidRoute = disasterEvaluations.find(route =>
@@ -1002,11 +1002,7 @@ export function Routes() {
               style={{ height: '100%', width: '100%', position: 'absolute', inset: 0 }}
               className="w-full h-full"
             >
-              <TileLayer
-                attribution='&copy; <a href="https://gallimaps.com" target="_blank" rel="noreferrer">Galli Maps</a> (Nepal) &copy; <a href="https://navigate.dor.gov.np">DOR Navigate</a>'
-                url={tileUrl}
-                maxZoom={18}
-              />
+              <ReliableTileLayer tileConfig={tileConfig} theme={theme} />
 
               {/* View Controller */}
               <MapBoundsController 

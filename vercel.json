@@ -1,0 +1,29 @@
+{
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/api/ai/assistant",
+      "destination": "/api/ai/assistant"
+    },
+    {
+      "source": "/api/health",
+      "destination": "/api/health"
+    },
+    {
+      "source": "/api/config",
+      "destination": "/api/config"
+    },
+    {
+      "source": "/api/galli-tiles/(.*)",
+      "destination": "/api/galli-tiles"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index?path=$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

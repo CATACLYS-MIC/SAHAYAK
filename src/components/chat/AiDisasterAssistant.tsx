@@ -15,6 +15,7 @@ import { SpeechAudioWave } from './SpeechAudioWave';
 import { VoiceSettingsModal } from './VoiceSettingsModal';
 import { CitizenReportModal } from './CitizenReportModal';
 import { EmergencyContactsModal } from './EmergencyContactsModal';
+import { generateLocalDisasterResponse } from '@/lib/disasterChatbotEngine';
 
 interface Message {
   id: string;
@@ -295,10 +296,20 @@ I am integrated directly with live national telemetry from **NDRRMA (BIPAD Porta
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
 
+    let data: any = null;
+
+    // Resilient timeout prevents UI hanging if serverless function is cold-starting
+    const abortCtrl = new AbortController();
+    const timeoutId = setTimeout(() => abortCtrl.abort(), 5000);
+
     try {
       const res = await fetch('/api/ai/assistant', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        signal: abortCtrl.signal,
         body: JSON.stringify({
           message: messageText,
           conversationHistory: messages.slice(-6).map(m => ({
@@ -313,8 +324,25 @@ I am integrated directly with live national telemetry from **NDRRMA (BIPAD Porta
         })
       });
 
-      const data = await res.json();
+      clearTimeout(timeoutId);
 
+      const contentType = res.headers.get('content-type') || '';
+      if (res.ok && contentType.includes('application/json')) {
+        data = await res.json();
+      } else {
+        console.warn('Backend API returned non-JSON response; falling back to client disaster engine.');
+      }
+    } catch (err) {
+      clearTimeout(timeoutId);
+      console.warn('Assistant network request finished or aborted; using local disaster intelligence:', err);
+    }
+
+    // High-resilience fallback: if server was unreachable, returned non-JSON, or returned a network interruption message, use client disaster engine
+    if (!data || !data.reply || typeof data.reply !== 'string' || data.reply.includes('Network interruption')) {
+      data = generateLocalDisasterResponse(messageText, language, currentLocation?.name || 'Kathmandu');
+    }
+
+    try {
       let actionExecutedFeedback: string | undefined = undefined;
       if (data.action && data.action.type !== 'NONE') {
         actionExecutedFeedback = executeAppAction(data.action);
@@ -344,17 +372,8 @@ I am integrated directly with live national telemetry from **NDRRMA (BIPAD Porta
       if (autoSpeakEnabled) {
         speak(data.voiceSummary || data.reply);
       }
-    } catch (err) {
-      console.warn('Assistant request failed:', err);
-      const errorMessage: Message = {
-        id: `err-${Date.now()}`,
-        role: 'assistant',
-        content: language === 'ne'
-          ? 'माफ गर्नुहोस्, नेटवर्कमा समस्या आयो। कृपया पुन: प्रयास गर्नुहोस् वा सिधै आपतकालीन हटलाइन ११४९ मा सम्पर्क गर्नुहोस्।'
-          : 'Network interruption encountered. Please retry or dial national emergency helpline 1149 directly.',
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
-      setMessages(prev => [...prev, errorMessage]);
+    } catch (displayErr) {
+      console.error('Error rendering assistant reply:', displayErr);
     } finally {
       setIsLoading(false);
     }

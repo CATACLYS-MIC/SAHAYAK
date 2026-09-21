@@ -11,6 +11,20 @@ export default defineConfig(() => {
         '@': path.resolve(__dirname, './src'),
       },
     },
+    define: {
+      'import.meta.env.VITE_GALLI_MAPS_API_KEY': JSON.stringify(
+        process.env.VITE_GALLI_MAPS_API_KEY ||
+        process.env.GALLI_MAPS_API_KEY ||
+        process.env.VITE_GALLIMAPS_API_KEY ||
+        process.env.GALLIMAPS_API_KEY ||
+        ''
+      ),
+      'import.meta.env.VITE_GEMINI_API_KEY': JSON.stringify(
+        process.env.VITE_GEMINI_API_KEY ||
+        process.env.GEMINI_API_KEY ||
+        ''
+      ),
+    },
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
       // Do not modifyâfile watching is disabled to prevent flickering during agent edits.

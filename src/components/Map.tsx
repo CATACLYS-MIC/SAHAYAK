@@ -1,10 +1,12 @@
 import React, { useEffect } from 'react';
-import { MapContainer, TileLayer, Circle, useMap } from 'react-leaflet';
+import { MapContainer, Circle, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { cn } from '../lib/utils';
 import { useAppState } from '../lib/store';
 import { useTheme } from '../lib/theme';
+import { getMapTileConfig } from '../lib/mapTiles';
+import { ReliableTileLayer } from './ReliableTileLayer';
 
 // Fix for default marker icon in react-leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -47,9 +49,7 @@ export function BaseMap({ className, children, center: customCenter, zoom = 11, 
       ? [currentLocation.lat, currentLocation.lng] 
       : defaultCenter;
 
-  const tileUrl = theme === 'dark'
-    ? '/api/galli-tiles/dark/{z}/{x}/{y}.png'
-    : '/api/galli-tiles/light/{z}/{x}/{y}.png';
+  const tileConfig = getMapTileConfig(theme);
 
   return (
     <div className={cn("w-full h-full min-h-[300px] relative overflow-hidden", className)}>
@@ -59,11 +59,7 @@ export function BaseMap({ className, children, center: customCenter, zoom = 11, 
         scrollWheelZoom={true} 
         style={{ height: '100%', width: '100%', position: 'absolute', inset: 0 }}
       >
-        <TileLayer
-          attribution='&copy; <a href="https://gallimaps.com" target="_blank" rel="noreferrer">Galli Maps</a> (Nepal) &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url={tileUrl}
-          maxZoom={18}
-        />
+        <ReliableTileLayer tileConfig={tileConfig} theme={theme} />
         <MapUpdater center={center} zoom={zoom} />
         
         {/* Draw a subtle circle around the current region */}

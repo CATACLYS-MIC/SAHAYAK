@@ -23,6 +23,8 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { useTheme } from '@/lib/theme';
 import { useTranslation } from '@/lib/i18n';
+import { getMapTileConfig } from '@/lib/mapTiles';
+import { ReliableTileLayer } from '@/components/ReliableTileLayer';
 
 // Leaflet map controller for smooth centering and following vehicle
 function NavigationMapController({ 
@@ -40,8 +42,17 @@ function NavigationMapController({
 
   useEffect(() => {
     map.invalidateSize();
-    const t = setTimeout(() => map.invalidateSize(), 150);
-    return () => clearTimeout(t);
+    const t1 = setTimeout(() => map.invalidateSize(), 80);
+    const t2 = setTimeout(() => map.invalidateSize(), 250);
+    const t3 = setTimeout(() => map.invalidateSize(), 500);
+    const handleResize = () => map.invalidateSize();
+    window.addEventListener('resize', handleResize);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+      window.removeEventListener('resize', handleResize);
+    };
   }, [map]);
 
   // Fit initial bounds
@@ -218,6 +229,7 @@ export function GoogleMapsFullscreenNav({
   const [focusCoords, setFocusCoords] = useState<[number, number] | null>(null);
   const [simProgressRatio, setSimProgressRatio] = useState(0); // 0 to 1 along path
   const [speedKmH, setSpeedKmH] = useState(48);
+  const [isLegendOpen, setIsLegendOpen] = useState(false);
 
   // Simulation timer
   const simIntervalRef = useRef<any>(null);
@@ -255,9 +267,10 @@ export function GoogleMapsFullscreenNav({
   const steps = useMemo(() => {
     if (activeRoute?.steps && activeRoute.steps.length > 0) {
       return activeRoute.steps.map((s: any, idx: number) => {
-        let type = s.type || 'turn';
-        let modifier = s.modifier || 'straight';
-        const inst = (s.instruction || '').toLowerCase();
+        const item = s || {};
+        let type = item.type || 'turn';
+        let modifier = item.modifier || 'straight';
+        const inst = (item.instruction || '').toLowerCase();
         if (inst.includes('left')) modifier = 'left';
         if (inst.includes('right')) modifier = 'right';
         if (inst.includes('straight') || inst.includes('continue')) modifier = 'straight';
@@ -265,13 +278,13 @@ export function GoogleMapsFullscreenNav({
 
         return {
           id: `step-${idx}`,
-          instruction: s.instruction || s.name || `Continue along corridor`,
-          distance: s.distance || 0,
-          duration: s.duration || 0,
-          name: s.name || 'Highway Segment',
+          instruction: item.instruction || item.name || `Continue along corridor`,
+          distance: item.distance || 0,
+          duration: item.duration || 0,
+          name: item.name || 'Highway Segment',
           type,
           modifier,
-          location: s.location || (routeCoords[Math.min(idx * 5, routeCoords.length - 1)])
+          location: item.location || (routeCoords[Math.min(idx * 5, routeCoords.length - 1)])
         };
       });
     }
@@ -597,9 +610,7 @@ export function GoogleMapsFullscreenNav({
     setFocusCoords(currentVehiclePosition);
   };
 
-  const tileUrl = mapLayer === 'topo'
-    ? 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png'
-    : (theme === 'dark' ? '/api/galli-tiles/dark/{z}/{x}/{y}.png' : '/api/galli-tiles/light/{z}/{x}/{y}.png');
+  const tileConfig = getMapTileConfig(theme, mapLayer);
 
   if (!isOpen) return null;
 
@@ -610,7 +621,7 @@ export function GoogleMapsFullscreenNav({
       <header className="bg-emerald-800 dark:bg-emerald-950 border-b border-emerald-700/70 shadow-2xl px-4 py-3 z-30 flex items-center justify-between gap-3 text-white shrink-0">
         <div className="flex items-center gap-3.5 min-w-0 flex-1">
           {/* Big Maneuver Icon */}
-          <div className="w-13 h-13 rounded-2xl bg-emerald-900/90 border-2 border-emerald-500/50 flex items-center justify-center shrink-0 shadow-lg p-2">
+          <div className="w-12 h-12 min-w-[48px] min-h-[48px] rounded-2xl bg-emerald-900/90 border-2 border-emerald-500/50 flex items-center justify-center shrink-0 shadow-lg p-2">
             {getManeuverIcon(activeStep.type, activeStep.modifier)}
           </div>
 
@@ -772,11 +783,7 @@ export function GoogleMapsFullscreenNav({
           style={{ height: '100%', width: '100%', position: 'absolute', inset: 0 }}
           className="w-full h-full"
         >
-          <TileLayer
-            attribution='&copy; <a href="https://gallimaps.com">Galli Maps</a> &copy; <a href="https://navigate.dor.gov.np">DOR Navigate</a> &copy; <a href="http://hydrology.gov.np">DHM River Watch</a>'
-            url={tileUrl}
-            maxZoom={18}
-          />
+          <ReliableTileLayer tileConfig={tileConfig} theme={theme} />
 
           <NavigationMapController
             routeCoords={routeCoords}
@@ -1094,44 +1101,57 @@ export function GoogleMapsFullscreenNav({
         </MapContainer>
 
         {/* Floating Route & Bridge Color Legend Overlay */}
-        <div className="absolute top-20 right-4 bg-slate-900/95 backdrop-blur-md px-3.5 py-2.5 rounded-xl border border-slate-800 shadow-xl text-[11px] space-y-1.5 z-[1000] pointer-events-auto max-w-[260px]">
-          <div className="font-bold text-slate-200 mb-1 text-[10px] uppercase tracking-wider flex items-center justify-between">
-            <span>Route & Bridge Safety</span>
-            <span className="text-[9px] text-emerald-400 font-semibold">Live DOR / Police</span>
-          </div>
-          <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px]">
-            <div className="flex items-center gap-1.5">
-              <span className="w-3.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
-              <span className="text-slate-300 font-medium">Normal Road</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-3.5 h-1.5 rounded-full bg-yellow-500 shrink-0"></span>
-              <span className="text-yellow-400 font-medium">Restricted Road</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-3.5 h-1.5 rounded-full bg-red-500 shrink-0"></span>
-              <span className="text-red-400 font-bold">Blocked Road</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs">🟢</span>
-              <span className="text-slate-300">Normal Bridge</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs">🟡</span>
-              <span className="text-yellow-400 font-medium">Risky Bridge</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs">🔴</span>
-              <span className="text-red-400 font-bold">Blocked Bridge</span>
-            </div>
-            <div className="flex items-center gap-1.5 col-span-2 pt-1 border-t border-slate-800">
-              <span className="w-3.5 h-1 bg-emerald-500 rounded shrink-0"></span>
-              <span className="text-emerald-400 font-bold">Recommended Safest Route</span>
-            </div>
-            <div className="flex items-center gap-1.5 col-span-2">
-              <span className="w-3.5 h-1 border-t-2 border-dashed border-red-500 rounded shrink-0"></span>
-              <span className="text-red-400 font-bold">Route to Avoid (Blocked)</span>
-            </div>
+        <div className="absolute bottom-24 right-4 z-[1000] pointer-events-auto max-w-[280px]">
+          <div className="bg-slate-900/95 backdrop-blur-md rounded-xl border border-slate-800 shadow-2xl text-[11px] overflow-hidden">
+            <button
+              onClick={() => setIsLegendOpen(!isLegendOpen)}
+              className="w-full px-3 py-2 flex items-center justify-between gap-2 text-slate-200 font-bold hover:bg-slate-800/80 transition-colors"
+            >
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span className="text-[10px] uppercase tracking-wider">Map Color Codes</span>
+              </div>
+              <span className="text-[10px] text-slate-400">{isLegendOpen ? 'Hide' : 'Show'}</span>
+            </button>
+
+            {isLegendOpen && (
+              <div className="p-3 pt-1 space-y-1.5 border-t border-slate-800/80">
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px]">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+                    <span className="text-slate-300 font-medium">Normal Road</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3 h-1.5 rounded-full bg-yellow-500 shrink-0"></span>
+                    <span className="text-yellow-400 font-medium">Restricted Road</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3 h-1.5 rounded-full bg-red-500 shrink-0"></span>
+                    <span className="text-red-400 font-bold">Blocked Road</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs">🟢</span>
+                    <span className="text-slate-300">Normal Bridge</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs">🟡</span>
+                    <span className="text-yellow-400 font-medium">Risky Bridge</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs">🔴</span>
+                    <span className="text-red-400 font-bold">Blocked Bridge</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 col-span-2 pt-1 border-t border-slate-800">
+                    <span className="w-3.5 h-1 bg-emerald-500 rounded shrink-0"></span>
+                    <span className="text-emerald-400 font-bold">Recommended Safest Route</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 col-span-2">
+                    <span className="w-3.5 h-1 border-t-2 border-dashed border-red-500 rounded shrink-0"></span>
+                    <span className="text-red-400 font-bold">Route to Avoid (Blocked)</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
