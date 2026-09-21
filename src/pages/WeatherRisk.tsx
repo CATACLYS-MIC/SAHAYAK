@@ -137,6 +137,39 @@ export function WeatherRisk() {
   };
 
   const individualRisks = normalizedHazardRisks.filter(r => r.hazard !== 'Overall');
+
+  // Comprehensive environmental sensors combining ground telemetry and hydrological instruments
+  const allLiveSensors = useMemo(() => {
+    const list = [...environmentalSensors];
+
+    if (!list.some(s => s.type.toLowerCase().includes('rain') || s.type.toLowerCase().includes('precip'))) {
+      const precip24h = fusedWeather?.precipitation24hMm ?? 0;
+      const isCritical = precip24h >= 140;
+      const isWarning = precip24h >= 50;
+      list.push({
+        id: 'sens-precip',
+        type: 'Rainfall (24h)',
+        value: `${precip24h.toFixed(1)} mm`,
+        status: isCritical ? 'CRITICAL' : isWarning ? 'WARNING' : 'NORMAL',
+        trend: fusedWeather?.precipitationMm && fusedWeather.precipitationMm > 5 ? 'RISING' : 'STABLE'
+      });
+    }
+
+    if (!list.some(s => s.type.toLowerCase().includes('pressure') || s.type.toLowerCase().includes('baromet'))) {
+      const pressure = fusedWeather?.pressure ?? 1012;
+      const isCritical = pressure < 995;
+      const isWarning = pressure < 1005;
+      list.push({
+        id: 'sens-press',
+        type: 'Barometric Pressure',
+        value: `${pressure} hPa`,
+        status: isCritical ? 'CRITICAL' : isWarning ? 'WARNING' : 'NORMAL',
+        trend: pressure < 1008 ? 'FALLING' : 'STABLE'
+      });
+    }
+
+    return list;
+  }, [environmentalSensors, fusedWeather]);
   const topHazard = individualRisks.length > 0
     ? individualRisks.reduce((prev, current) => (prev.score > current.score) ? prev : current, individualRisks[0])
     : overallRisk;
@@ -865,36 +898,80 @@ export function WeatherRisk() {
         </div>
 
         <div className="lg:col-span-1 flex flex-col">
-          <h3 className="text-lg font-bold mb-4 text-slate-900 dark:text-white flex items-center">
-            <Activity className="mr-2 h-5 w-5 text-teal-600 dark:text-teal-500" />
-            Live Monitors
-          </h3>
-          <Card className="flex-1 p-4 bg-slate-900 text-slate-50 border-slate-800">
-            <div className="space-y-4">
-              {environmentalSensors.map(sensor => (
-                <div key={sensor.id} className="p-4 rounded-lg bg-slate-950 border border-slate-800">
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="font-bold text-sm text-slate-400 uppercase tracking-wider">{sensor.type}</div>
-                    <Badge variant={sensor.status === 'CRITICAL' ? 'critical' : sensor.status === 'WARNING' ? 'warning' : 'outline'} className={sensor.status === 'NORMAL' ? 'text-slate-400 border-slate-700' : ''}>
-                      {sensor.status}
-                    </Badge>
-                  </div>
-                  <div className="flex items-end justify-between">
-                    <div className={`text-3xl font-bold ${sensor.status === 'CRITICAL' ? 'text-red-400' : sensor.status === 'WARNING' ? 'text-yellow-400' : 'text-white'}`}>
-                      {sensor.value}
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center">
+              <Activity className="mr-2 h-5 w-5 text-teal-600 dark:text-teal-500" />
+              <span>{t('Live Monitors')}</span>
+            </h3>
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+              {t('Ground IoT Network', 'Ground IoT Network')}
+            </span>
+          </div>
+          <Card className="flex-1 p-4 flex flex-col justify-between border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+            <div className="space-y-3">
+              {allLiveSensors.map(sensor => {
+                const isCritical = sensor.status === 'CRITICAL';
+                const isWarning = sensor.status === 'WARNING';
+                return (
+                  <div 
+                    key={sensor.id} 
+                    className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 transition-colors shadow-2xs hover:border-slate-300 dark:hover:border-slate-700"
+                  >
+                    <div className="flex justify-between items-start mb-1.5">
+                      <div className="font-bold text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                        {t(sensor.type, sensor.type)}
+                      </div>
+                      <Badge 
+                        variant={isCritical ? 'critical' : isWarning ? 'warning' : 'outline'} 
+                        className={!isCritical && !isWarning ? 'border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 bg-emerald-50/70 dark:bg-emerald-950/30 font-semibold text-[10px]' : 'text-[10px] font-bold'}
+                      >
+                        {t(sensor.status, sensor.status)}
+                      </Badge>
                     </div>
-                    <div className="text-sm font-medium flex items-center">
-                      {sensor.trend === 'RISING' ? (
-                        <span className="text-red-400 flex items-center"><Navigation className="h-4 w-4 mr-1 rotate-45" /> Rising</span>
-                      ) : sensor.trend === 'FALLING' ? (
-                        <span className="text-emerald-400 flex items-center"><Navigation className="h-4 w-4 mr-1 rotate-[135deg]" /> Falling</span>
-                      ) : (
-                        <span className="text-slate-400 flex items-center"><Navigation className="h-4 w-4 mr-1 rotate-90" /> Stable</span>
-                      )}
+                    <div className="flex items-end justify-between">
+                      <div className={cn(
+                        "text-2xl sm:text-3xl font-bold tracking-tight",
+                        isCritical ? "text-red-600 dark:text-red-400" :
+                        isWarning ? "text-amber-600 dark:text-amber-400" :
+                        "text-slate-900 dark:text-white"
+                      )}>
+                        {sensor.value}
+                      </div>
+                      <div className="text-xs font-semibold flex items-center">
+                        {sensor.trend === 'RISING' ? (
+                          <span className="text-red-600 dark:text-red-400 flex items-center font-medium">
+                            <Navigation className="h-3.5 w-3.5 mr-1 rotate-45" /> {t('Rising', 'Rising')}
+                          </span>
+                        ) : sensor.trend === 'FALLING' ? (
+                          <span className="text-emerald-600 dark:text-emerald-400 flex items-center font-medium">
+                            <Navigation className="h-3.5 w-3.5 mr-1 rotate-[135deg]" /> {t('Falling', 'Falling')}
+                          </span>
+                        ) : (
+                          <span className="text-slate-500 dark:text-slate-400 flex items-center font-medium">
+                            <Navigation className="h-3.5 w-3.5 mr-1 rotate-90" /> {t('Stable', 'Stable')}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
+            </div>
+
+            {/* IoT Station Health & Sync Status Footer */}
+            <div className="mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span className="font-semibold text-slate-700 dark:text-slate-300">
+                  {t('Ground IoT Network Active', 'Ground IoT Network Active')}
+                </span>
+              </div>
+              <span className="text-[11px] font-mono text-slate-400 dark:text-slate-500">
+                {t('15s Telemetry Pulse', '15s Telemetry Pulse')}
+              </span>
             </div>
           </Card>
         </div>

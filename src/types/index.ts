@@ -14,7 +14,7 @@ export interface HourlyForecast {
 
 export interface EnvironmentalSensor {
   id: string;
-  type: 'River Level' | 'Soil Moisture' | 'Seismic Activity';
+  type: 'River Level' | 'Soil Moisture' | 'Seismic Activity' | 'Rainfall (24h)' | 'Barometric Pressure' | string;
   value: string;
   status: 'NORMAL' | 'WARNING' | 'CRITICAL';
   trend: 'RISING' | 'FALLING' | 'STABLE';
