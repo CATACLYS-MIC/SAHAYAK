@@ -8,6 +8,7 @@ import { Circle } from 'react-leaflet';
 import { DhmRiverWatchPanel } from '@/components/DhmRiverWatchPanel';
 import { AiWeatherAdvisoryBox } from '@/components/AiWeatherAdvisoryBox';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n';
 
 function getSourceUrl(sourceName: string, location?: { lat?: number; lng?: number }): string {
   const name = sourceName.toLowerCase();
@@ -36,6 +37,7 @@ function getSourceUrl(sourceName: string, location?: { lat?: number; lng?: numbe
 }
 
 export function WeatherRisk() {
+  const { t } = useTranslation();
   const { 
     currentLocationId, currentLocation, locations, weatherSources, fusedWeather, hazardRisks, 
     demoScenarioStep, setDemoScenarioStep,
@@ -903,14 +905,14 @@ export function WeatherRisk() {
         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
           <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center">
             <Activity className="mr-2 h-5 w-5 text-emerald-600 dark:text-emerald-500" />
-            AI Hazard Analysis & Multi-Model Calibration
+            {t('AI Hazard Analysis & Multi-Model Calibration')}
           </h3>
           <div className="flex items-center gap-2 text-xs">
             <Badge variant="outline" className="bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800">
-              Confidence Floor: ≥{CONFIDENCE_THRESHOLD}%
+              {t('Confidence Floor:')} ≥{CONFIDENCE_THRESHOLD}%
             </Badge>
             <Badge variant="outline" className="bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-800">
-              Base-Level Normalized
+              {t('Base-Level Normalized')}
             </Badge>
           </div>
         </div>
@@ -920,7 +922,7 @@ export function WeatherRisk() {
               <CardHeader 
                 title={
                   <div className="flex items-center justify-between w-full">
-                    <span className="font-bold text-slate-900 dark:text-slate-100">{risk.hazard} Assessment</span>
+                    <span className="font-bold text-slate-900 dark:text-slate-100">{t(`${risk.hazard} Assessment`)}</span>
                     <div className="flex items-center gap-1.5">
                       <Badge variant={risk.level === 'CRITICAL' ? 'critical' : risk.level === 'HIGH' ? 'danger' : risk.level === 'ELEVATED' ? 'warning' : 'success'}>
                         {risk.level}
@@ -942,8 +944,8 @@ export function WeatherRisk() {
                 
                 <div className="bg-white/60 dark:bg-slate-950/60 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
                   <div className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-between">
-                    <span>Why? (AI & Meteorological Logic)</span>
-                    <span className="text-[11px] font-medium text-slate-400">Confidence: {risk.confidence}%</span>
+                    <span>{t('Why? (AI & Meteorological Logic)')}</span>
+                    <span className="text-[11px] font-medium text-slate-400">{t('Confidence:')} {risk.confidence}%</span>
                   </div>
                   <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
                     {risk.explanation}
@@ -951,7 +953,7 @@ export function WeatherRisk() {
                 </div>
 
                 <div>
-                  <div className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Telemetry Factors</div>
+                  <div className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">{t('Telemetry Factors')}</div>
                   <ul className="text-sm text-slate-600 dark:text-slate-400 list-disc list-inside space-y-1">
                     {risk.factors.map((f, i) => <li key={i}>{f}</li>)}
                   </ul>
