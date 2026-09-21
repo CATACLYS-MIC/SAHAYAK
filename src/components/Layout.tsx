@@ -3,12 +3,14 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { 
   Home, CloudLightning, ShieldAlert, Map, Building2, Users, 
   ClipboardCheck, RadioTower, Menu, Search, Bell, 
-  MapPin, UserCircle, Moon, Sun, X, Stethoscope, PanelLeftClose, PanelLeftOpen
+  MapPin, UserCircle, Moon, Sun, X, Stethoscope, PanelLeftClose, PanelLeftOpen,
+  Mic
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/lib/theme';
 import { useTranslation } from '@/lib/i18n';
 import { LanguageSelector } from '@/components/LanguageSelector';
+import { AiDisasterAssistant } from '@/components/chat/AiDisasterAssistant';
 import { useAppState } from '@/lib/store';
 import { useAuth } from '@/lib/auth';
 
@@ -171,6 +173,14 @@ export function Layout() {
                 placeholder={t('common.search', 'Search demo data...')} 
                 className="bg-transparent border-none outline-none w-full placeholder:text-slate-500"
               />
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent('sahayak:open-voice-assistant'))}
+                className="p-1 rounded-md text-slate-400 hover:text-red-500 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
+                title={t('common.voice_search', 'Ask SAHAYAK by Voice')}
+              >
+                <Mic className="h-3.5 w-3.5 text-red-500" />
+              </button>
               {searchQuery && (
                 <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md shadow-lg overflow-hidden z-50">
                   <div className="p-2 text-xs font-bold text-slate-500 uppercase">Demo Search Results</div>
@@ -181,6 +191,14 @@ export function Layout() {
           </div>
           
           <div className="flex items-center gap-2 sm:gap-3">
+            {/* Quick Voice Assistant Button for Mobile / Header */}
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent('sahayak:open-voice-assistant'))}
+              className="sm:hidden text-red-500 dark:text-red-400 hover:text-red-600 p-2 rounded-full hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+              title="Voice Assistant"
+            >
+              <Mic className="h-5 w-5" />
+            </button>
             {/* Language Selector in Header */}
             <LanguageSelector variant="header" />
 
@@ -272,6 +290,9 @@ export function Layout() {
           <Outlet />
         </main>
       </div>
+
+      {/* Central AI Disaster Assistant (Voice & Text) */}
+      <AiDisasterAssistant />
     </div>
   );
 }
