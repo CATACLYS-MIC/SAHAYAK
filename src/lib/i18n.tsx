@@ -1292,6 +1292,35 @@ function restoreEnglishText(text: string): string {
   return text;
 }
 
+function normalizeToEnglish(text: string): string {
+  if (!text || typeof text !== 'string') return text;
+  let result = text;
+  const replacements: Array<[string, string]> = [];
+
+  for (const dictionary of Object.values(TRANSLATIONS)) {
+    for (const [key, value] of Object.entries(dictionary)) {
+      const english = TRANSLATIONS.en[key];
+      if (value && english && value !== english) replacements.push([value, english]);
+    }
+  }
+  for (const [phrase, translations] of Object.entries(COMMON_PHRASES)) {
+    for (const language of SUPPORTED_LANGUAGES) {
+      const translated = translations[language.code];
+      if (language.code !== 'en' && translated && translations.en && translated !== translations.en) {
+        replacements.push([translated, translations.en]);
+      }
+    }
+  }
+
+  replacements
+    .sort((a, b) => b[0].length - a[0].length)
+    .forEach(([translated, english]) => {
+      if (result.includes(translated)) result = result.replaceAll(translated, english);
+    });
+
+  return result;
+}
+
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
@@ -1321,12 +1350,14 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   });
 
   const setLanguage = useCallback((lang: Language) => {
+    if (lang === language) return;
     setLanguageState(lang);
     if (typeof window !== 'undefined') {
       localStorage.setItem(LANGUAGE_STORAGE_KEY, lang);
       document.documentElement.lang = lang;
+      window.location.reload();
     }
-  }, []);
+  }, [language]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -1338,9 +1369,10 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const translateDynamic = useCallback((text: string, targetLang?: Language): string => {
     const lang = targetLang || language;
     if (!text || typeof text !== 'string') return text;
-    if (lang === 'en') return text;
+    const canonicalText = normalizeToEnglish(text);
+    if (lang === 'en') return canonicalText;
 
-    const trimmed = text.trim();
+    const trimmed = canonicalText.trim();
 
     // 1. Direct dictionary match
     const dict = TRANSLATIONS[lang];
@@ -1361,7 +1393,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     }
 
     // 3. Pattern / Substring replacements for compound dynamic strings
-    let result = text;
+    let result = canonicalText;
     let modified = false;
 
     // Check longer phrases first
@@ -1404,7 +1436,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    return modified ? result : text;
+    return modified ? result : canonicalText;
   }, [language]);
 
   // Main t function
@@ -1433,7 +1465,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     }
 
     // Try dynamic translation on the text or fallback
-    const targetText = fallback || key;
+    const targetText = normalizeToEnglish(fallback || key);
     if (language !== 'en') {
       const dyn = translateDynamic(targetText, language);
       if (dyn !== targetText) {
@@ -1468,25 +1500,25 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         while ((node = walker.nextNode())) {
           const currentText = node.nodeValue || '';
           const cachedText = (node as any).__sahayak_orig_text;
-          const restoredText = restoreEnglishText(currentText);
-          const cachedRestoredText = cachedText ? restoreEnglishText(cachedText) : '';
-          node.nodeValue = restoredText !== currentText ? restoredText : (cachedRestoredText || currentText);
+          const normalizedText = normalizeToEnglish(currentText);
+          const normalizedCachedText = cachedText ? normalizeToEnglish(cachedText) : '';
+          node.nodeValue = normalizedText || normalizedCachedText || currentText;
         }
         // Restore input placeholders
         document.querySelectorAll('input, textarea').forEach(el => {
           const input = el as HTMLInputElement | HTMLTextAreaElement;
           if ((input as any).__sahayak_orig_placeholder !== undefined) {
-            input.placeholder = restoreEnglishText(input.placeholder) || restoreEnglishText((input as any).__sahayak_orig_placeholder);
+            input.placeholder = normalizeToEnglish(input.placeholder) || normalizeToEnglish((input as any).__sahayak_orig_placeholder);
           }
         });
         // Restore title and aria-label
         document.querySelectorAll('[title], [aria-label]').forEach(el => {
           const htmlEl = el as HTMLElement;
           if ((htmlEl as any).__sahayak_orig_title !== undefined) {
-            htmlEl.title = restoreEnglishText(htmlEl.title) || restoreEnglishText((htmlEl as any).__sahayak_orig_title);
+            htmlEl.title = normalizeToEnglish(htmlEl.title) || normalizeToEnglish((htmlEl as any).__sahayak_orig_title);
           }
           if ((htmlEl as any).__sahayak_orig_arialabel !== undefined) {
-            htmlEl.setAttribute('aria-label', restoreEnglishText(htmlEl.getAttribute('aria-label') || '') || restoreEnglishText((htmlEl as any).__sahayak_orig_arialabel));
+            htmlEl.setAttribute('aria-label', normalizeToEnglish(htmlEl.getAttribute('aria-label') || '') || normalizeToEnglish((htmlEl as any).__sahayak_orig_arialabel));
           }
         });
         return;
@@ -1517,19 +1549,16 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       let node: Node | null;
       while ((node = walker.nextNode())) {
         const currentVal = node.nodeValue || '';
+        const baseVal = normalizeToEnglish(currentVal);
 
         // Skip if already predominantly in Devanagari script (range \u0900-\u097F)
         const devanagariCount = (currentVal.match(/[\u0900-\u097F]/g) || []).length;
-        if (devanagariCount > currentVal.length * 0.4 && (node as any).__sahayak_orig_text === undefined) {
+        if (devanagariCount > currentVal.length * 0.4 && !/[A-Za-z]/.test(currentVal) && (node as any).__sahayak_orig_text === undefined) {
           continue;
         }
 
-        // Save pristine original English text if not yet saved
-        if ((node as any).__sahayak_orig_text === undefined) {
-          (node as any).__sahayak_orig_text = currentVal;
-        }
-
-        const baseText = (node as any).__sahayak_orig_text || currentVal;
+        const baseText = baseVal || (node as any).__sahayak_orig_text || currentVal;
+        (node as any).__sahayak_orig_text = baseText;
         const translated = translateDynamic(baseText, language);
 
         if (translated !== currentVal && translated !== baseText) {
